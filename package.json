@@ -1,0 +1,28 @@
+{
+  "name": "context-mixer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI-accessible knowledge base service",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev --persist-to %USERPROFILE%/.context-mixer/wrangler-state",
+    "deploy": "wrangler deploy",
+    "d1:create": "wrangler d1 create context-mixer-db",
+    "d1:migrate": "wrangler d1 execute context-mixer-db --remote --file=src/db/schema.sql",
+    "d1:migrate-local": "wrangler d1 execute context-mixer-db --local --file=src/db/schema.sql --persist-to %USERPROFILE%/.context-mixer/wrangler-state",
+    "r2:create": "wrangler r2 bucket create context-mixer-files",
+    "test": "vitest",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clerk/backend": "^3.6.1",
+    "@hono/clerk-auth": "^3.1.1",
+    "hono": "^4.6.15",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241127.0",
+    "typescript": "^5.7.3",
+    "wrangler": "^4.9.1"
+  }
+}
