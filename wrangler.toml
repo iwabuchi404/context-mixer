@@ -13,7 +13,8 @@ bucket_name = "context-mixer-files"
 
 [vars]
 CLERK_PUBLISHABLE_KEY = "pk_test_d2VsY29tZWQta2l0dGVuLTc0LmNsZXJrLmFjY291bnRzLmRldiQ"
-CLERK_FRONTEND_API = "https://welcome-kitten-74.clerk.accounts.dev"
+CLERK_FRONTEND_API = "https://welcomed-kitten-74.clerk.accounts.dev"
+CLERK_SIGN_IN_URL = "https://welcomed-kitten-74.accounts.dev/sign-in"
 # CLERK_SECRET_KEY:
 #   local      -> .dev.vars
 #   production -> npx wrangler secret put CLERK_SECRET_KEY

@@ -6,24 +6,18 @@ import { deleteCookie } from 'hono/cookie'
 
 export const authRoute = new Hono<AppEnv>()
 
-// GET /auth/login - Redirect to Clerk Hosted UI
+// GET /auth/login - Redirect to Clerk Hosted UI (Account Portal)
 authRoute.get('/login', (c) => {
-  const frontendApi = c.env.CLERK_FRONTEND_API
+  const signInUrl = c.env.CLERK_SIGN_IN_URL
 
-  if (!frontendApi) {
-    return c.json({ error: { code: 'INVALID_CONFIG', message: 'CLERK_FRONTEND_API not configured' } }, 500)
+  if (!signInUrl) {
+    return c.json({ error: { code: 'INVALID_CONFIG', message: 'CLERK_SIGN_IN_URL not configured' } }, 500)
   }
 
-  // Build the authorization URL with redirect callback
-  // Clerk's sign-in page handles the redirect after authentication
-  const origin = c.req.header('origin') || 'http://localhost:8787'
-  const redirectUrl = `${frontendApi}/v1/client?after_sign_in_url=${encodeURIComponent(
-    `${origin}/auth/callback`
-  )}&after_sign_up_url=${encodeURIComponent(
-    `${origin}/auth/callback`
-  )}&sign_up_force_redirect_url=${encodeURIComponent(
-    `${origin}/auth/callback`
-  )}`
+  // Origin must come from the request URL: browsers don't send an Origin
+  // header on plain GET navigations
+  const origin = new URL(c.req.url).origin
+  const redirectUrl = `${signInUrl}?redirect_url=${encodeURIComponent(`${origin}/auth/callback`)}`
 
   return c.redirect(redirectUrl)
 })
@@ -35,7 +29,7 @@ authRoute.get('/callback', async (c) => {
   // After Clerk authentication, the user is redirected here with session token.
   // The clerkMiddleware in authMiddleware.ts will validate the token.
   // We just redirect to the main app page.
-  const origin = c.req.header('origin') || 'http://localhost:8787'
+  const origin = new URL(c.req.url).origin
   return c.redirect(`${origin}/`)
 })
 
