@@ -1,142 +1,74 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Document - Context Mixer</title>
-  <link rel="icon" href="/favicon.svg">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Doc - Mixer</title>
   <link rel="stylesheet" href="/style.css">
-  <script src="https://unpkg.com/vue@3.5/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
 </head>
-<body>
-  <header></header>
-  <main id="app" v-cloak>
-    <p v-if="error" class="error">{{ error }}</p>
+<body hx-headers='{"Accept": "text/html"}'>
+  <header>
+    <button class="menu-toggle" aria-label="Menu">☰</button>
+    <a class="brand" href="/">Mixer</a>
+    <nav>
+      <a href="/" class="active">Docs</a>
+      <a href="/keys.html">Keys</a>
+      <a href="/inbox.html">Inbox</a>
+      <a href="/files.html">Files</a>
+    </nav>
+    <div style="flex:1"></div>
+    <div id="user-info"></div>
+  </header>
 
-    <template v-if="doc">
-      <div class="row">
-        <input v-model="title" type="text" class="grow" style="font-size:1.2rem;font-weight:700">
-        <button @click="mode = mode === 'edit' ? 'preview' : 'edit'">
-          {{ mode === 'edit' ? 'プレビュー' : '編集' }}
-        </button>
-        <button class="primary" @click="save" :disabled="saving || !dirty">{{ saving ? '保存中…' : '保存' }}</button>
-      </div>
-      <p class="muted">
-        {{ doc.id }} ・更新 {{ new Date(doc.updated_at).toLocaleString() }}
-        <span v-if="dirty" class="tag">未保存</span>
-      </p>
-
-      <textarea v-if="mode === 'edit'" v-model="content" class="editor"
-                placeholder="Markdownで書く。[[doc_xxx]] で他ドキュメントへリンク。"></textarea>
-      <div v-else class="preview" v-html="rendered"></div>
-
-      <div class="card" v-if="links.length || backlinks.length">
-        <template v-if="links.length">
-          <strong>リンク先</strong>
-          <ul class="plain">
-            <li v-for="l in links" :key="l.id"><a :href="'/doc?id=' + l.id">{{ l.title }}</a></li>
-          </ul>
-        </template>
-        <template v-if="backlinks.length">
-          <strong>被リンク</strong>
-          <ul class="plain">
-            <li v-for="l in backlinks" :key="l.id"><a :href="'/doc?id=' + l.id">{{ l.title }}</a></li>
-          </ul>
-        </template>
-      </div>
-
-      <details class="card">
-        <summary>変更履歴</summary>
-        <ul class="plain">
-          <li v-for="rev in history" :key="rev.id">
-            <span>{{ new Date(rev.created_at).toLocaleString() }}</span>
-            <span class="tag">{{ rev.author_type }}{{ rev.api_key_name ? ': ' + rev.api_key_name : '' }}</span>
-            <span class="muted">{{ rev.content_bytes }} bytes</span>
-          </li>
-        </ul>
-      </details>
-
-      <p style="margin-top:2rem">
-        <button class="danger" @click="remove">このドキュメントを削除</button>
-      </p>
-    </template>
+  <main style="padding: 20px 40px">
+    <div id="doc-content" hx-get="/docs/edit" hx-include="#doc-id" hx-trigger="load">
+      <p class="muted">Loading document...</p>
+    </div>
+    <input type="hidden" id="doc-id" name="id">
   </main>
 
-  <script type="module">
-    import { requireAuth, api, renderHeader } from '/app.js'
+  <script src="/app.js"></script>
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const docId = urlParams.get('id');
+    if (docId) document.getElementById('doc-id').value = docId;
 
-    const clerk = await requireAuth()
-    renderHeader(clerk)
+    function renderPreview() {
+      const content = document.getElementById('content')?.value;
+      const preview = document.getElementById('preview');
+      if (content && preview) preview.innerHTML = marked.parse(content);
+    }
 
-    const docId = new URLSearchParams(location.search).get('id')
+    function toggleMode() {
+      const e = document.getElementById('edit-section');
+      const p = document.getElementById('preview-section');
+      const b = document.getElementById('toggle-btn');
+      if (e.style.display === 'none') {
+        e.style.display = 'block'; p.style.display = 'none'; b.textContent = 'Preview';
+      } else {
+        e.style.display = 'none'; p.style.display = 'block'; b.textContent = 'Edit';
+        renderPreview();
+      }
+    }
 
-    Vue.createApp({
-      data: () => ({
-        doc: null,
-        title: '',
-        content: '',
-        mode: 'edit',
-        links: [],
-        backlinks: [],
-        history: [],
-        saving: false,
-        error: '',
-      }),
-      computed: {
-        dirty() {
-          return this.doc && (this.title !== this.doc.title || this.content !== this.doc.content)
-        },
-        rendered() {
-          return marked.parse(this.content ?? '')
-        },
-      },
-      methods: {
-        async run(fn) {
-          this.error = ''
-          try { await fn() } catch (e) { this.error = e.message }
-        },
-        async reload() {
-          this.doc = await api(`/docs/${docId}`)
-          this.title = this.doc.title
-          this.content = this.doc.content
-          document.title = `${this.doc.title} - Context Mixer`
-          const [links, backlinks, history] = await Promise.all([
-            api(`/docs/${docId}/links`),
-            api(`/docs/${docId}/backlinks`),
-            api(`/docs/${docId}/history`),
-          ])
-          this.links = links.data
-          this.backlinks = backlinks.data
-          this.history = history.data
-        },
-        async save() {
-          this.saving = true
-          await this.run(async () => {
-            await api(`/docs/${docId}`, {
-              method: 'PUT',
-              body: JSON.stringify({ title: this.title, content: this.content }),
-            })
-            await this.reload()
-          })
-          this.saving = false
-        },
-        async remove() {
-          if (!confirm('このドキュメントを削除しますか?(変更履歴は残ります)')) return
-          await this.run(async () => {
-            await api(`/docs/${docId}`, { method: 'DELETE' })
-            location.href = '/'
-          })
-        },
-      },
-      async mounted() {
-        if (!docId) { this.error = 'id が指定されていません'; return }
-        await this.run(() => this.reload())
-        window.addEventListener('beforeunload', (e) => {
-          if (this.dirty) e.preventDefault()
-        })
-      },
-    }).mount('#app')
+    function scrollToSection(slug) {
+      const ta = document.getElementById('content');
+      const lines = ta.value.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('#')) {
+          const title = line.replace(/^#+\s+/, '');
+          const lineSlug = title.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
+          if (lineSlug === slug) {
+            ta.scrollTop = i * 20; // Approx
+            ta.focus();
+            break;
+          }
+        }
+      }
+    }
   </script>
 </body>
 </html>

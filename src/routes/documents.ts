@@ -34,8 +34,124 @@ const appendSchema = z.object({
 
 export const documentsRoute = new Hono<AppEnv>()
 
-// Helper: Generate unique ID
-const generateId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+// GET /docs/edit - Get document edit form (for HTMX)
+documentsRoute.get('/edit', async (c) => {
+  const id = c.req.query('id')
+  if (!id) {
+    return c.html('<p class="error">ドキュメントIDが指定されていません</p>', 400)
+  }
+
+  const doc = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first() as any
+  if (!doc) {
+    return c.html('<p class="error">ドキュメントが見つかりません</p>', 404)
+  }
+
+  const sections = parseSections(doc.content)
+
+  // Get links and backlinks
+  const [linksResult, backlinksResult] = await Promise.all([
+    c.env.DB.prepare(`
+      SELECT d.id, d.title
+      FROM document_links l
+      JOIN documents d ON d.id = l.to_doc_id
+      WHERE l.from_doc_id = ?
+      ORDER BY d.title
+    `).bind(id).all(),
+    c.env.DB.prepare(`
+      SELECT d.id, d.title
+      FROM document_links l
+      JOIN documents d ON d.id = l.from_doc_id
+      WHERE l.to_doc_id = ?
+      ORDER BY d.title
+    `).bind(id).all(),
+  ])
+
+  let html = `
+    <div style="display: flex; align-items: baseline; gap: var(--space-4); margin-bottom: var(--space-6)">
+      <input type="text" id="title" name="title" value="${doc.title}" class="input" style="font-size: 1.8rem; font-weight: 700; border:none; background:transparent; padding:0; height:auto">
+      <div class="spacer"></div>
+      <button id="toggle-btn" class="btn" onclick="toggleMode()">Preview</button>
+      <button class="btn-primary" hx-put="/docs/${id}" hx-include="#title,#content">Save Changes</button>
+    </div>
+
+    <div class="doc-layout">
+      <!-- Main Editor -->
+      <div class="doc-main">
+        <div id="edit-section">
+          <textarea id="content" name="content" class="textarea editor" oninput="renderPreview()">${doc.content}</textarea>
+        </div>
+        <div id="preview-section" style="display:none">
+          <article id="preview" class="prose" style="background: var(--surface); padding: var(--space-6); border: 1px solid var(--border); border-radius: var(--radius-md)"></article>
+        </div>
+      </div>
+
+      <!-- Sidebar: Meta & Outline -->
+      <aside class="doc-aside">
+        <div class="doc-meta-card">
+          <h3>Information</h3>
+          <div class="muted" style="font-size: var(--text-xs); line-height: 1.8">
+            <div style="display:flex; justify-content:space-between"><span>ID</span><code style="font-size:10px">${doc.id}</code></div>
+            <div style="display:flex; justify-content:space-between"><span>Priority</span><span class="badge" style="background:${doc.priority === 'high' ? 'var(--danger)' : 'var(--border)'}">${doc.priority}</span></div>
+            <div style="display:flex; justify-content:space-between"><span>Status</span><span>${doc.status}</span></div>
+            <div style="display:flex; justify-content:space-between"><span>Updated</span><span>${new Date(doc.updated_at).toLocaleDateString()}</span></div>
+          </div>
+          
+          <hr style="border:0; border-top:1px solid var(--border); margin: var(--space-4) 0">
+          
+          <h3>Outline</h3>
+          <nav class="tree">
+  `
+
+  if (sections.length > 0) {
+    for (const s of sections) {
+      const indent = (s.level - 1) * 12
+      html += `<a href="#" class="tree-item" onclick="scrollToSection('${s.slug}')" style="padding-left:${indent + 8}px; font-size:var(--text-xs)">${s.title}</a>`
+    }
+  } else {
+    html += '<div class="muted" style="padding:0 var(--space-2)">No headings found</div>'
+  }
+
+  html += `
+          </nav>
+        </div>
+  `
+
+  if (linksResult.results.length > 0 || backlinksResult.results.length > 0) {
+    html += '<div class="doc-meta-card"><h3>Links</h3>'
+    if (linksResult.results.length > 0) {
+      html += '<div class="muted" style="font-size:10px; font-weight:700; margin-bottom:4px">LINKS</div><nav class="tree" style="margin-bottom:var(--space-4)">'
+      for (const link of linksResult.results) {
+        html += `<a href="/doc.html?id=${link.id}" class="tree-item" style="font-size:var(--text-xs)">${link.title}</a>`
+      }
+      html += '</nav>'
+    }
+    if (backlinksResult.results.length > 0) {
+      html += '<div class="muted" style="font-size:10px; font-weight:700; margin-bottom:4px">BACKLINKS</div><nav class="tree">'
+      for (const link of backlinksResult.results) {
+        html += `<a href="/doc.html?id=${link.id}" class="tree-item" style="font-size:var(--text-xs)">${link.title}</a>`
+      }
+      html += '</nav>'
+    }
+    html += '</div>'
+  }
+
+  html += `
+        <div class="doc-meta-card">
+          <h3>History</h3>
+          <div hx-get="/docs/${id}/history" hx-trigger="load" hx-headers='{"Accept": "text/html"}'>
+            <p class="muted">Loading...</p>
+          </div>
+        </div>
+
+        <button class="btn btn-danger" style="width:100%; justify-content:center" 
+                hx-delete="/docs/${id}" hx-confirm="Delete this document?" hx-swap="none" 
+                onclick="if (confirm('Are you sure?')) { /* handled by htmx */ } else { return false; }">Delete Document</button>
+      </aside>
+    </div>
+  `
+
+  return c.html(html)
+})
 
 // Helper: Record a revision snapshot
 const createRevision = async (
@@ -300,7 +416,8 @@ documentsRoute.post('/:id/append', async (c) => {
 documentsRoute.get('/:id/history', async (c) => {
   const id = c.req.param('id')
   const limit = parseInt(c.req.query('limit') || '20')
-  const cursor = c.req.query('cursor') // created_at of the last item from the previous page
+  const cursor = c.req.query('cursor')
+  const accept = c.req.header('Accept') || ''
 
   const loaded = await loadDoc(c, id)
   if ('response' in loaded) return loaded.response
@@ -323,6 +440,23 @@ documentsRoute.get('/:id/history', async (c) => {
 
   const revisions = result.results.slice(0, limit)
   const hasMore = result.results.length > limit
+
+  // Return HTML for HTMX requests
+  if (accept.includes('text/html')) {
+    let html = '<ul class="plain">\n'
+    for (const rev of revisions) {
+      html += `  <li>\n`
+      html += `    <span>${new Date(rev.created_at).toLocaleString()}</span>\n`
+      html += `    <span class="tag">${rev.author_type}${rev.api_key_name ? ': ' + rev.api_key_name : ''}</span>\n`
+      html += `    <span class="muted">${rev.content_bytes} bytes</span>\n`
+      html += `  </li>\n`
+    }
+    if (revisions.length === 0) {
+      html += '  <li class="muted">履歴がありません</li>\n'
+    }
+    html += '</ul>\n'
+    return c.html(html)
+  }
 
   return c.json({
     data: revisions,
@@ -354,7 +488,20 @@ documentsRoute.get('/:id/history/:rev', async (c) => {
 documentsRoute.post('/', async (c) => {
   try {
     const auth = c.get('auth')
-    const body = await c.req.json()
+    const contentType = c.req.header('Content-Type') || ''
+    let body: any
+
+    if (contentType.includes('application/json')) {
+      body = await c.req.json()
+    } else {
+      body = await c.req.parseBody()
+    }
+
+    // Default content if not provided
+    if (body.content === undefined) {
+      body.content = ''
+    }
+
     const parsed = createDocSchema.parse(body)
 
     if (!isCollectionAllowed(auth, parsed.collection_id)) {
@@ -392,6 +539,12 @@ documentsRoute.post('/', async (c) => {
 
     const linkWarnings = await syncDocumentLinks(c.env.DB, id, parsed.content)
 
+    const accept = c.req.header('Accept') || ''
+    if (accept.includes('text/html')) {
+      // Return a script to redirect to the new document's page
+      return c.html(`<script>window.location.href="/doc.html?id=${id}";</script>`)
+    }
+
     const doc = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first()
 
     return c.json(linkWarnings.length > 0 ? { ...doc, link_warnings: linkWarnings } : doc, 201)
@@ -410,7 +563,15 @@ documentsRoute.put('/:id', async (c) => {
 
   try {
     const auth = c.get('auth')
-    const body = await c.req.json()
+    const contentType = c.req.header('Content-Type') || ''
+    let body: any
+
+    if (contentType.includes('application/json')) {
+      body = await c.req.json()
+    } else {
+      body = await c.req.parseBody()
+    }
+
     const parsed = updateDocSchema.parse(body)
 
     const existing = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first() as any
@@ -458,6 +619,15 @@ documentsRoute.put('/:id', async (c) => {
       : []
 
     const updated = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first()
+    const accept = c.req.header('Accept') || ''
+
+    // Return HTML for HTMX requests
+    if (accept.includes('text/html')) {
+      // Return a small success message or just a script to redirect/reload
+      // For now, redirecting to the document list or just showing "Saved"
+      return c.html('<script>alert("保存しました"); window.location.reload();</script>')
+    }
+
     return c.json(linkWarnings.length > 0 ? { ...updated, link_warnings: linkWarnings } : updated)
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -486,6 +656,13 @@ documentsRoute.delete('/:id', async (c) => {
     c.env.DB.prepare('DELETE FROM document_links WHERE from_doc_id = ? OR to_doc_id = ?').bind(id, id),
     c.env.DB.prepare('DELETE FROM documents WHERE id = ?').bind(id),
   ])
+
+  const accept = c.req.header('Accept') || ''
+
+  // Return HTML for HTMX requests
+  if (accept.includes('text/html')) {
+    return c.html('<script>window.location.href="/";</script>')
+  }
 
   return c.json({ success: true, id })
 })

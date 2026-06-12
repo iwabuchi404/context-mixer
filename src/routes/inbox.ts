@@ -163,6 +163,7 @@ inboxRoute.post('/:token', async (c) => {
 inboxRoute.get('/', async (c) => {
   const status = c.req.query('status') || 'pending'
   const limit = parseInt(c.req.query('limit') || '20')
+  const accept = c.req.header('Accept') || ''
 
   const result = await c.env.DB.prepare(`
     SELECT i.*, d.title as document_title
@@ -173,6 +174,28 @@ inboxRoute.get('/', async (c) => {
     LIMIT ?
   `).bind(status, limit).all()
 
+  if (accept.includes('text/html')) {
+    let html = '<div style="display:flex; flex-direction:column; gap:var(--space-4)">\n'
+    for (const item of result.results) {
+      html += `  <div class="doc-meta-card">\n`
+      html += `    <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3)">\n`
+      html += `      <strong style="font-size:var(--text-sm)">${item.document_title}</strong>\n`
+      html += `      <span class="muted" style="font-size:var(--text-xs)">(${item.document_id})</span>\n`
+      html += `      <div class="spacer"></div>\n`
+      html += `      <button class="btn-primary btn-sm" hx-post="/inbox/${item.id}/approve" hx-target="#inbox-list">Approve</button>\n`
+      html += `      <button class="btn btn-danger btn-sm" hx-post="/inbox/${item.id}/reject" hx-target="#inbox-list">Reject</button>\n`
+      html += `    </div>\n`
+      html += `    <div class="muted" style="font-size:var(--text-xs); margin-bottom:var(--space-3)">Submitted: ${new Date(item.submitted_at).toLocaleString()} ${item.source_hint ? '・ Source: ' + item.source_hint : ''}</div>\n`
+      html += `    <pre style="margin:0; font-size:var(--text-xs); background:var(--surface-dim); padding:var(--space-3); border-radius:var(--radius-sm)"><code>${item.content}</code></pre>\n`
+      html += `  </div>\n`
+    }
+    if (result.results.length === 0) {
+      html += '  <div class="muted" style="padding:var(--space-6); text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md)">No pending submissions.</div>\n'
+    }
+    html += '</div>\n'
+    return c.html(html)
+  }
+
   return c.json({ data: result.results })
 })
 
@@ -180,6 +203,7 @@ inboxRoute.get('/', async (c) => {
 inboxRoute.post('/:id/approve', async (c) => {
   try {
     const id = c.req.param('id')
+    const accept = c.req.header('Accept') || ''
 
     const item = await c.env.DB.prepare('SELECT * FROM inbox_items WHERE id = ?').bind(id).first() as any
     if (!item) {
@@ -223,6 +247,10 @@ inboxRoute.post('/:id/approve', async (c) => {
     await c.env.DB.prepare('UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?')
       .bind('approved', now, id).run()
 
+    if (accept.includes('text/html')) {
+      return c.redirect('/inbox')
+    }
+
     return c.json({ success: true, document_id: doc.id, updated_at: now })
   } catch (error: any) {
     console.error('Error approving inbox item:', error)
@@ -234,6 +262,7 @@ inboxRoute.post('/:id/approve', async (c) => {
 inboxRoute.post('/:id/reject', async (c) => {
   try {
     const id = c.req.param('id')
+    const accept = c.req.header('Accept') || ''
 
     const item = await c.env.DB.prepare('SELECT * FROM inbox_items WHERE id = ?').bind(id).first() as any
     if (!item) {
@@ -249,6 +278,10 @@ inboxRoute.post('/:id/reject', async (c) => {
     // Update item status
     await c.env.DB.prepare('UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?')
       .bind('rejected', now, id).run()
+
+    if (accept.includes('text/html')) {
+      return c.redirect('/inbox')
+    }
 
     return c.json({ success: true, id })
   } catch (error: any) {

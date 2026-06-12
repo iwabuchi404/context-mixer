@@ -31,6 +31,47 @@ const PUBLIC_COLUMNS = 'id, name, scopes, collection_ids, entry_doc_id, expires_
 
 // GET /api-keys - List keys (never returns hashes)
 apiKeysRoute.get('/', async (c) => {
+  const accept = c.req.header('Accept') || ''
+
+  // Return HTML for HTMX requests
+  if (accept.includes('text/html')) {
+    const result = await c.env.DB.prepare(
+      `SELECT ${PUBLIC_COLUMNS} FROM api_keys ORDER BY created_at DESC`
+    ).all()
+
+    let html = '<ul class="plain">\n'
+    for (const key of result.results) {
+      const scopes = JSON.parse(key.scopes)
+      html += `  <li>\n`
+      html += `    <div class="row">\n`
+      html += `      <strong>${key.name}</strong>\n`
+      html += `      <span class="tag">${scopes.join(', ')}</span>\n`
+      if (!key.is_active) {
+        html += `      <span class="tag" style="color:#dc2626">失効済み</span>\n`
+      }
+      html += `      <span class="spacer" style="flex:1"></span>\n`
+      if (key.is_active) {
+        html += `      <button class="danger" hx-delete="/api-keys/${key.id}" hx-confirm="キー「${key.name}」を失効させますか?" hx-include="#keys-list">失効</button>\n`
+      }
+      html += `    </div>\n`
+      html += `    <div class="muted">\n`
+      html += `      作成 ${new Date(key.created_at).toLocaleString()}\n`
+      if (key.last_used_at) {
+        html += `      ・最終使用 ${new Date(key.last_used_at).toLocaleString()}\n`
+      } else {
+        html += `      ・未使用\n`
+      }
+      html += `    </div>\n`
+      html += `  </li>\n`
+    }
+    if (result.results.length === 0) {
+      html += '  <li class="muted">発行済みのキーはありません。</li>\n'
+    }
+    html += '</ul>\n'
+    return c.html(html)
+  }
+
+  // JSON for API requests
   const result = await c.env.DB.prepare(
     `SELECT ${PUBLIC_COLUMNS} FROM api_keys ORDER BY created_at DESC`
   ).all()
@@ -40,7 +81,19 @@ apiKeysRoute.get('/', async (c) => {
 // POST /api-keys - Issue a key. The raw key is returned once and never stored.
 apiKeysRoute.post('/', async (c) => {
   try {
-    const body = await c.req.json()
+    const contentType = c.req.header('Content-Type') || ''
+    let body: any
+
+    if (contentType.includes('application/json')) {
+      body = await c.req.json()
+    } else {
+      body = await c.req.parseBody()
+      // HTMX/Form can send single value as string, Zod expects array
+      if (body.scopes && !Array.isArray(body.scopes)) {
+        body.scopes = [body.scopes]
+      }
+    }
+
     const parsed = createKeySchema.parse(body)
 
     const id = generateId('key')
@@ -65,6 +118,22 @@ apiKeysRoute.post('/', async (c) => {
     const key = await c.env.DB.prepare(
       `SELECT ${PUBLIC_COLUMNS} FROM api_keys WHERE id = ?`
     ).bind(id).first()
+
+    const accept = c.req.header('Accept') || ''
+
+    // Return HTML for HTMX requests
+    if (accept.includes('text/html')) {
+      let html = `
+        <div class="doc-meta-card" style="border-color:var(--accent); background:var(--accent-subtle); margin-top:var(--space-4)">
+          <strong style="font-size:var(--text-xs); color:var(--accent)">RAW KEY (COPY NOW, THIS WILL NOT BE SHOWN AGAIN)</strong>
+          <div class="keybox" style="margin: var(--space-2) 0">${rawKey}</div>
+          <button class="btn-primary btn-sm" onclick="copyKey('${rawKey}')">Copy to Clipboard</button>
+        </div>
+        <script>document.getElementById('created-key-section').style.display = 'block';</script>
+        <div hx-get="/api-keys" hx-trigger="load" hx-target="#keys-list" hx-swap="innerHTML"></div>
+      `
+      return c.html(html)
+    }
 
     return c.json({ ...key, key: rawKey }, 201)
   } catch (error: any) {
@@ -140,6 +209,7 @@ apiKeysRoute.patch('/:id', async (c) => {
 // DELETE /api-keys/:id - Revoke (deactivate, kept for revision traceability)
 apiKeysRoute.delete('/:id', async (c) => {
   const id = c.req.param('id')
+  const accept = c.req.header('Accept') || ''
 
   const existing = await c.env.DB.prepare('SELECT id FROM api_keys WHERE id = ?').bind(id).first()
   if (!existing) {
@@ -147,6 +217,44 @@ apiKeysRoute.delete('/:id', async (c) => {
   }
 
   await c.env.DB.prepare('UPDATE api_keys SET is_active = 0 WHERE id = ?').bind(id).run()
+
+  // Return HTML for HTMX requests - reload the list
+  if (accept.includes('text/html')) {
+    const result = await c.env.DB.prepare(
+      `SELECT ${PUBLIC_COLUMNS} FROM api_keys ORDER BY created_at DESC`
+    ).all()
+
+    let html = '<ul class="plain">\n'
+    for (const key of result.results) {
+      const scopes = JSON.parse(key.scopes)
+      html += `  <li>\n`
+      html += `    <div class="row">\n`
+      html += `      <strong>${key.name}</strong>\n`
+      html += `      <span class="tag">${scopes.join(', ')}</span>\n`
+      if (!key.is_active) {
+        html += `      <span class="tag" style="color:#dc2626">失効済み</span>\n`
+      }
+      html += `      <span class="spacer" style="flex:1"></span>\n`
+      if (key.is_active) {
+        html += `      <button class="danger" hx-delete="/api-keys/${key.id}" hx-confirm="キー「${key.name}」を失効させますか?" hx-include="#keys-list">失効</button>\n`
+      }
+      html += `    </div>\n`
+      html += `    <div class="muted">\n`
+      html += `      作成 ${new Date(key.created_at).toLocaleString()}\n`
+      if (key.last_used_at) {
+        html += `      ・最終使用 ${new Date(key.last_used_at).toLocaleString()}\n`
+      } else {
+        html += `      ・未使用\n`
+      }
+      html += `    </div>\n`
+      html += `  </li>\n`
+    }
+    if (result.results.length === 0) {
+      html += '  <li class="muted">発行済みのキーはありません。</li>\n'
+    }
+    html += '</ul>\n'
+    return c.html(html)
+  }
 
   return c.json({ success: true, id })
 })

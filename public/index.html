@@ -1,155 +1,83 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Context Mixer</title>
   <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="/style.css">
-  <script src="https://unpkg.com/vue@3.5/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
 </head>
-<body>
-  <header></header>
-  <main id="app" v-cloak>
-    <p v-if="error" class="error">{{ error }}</p>
+<body hx-headers='{"Accept": "text/html"}'>
+  <header>
+    <button class="menu-toggle" aria-label="Menu">☰</button>
+    <a class="brand" href="/">Mixer</a>
+    <nav>
+      <a href="/" class="active">Docs</a>
+      <a href="/keys.html">Keys</a>
+      <a href="/inbox.html">Inbox</a>
+      <a href="/files.html">Files</a>
+    </nav>
+    <div class="spacer"></div>
+    <div id="user-info" class="user-info"></div>
+  </header>
 
-    <section>
-      <div class="row">
-        <h2 style="margin:0.4rem 0">Collections</h2>
-        <span class="spacer" style="flex:1"></span>
-        <input v-model="newCollectionName" type="text" placeholder="新しいコレクション名"
-               style="max-width:14rem" @keyup.enter="createCollection">
-        <button class="primary" @click="createCollection" :disabled="!newCollectionName.trim()">作成</button>
+  <main class="app-layout">
+    <!-- Sidebar: Collections -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h2 class="sidebar-title">Collections</h2>
+        <nav class="tree" id="collections-list" hx-get="/collections/html" hx-trigger="load">
+          <p class="muted">Loading...</p>
+        </nav>
       </div>
-      <ul class="plain">
-        <li v-for="col in flatCollections" :key="col.id"
-            :style="{ paddingLeft: (col.depth * 1.2 + 0.2) + 'rem' }">
-          <a href="#" @click.prevent="selectCollection(col)"
-             :style="{ fontWeight: selected?.id === col.id ? 700 : 400 }">{{ col.name }}</a>
-          <span v-if="col.is_system" class="tag">system</span>
-        </li>
-        <li v-if="flatCollections.length === 0" class="muted">コレクションがありません。まず1つ作成してください。</li>
-      </ul>
-    </section>
+      
+      <div class="spacer"></div>
+      
+      <div class="sidebar-section" style="border-top: 1px solid var(--border)">
+        <div class="form-row">
+          <input type="text" id="new-col-name" class="input" placeholder="+ Collection" style="font-size: var(--text-xs)">
+          <button class="btn-primary" style="padding: var(--space-1) var(--space-2); min-height: 28px;"
+                  hx-post="/collections" hx-include="#new-col-name" hx-target="#collections-list">Create</button>
+        </div>
+      </div>
+    </aside>
 
-    <section v-if="selected">
-      <div class="row">
-        <h2 style="margin:0.4rem 0">{{ selected.name }} のドキュメント</h2>
-        <span class="spacer" style="flex:1"></span>
-        <input v-model="newDocTitle" type="text" placeholder="新しいドキュメントのタイトル"
-               style="max-width:16rem" @keyup.enter="createDoc">
-        <button class="primary" @click="createDoc" :disabled="!newDocTitle.trim()">作成</button>
-      </div>
-      <ul class="plain">
-        <li v-for="doc in docs" :key="doc.id">
-          <a :href="'/doc?id=' + doc.id">{{ doc.title }}</a>
-          <span class="tag" v-if="doc.priority !== 'normal'">{{ doc.priority }}</span>
-          <div class="muted">{{ new Date(doc.updated_at).toLocaleString() }}</div>
-        </li>
-        <li v-if="docs.length === 0" class="muted">ドキュメントがありません。</li>
-      </ul>
-      <button v-if="nextCursor" @click="loadMoreDocs">さらに読み込む</button>
-    </section>
+    <!-- Main View -->
+    <div class="main-content">
+      <section id="documents-section" style="display:none; margin-bottom: var(--space-7)">
+        <div style="display: flex; align-items: baseline; gap: var(--space-4); margin-bottom: var(--space-5)">
+          <h1 id="collection-title" style="margin:0">Documents</h1>
+          <div class="spacer"></div>
+          <div class="form-row">
+            <input type="text" id="new-doc-title" class="input" placeholder="New Document title..." style="width: 240px">
+            <button class="btn-primary" hx-post="/docs" hx-include="#new-doc-title,#selected-collection-id" hx-target="#documents-list">Create Doc</button>
+          </div>
+        </div>
+        
+        <input type="hidden" id="selected-collection-id" name="collection_id">
+        <div id="documents-list">
+          <!-- Populated by collection selection -->
+        </div>
+      </section>
 
-    <section>
-      <h2>検索</h2>
-      <div class="row">
-        <input v-model="query" type="text" class="grow" placeholder="キーワード検索" @keyup.enter="search">
-        <button @click="search" :disabled="!query.trim()">検索</button>
-      </div>
-      <ul class="plain">
-        <li v-for="hit in hits" :key="hit.id">
-          <a :href="'/doc?id=' + hit.id">{{ hit.title }}</a>
-          <div class="muted" style="white-space:pre-wrap">{{ hit.snippet }}</div>
-        </li>
-      </ul>
-    </section>
+      <section id="search-section">
+        <h2 class="sidebar-title" style="margin-bottom: var(--space-4)">Quick Search</h2>
+        <div class="card" style="padding: 0; border: none;">
+          <input type="text" id="search-query" class="input" placeholder="Type to search documents..." name="q" 
+                 hx-get="/search/html" 
+                 hx-trigger="keyup changed delay:300ms" 
+                 hx-target="#search-results"
+                 style="font-size: 1.1rem; padding: var(--space-4);">
+          
+          <div id="search-results" style="margin-top: var(--space-5)">
+            <p class="muted">Enter keywords to find documents across all collections.</p>
+          </div>
+        </div>
+      </section>
+    </div>
   </main>
 
-  <script type="module">
-    import { requireAuth, api, renderHeader } from '/app.js'
-
-    const clerk = await requireAuth()
-    renderHeader(clerk)
-
-    Vue.createApp({
-      data: () => ({
-        collections: [],
-        selected: null,
-        docs: [],
-        nextCursor: null,
-        hits: [],
-        query: '',
-        newCollectionName: '',
-        newDocTitle: '',
-        error: '',
-      }),
-      computed: {
-        flatCollections() {
-          const out = []
-          const walk = (nodes, depth) => {
-            for (const n of nodes ?? []) {
-              out.push({ ...n, depth })
-              walk(n.children, depth + 1)
-            }
-          }
-          walk(this.collections, 0)
-          return out
-        },
-      },
-      methods: {
-        async run(fn) {
-          this.error = ''
-          try { await fn() } catch (e) { this.error = e.message }
-        },
-        async reloadCollections() {
-          this.collections = await api('/collections')
-        },
-        async selectCollection(col) {
-          await this.run(async () => {
-            this.selected = col
-            const page = await api(`/docs?collection=${encodeURIComponent(col.id)}`)
-            this.docs = page.data
-            this.nextCursor = page.next_cursor
-          })
-        },
-        async loadMoreDocs() {
-          await this.run(async () => {
-            const page = await api(`/docs?collection=${encodeURIComponent(this.selected.id)}&cursor=${encodeURIComponent(this.nextCursor)}`)
-            this.docs.push(...page.data)
-            this.nextCursor = page.next_cursor
-          })
-        },
-        async createCollection() {
-          await this.run(async () => {
-            await api('/collections', { method: 'POST', body: JSON.stringify({ name: this.newCollectionName.trim() }) })
-            this.newCollectionName = ''
-            await this.reloadCollections()
-          })
-        },
-        async createDoc() {
-          await this.run(async () => {
-            const doc = await api('/docs', {
-              method: 'POST',
-              body: JSON.stringify({
-                title: this.newDocTitle.trim(),
-                content: '',
-                collection_id: this.selected.id,
-              }),
-            })
-            location.href = `/doc?id=${doc.id}`
-          })
-        },
-        async search() {
-          await this.run(async () => {
-            this.hits = await api(`/search?q=${encodeURIComponent(this.query.trim())}`)
-          })
-        },
-      },
-      async mounted() {
-        await this.run(() => this.reloadCollections())
-      },
-    }).mount('#app')
-  </script>
+  <script src="/app.js"></script>
 </body>
 </html>
