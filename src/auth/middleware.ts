@@ -8,7 +8,7 @@ import { API_KEY_PREFIX, verifyApiKey } from './apikey'
 import { clerkSession, ensureUser, verifySession } from './clerk'
 
 const isPublic = (method: string, path: string): boolean => {
-  if (path === '/health' || path === '/') return true
+  if (path === '/health' || path === '/' || path === '/config') return true
   if (path.startsWith('/auth/')) return true
   if (method === 'POST' && /^\/inbox\/[^/]+$/.test(path)) return true
   return false

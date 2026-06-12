@@ -1,6 +1,16 @@
 import { Hono } from 'hono'
+import type { AppEnv } from '../auth/adapter'
 
-export const healthRoute = new Hono()
+export const healthRoute = new Hono<AppEnv>()
+
+// Public config for the Web UI (publishable values only)
+healthRoute.get('/config', (c) => {
+  return c.json({
+    publishable_key: c.env.CLERK_PUBLISHABLE_KEY,
+    frontend_api: c.env.CLERK_FRONTEND_API,
+    sign_in_url: c.env.CLERK_SIGN_IN_URL,
+  })
+})
 
 healthRoute.get('/health', (c) => {
   return c.json({
