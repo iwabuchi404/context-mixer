@@ -25,7 +25,7 @@
       <h1>Inbox</h1>
       <p class="muted" style="margin-bottom: var(--space-6)">Review and approve content submitted via external webhooks.</p>
 
-      <div id="inbox-list" hx-get="/inbox" hx-trigger="auth-ready from:body" hx-headers='{"Accept": "text/html"}'>
+      <div id="inbox-list" hx-get="/ui/inbox" hx-trigger="auth-ready from:body" hx-headers='{"Accept": "text/html"}'>
         <p class="muted">Loading...</p>
       </div>
     </div>

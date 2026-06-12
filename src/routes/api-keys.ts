@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import type { AppEnv } from '../auth/adapter'
 import { generateApiKey, hashApiKey } from '../auth/apikey'
+import { escapeHtml as esc } from '../services/markdown'
 
 const scopeEnum = z.enum(['read', 'write'])
 
@@ -44,14 +45,14 @@ apiKeysRoute.get('/', async (c) => {
       const scopes = JSON.parse(key.scopes)
       html += `  <li>\n`
       html += `    <div class="row">\n`
-      html += `      <strong>${key.name}</strong>\n`
-      html += `      <span class="tag">${scopes.join(', ')}</span>\n`
+      html += `      <strong>${esc(key.name)}</strong>\n`
+      html += `      <span class="tag">${esc(scopes.join(', '))}</span>\n`
       if (!key.is_active) {
         html += `      <span class="tag" style="color:#dc2626">失効済み</span>\n`
       }
       html += `      <span class="spacer" style="flex:1"></span>\n`
       if (key.is_active) {
-        html += `      <button class="danger" hx-delete="/api-keys/${key.id}" hx-confirm="キー「${key.name}」を失効させますか?" hx-include="#keys-list">失効</button>\n`
+        html += `      <button class="danger" hx-delete="/api-keys/${esc(key.id)}" hx-confirm="キー「${esc(key.name)}」を失効させますか?" hx-include="#keys-list">失効</button>\n`
       }
       html += `    </div>\n`
       html += `    <div class="muted">\n`
@@ -229,14 +230,14 @@ apiKeysRoute.delete('/:id', async (c) => {
       const scopes = JSON.parse(key.scopes)
       html += `  <li>\n`
       html += `    <div class="row">\n`
-      html += `      <strong>${key.name}</strong>\n`
-      html += `      <span class="tag">${scopes.join(', ')}</span>\n`
+      html += `      <strong>${esc(key.name)}</strong>\n`
+      html += `      <span class="tag">${esc(scopes.join(', '))}</span>\n`
       if (!key.is_active) {
         html += `      <span class="tag" style="color:#dc2626">失効済み</span>\n`
       }
       html += `      <span class="spacer" style="flex:1"></span>\n`
       if (key.is_active) {
-        html += `      <button class="danger" hx-delete="/api-keys/${key.id}" hx-confirm="キー「${key.name}」を失効させますか?" hx-include="#keys-list">失効</button>\n`
+        html += `      <button class="danger" hx-delete="/api-keys/${esc(key.id)}" hx-confirm="キー「${esc(key.name)}」を失効させますか?" hx-include="#keys-list">失効</button>\n`
       }
       html += `    </div>\n`
       html += `    <div class="muted">\n`

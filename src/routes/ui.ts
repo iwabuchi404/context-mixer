@@ -8,8 +8,16 @@ import { escapeHtml as esc, renderMarkdown } from '../services/markdown'
 import { parseSections } from '../services/sections'
 import { syncDocumentLinks } from '../services/links'
 import { createRevision } from './documents'
+import { renderInboxList } from './inbox'
+import { renderFilesList } from './files'
 
 export const uiRoute = new Hono<AppEnv>()
+
+// Admin list fragments live under /ui/* so they aren't shadowed by the
+// static assets at /inbox.html and /files.html (extensionless asset serving
+// would otherwise intercept GET /inbox and GET /files).
+uiRoute.get('/inbox', async (c) => c.html(await renderInboxList(c)))
+uiRoute.get('/files', async (c) => c.html(await renderFilesList(c)))
 
 const generateId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 

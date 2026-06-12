@@ -5,6 +5,10 @@ import { Hono } from 'hono'
 import { z } from 'zod'
 import { authorOf, isCollectionAllowed } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
+import { escapeHtml as esc } from '../services/markdown'
+
+// Max bytes accepted from a single inbox submission (external, unauthenticated)
+const MAX_INBOX_CONTENT = 100_000
 
 export const inboxRoute = new Hono<AppEnv>()
 
@@ -135,7 +139,11 @@ inboxRoute.post('/:token', async (c) => {
       return c.json({ error: { code: 'INVALID_CONTENT', message: 'Content is required' } }, 400)
     }
 
-    const sourceHint = body.source_hint || null
+    if (content.length > MAX_INBOX_CONTENT) {
+      return c.json({ error: { code: 'CONTENT_TOO_LARGE', message: `Content exceeds ${MAX_INBOX_CONTENT} characters` } }, 413)
+    }
+
+    const sourceHint = typeof body.source_hint === 'string' ? body.source_hint.slice(0, 500) : null
 
     // Get IP hash for rate limiting/audit
     const ip = c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown'
@@ -159,11 +167,11 @@ inboxRoute.post('/:token', async (c) => {
   }
 })
 
-// GET /inbox - List pending items
-inboxRoute.get('/', async (c) => {
+// Renders the pending-items list as an HTML fragment (served via /ui/inbox).
+// Buttons re-target #inbox-list, which approve/reject refresh in place.
+export const renderInboxList = async (c: any): Promise<string> => {
   const status = c.req.query('status') || 'pending'
   const limit = parseInt(c.req.query('limit') || '20')
-  const accept = c.req.header('Accept') || ''
 
   const result = await c.env.DB.prepare(`
     SELECT i.*, d.title as document_title
@@ -174,27 +182,40 @@ inboxRoute.get('/', async (c) => {
     LIMIT ?
   `).bind(status, limit).all()
 
-  if (accept.includes('text/html')) {
-    let html = '<div style="display:flex; flex-direction:column; gap:var(--space-4)">\n'
-    for (const item of result.results as any[]) {
-      html += `  <div class="doc-meta-card">\n`
-      html += `    <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3)">\n`
-      html += `      <strong style="font-size:var(--text-sm)">${item.document_title}</strong>\n`
-      html += `      <span class="muted" style="font-size:var(--text-xs)">(${item.document_id})</span>\n`
-      html += `      <div class="spacer"></div>\n`
-      html += `      <button class="btn-primary btn-sm" hx-post="/inbox/${item.id}/approve" hx-target="#inbox-list">Approve</button>\n`
-      html += `      <button class="btn btn-danger btn-sm" hx-post="/inbox/${item.id}/reject" hx-target="#inbox-list">Reject</button>\n`
-      html += `    </div>\n`
-      html += `    <div class="muted" style="font-size:var(--text-xs); margin-bottom:var(--space-3)">Submitted: ${new Date(item.submitted_at).toLocaleString()} ${item.source_hint ? '・ Source: ' + item.source_hint : ''}</div>\n`
-      html += `    <pre style="margin:0; font-size:var(--text-xs); background:var(--surface-dim); padding:var(--space-3); border-radius:var(--radius-sm)"><code>${item.content}</code></pre>\n`
-      html += `  </div>\n`
-    }
-    if (result.results.length === 0) {
-      html += '  <div class="muted" style="padding:var(--space-6); text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md)">No pending submissions.</div>\n'
-    }
-    html += '</div>\n'
-    return c.html(html)
+  let html = '<div style="display:flex; flex-direction:column; gap:var(--space-4)">\n'
+  for (const item of result.results as any[]) {
+    html += `  <div class="doc-meta-card">\n`
+    html += `    <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3)">\n`
+    html += `      <strong style="font-size:var(--text-sm)">${esc(item.document_title)}</strong>\n`
+    html += `      <span class="muted" style="font-size:var(--text-xs)">(${esc(item.document_id)})</span>\n`
+    html += `      <div class="spacer"></div>\n`
+    html += `      <button class="btn-primary btn-sm" hx-post="/inbox/${esc(item.id)}/approve" hx-target="#inbox-list">Approve</button>\n`
+    html += `      <button class="btn btn-danger btn-sm" hx-post="/inbox/${esc(item.id)}/reject" hx-target="#inbox-list">Reject</button>\n`
+    html += `    </div>\n`
+    html += `    <div class="muted" style="font-size:var(--text-xs); margin-bottom:var(--space-3)">Submitted: ${new Date(item.submitted_at).toLocaleString()} ${item.source_hint ? '・ Source: ' + esc(item.source_hint) : ''}</div>\n`
+    html += `    <pre style="margin:0; font-size:var(--text-xs); background:var(--surface-dim); padding:var(--space-3); border-radius:var(--radius-sm)"><code>${esc(item.content)}</code></pre>\n`
+    html += `  </div>\n`
   }
+  if (result.results.length === 0) {
+    html += '  <div class="muted" style="padding:var(--space-6); text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md)">No pending submissions.</div>\n'
+  }
+  html += '</div>\n'
+  return html
+}
+
+// GET /inbox - List pending items (JSON API; the HTML fragment is /ui/inbox)
+inboxRoute.get('/', async (c) => {
+  const status = c.req.query('status') || 'pending'
+  const limit = parseInt(c.req.query('limit') || '20')
+
+  const result = await c.env.DB.prepare(`
+    SELECT i.*, d.title as document_title
+    FROM inbox_items i
+    JOIN documents d ON i.document_id = d.id
+    WHERE i.status = ?
+    ORDER BY i.submitted_at DESC
+    LIMIT ?
+  `).bind(status, limit).all()
 
   return c.json({ data: result.results })
 })
@@ -248,7 +269,7 @@ inboxRoute.post('/:id/approve', async (c) => {
       .bind('approved', now, id).run()
 
     if (accept.includes('text/html')) {
-      return c.redirect('/inbox')
+      return c.html(await renderInboxList(c))
     }
 
     return c.json({ success: true, document_id: doc.id, updated_at: now })
@@ -280,7 +301,7 @@ inboxRoute.post('/:id/reject', async (c) => {
       .bind('rejected', now, id).run()
 
     if (accept.includes('text/html')) {
-      return c.redirect('/inbox')
+      return c.html(await renderInboxList(c))
     }
 
     return c.json({ success: true, id })

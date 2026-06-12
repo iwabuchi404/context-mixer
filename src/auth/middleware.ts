@@ -10,7 +10,8 @@ import { clerkSession, ensureUser, verifySession } from './clerk'
 const isPublic = (method: string, path: string): boolean => {
   if (path === '/health' || path === '/' || path === '/config' || path === '/favicon.svg') return true
   if (path.startsWith('/auth/') || path.startsWith('/public/')) return true
-  if (method === 'POST' && /^\/inbox\/[^/]+$/.test(path)) return true
+  // External submission endpoint only. NOT /inbox/tokens (auth-required management).
+  if (method === 'POST' && /^\/inbox\/[^/]+$/.test(path) && path !== '/inbox/tokens') return true
   return false
 }
 
