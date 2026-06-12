@@ -30,6 +30,43 @@ const getExtension = (filename: string, mimeType: string): string => {
   return mimeMap[mimeType] || 'bin'
 }
 
+// GET /files - List files
+filesRoute.get('/', async (c) => {
+  const limit = parseInt(c.req.query('limit') || '50')
+  const accept = c.req.header('Accept') || ''
+
+  const result = await c.env.DB.prepare(`
+    SELECT * FROM files ORDER BY created_at DESC LIMIT ?
+  `).bind(limit).all()
+
+  if (accept.includes('text/html')) {
+    let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:var(--space-4)">\n'
+    for (const file of result.results) {
+      const isImage = file.mime_type.startsWith('image/')
+      html += `  <div class="doc-meta-card" style="display:flex; gap:var(--space-4); align-items:start">\n`
+      if (isImage) {
+        html += `    <img src="/files/${file.id}/raw" style="width:64px; height:64px; object-fit:cover; border-radius:var(--radius-sm); border:1px solid var(--border)">\n`
+      } else {
+        html += `    <div style="width:64px; height:64px; background:var(--surface-dim); display:flex; align-items:center; justify-content:center; border-radius:var(--radius-sm); font-size:24px">📄</div>\n`
+      }
+      html += `    <div style="flex:1; min-width:0">\n`
+      html += `      <div style="font-weight:600; font-size:var(--text-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis"><a href="/files/${file.id}/raw" target="_blank">${file.filename}</a></div>\n`
+      html += `      <div class="muted" style="font-size:var(--text-xs); margin-top:2px">${file.mime_type} ・ ${(file.size_bytes / 1024).toFixed(1)} KB</div>\n`
+      html += `      <div class="muted" style="font-size:10px; margin-top:4px">Embed: <code style="font-size:9px">/files/${file.id}/raw</code></div>\n`
+      html += `      <button class="btn-quiet btn-danger btn-sm" style="margin-top:var(--space-2); padding-left:0" hx-delete="/files/${file.id}" hx-confirm="Delete this file?" hx-target="#files-list">Delete</button>\n`
+      html += `    </div>\n`
+      html += `  </div>\n`
+    }
+    if (result.results.length === 0) {
+      html += '  <div class="muted" style="grid-column:1/-1; padding:var(--space-8); text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md)">No files uploaded.</div>\n'
+    }
+    html += '</div>\n'
+    return c.html(html)
+  }
+
+  return c.json({ data: result.results })
+})
+
 // POST /files - Upload file
 // FormData: file (required), document_id (optional)
 filesRoute.post('/', async (c) => {
@@ -75,6 +112,11 @@ filesRoute.post('/', async (c) => {
       now
     ).run()
 
+    const accept = c.req.header('Accept') || ''
+    if (accept.includes('text/html')) {
+      return c.redirect('/files')
+    }
+
     // Fetch created file
     const fileRecord = await c.env.DB.prepare('SELECT * FROM files WHERE id = ?').bind(fileId).first()
 
@@ -85,59 +127,10 @@ filesRoute.post('/', async (c) => {
   }
 })
 
-// GET /files/:id - Get file metadata
-filesRoute.get('/:id', async (c) => {
-  const id = c.req.param('id')
-
-  const file = await c.env.DB.prepare('SELECT * FROM files WHERE id = ?').bind(id).first()
-  if (!file) {
-    return c.json({ error: { code: 'FILE_NOT_FOUND', message: 'File not found' } }, 404)
-  }
-
-  // If file is linked to a document, check collection access
-  if (file.document_id) {
-    const doc = await c.env.DB.prepare('SELECT collection_id FROM documents WHERE id = ?').bind(file.document_id).first() as any
-    if (doc && !isCollectionAllowed(c.get('auth'), doc.collection_id)) {
-      return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
-    }
-  }
-
-  return c.json(file)
-})
-
-// GET /files/:id/raw - Get file content (direct from R2)
-filesRoute.get('/:id/raw', async (c) => {
-  const id = c.req.param('id')
-
-  const file = await c.env.DB.prepare('SELECT * FROM files WHERE id = ?').bind(id).first() as any
-  if (!file) {
-    return c.json({ error: { code: 'FILE_NOT_FOUND', message: 'File not found' } }, 404)
-  }
-
-  // If file is linked to a document, check collection access
-  if (file.document_id) {
-    const doc = await c.env.DB.prepare('SELECT collection_id FROM documents WHERE id = ?').bind(file.document_id).first() as any
-    if (doc && !isCollectionAllowed(c.get('auth'), doc.collection_id)) {
-      return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
-    }
-  }
-
-  // Fetch from R2
-  const object = await c.env.R2.get(file.r2_key)
-  if (!object) {
-    return c.json({ error: { code: 'FILE_NOT_FOUND', message: 'File not found in storage' } }, 404)
-  }
-
-  const headers = new Headers()
-  headers.set('Content-Type', file.mime_type)
-  headers.set('Content-Disposition', `inline; filename="${file.filename}"`)
-
-  return new Response(object.body, { headers })
-})
-
 // DELETE /files/:id - Delete file (from R2 and D1)
 filesRoute.delete('/:id', async (c) => {
   const id = c.req.param('id')
+  const accept = c.req.header('Accept') || ''
 
   const file = await c.env.DB.prepare('SELECT * FROM files WHERE id = ?').bind(id).first() as any
   if (!file) {
@@ -158,5 +151,10 @@ filesRoute.delete('/:id', async (c) => {
   // Delete from D1
   await c.env.DB.prepare('DELETE FROM files WHERE id = ?').bind(id).run()
 
+  if (accept.includes('text/html')) {
+    return c.redirect('/files')
+  }
+
   return c.json({ success: true, id })
 })
+

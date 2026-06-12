@@ -6,6 +6,15 @@ import { deleteCookie } from 'hono/cookie'
 
 export const authRoute = new Hono<AppEnv>()
 
+// GET /auth/config - Provide Clerk settings to the frontend
+authRoute.get('/config', (c) => {
+  return c.json({
+    publishable_key: c.env.CLERK_PUBLISHABLE_KEY,
+    frontend_api: c.env.CLERK_FRONTEND_API,
+    sign_in_url: c.env.CLERK_SIGN_IN_URL,
+  })
+})
+
 // GET /auth/login - Redirect to Clerk Hosted UI (Account Portal)
 authRoute.get('/login', (c) => {
   const signInUrl = c.env.CLERK_SIGN_IN_URL

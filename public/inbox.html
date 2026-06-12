@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inbox - Context Mixer</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body hx-headers='{"Accept": "text/html"}'>
+  <header>
+    <button class="menu-toggle" aria-label="Menu">☰</button>
+    <a class="brand" href="/">Mixer</a>
+    <nav>
+      <a href="/">Docs</a>
+      <a href="/keys.html">Keys</a>
+      <a href="/inbox.html" class="active">Inbox</a>
+      <a href="/files.html">Files</a>
+    </nav>
+    <div class="spacer"></div>
+    <div id="user-info" class="user-info"></div>
+  </header>
+
+  <main class="main-content">
+    <div style="max-width: 900px; margin: 0 auto">
+      <h1>Inbox</h1>
+      <p class="muted" style="margin-bottom: var(--space-6)">Review and approve content submitted via external webhooks.</p>
+
+      <div id="inbox-list" hx-get="/inbox" hx-trigger="load" hx-headers='{"Accept": "text/html"}'>
+        <p class="muted">Loading...</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

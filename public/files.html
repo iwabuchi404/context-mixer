@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Files - Context Mixer</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body hx-headers='{"Accept": "text/html"}'>
+  <header>
+    <button class="menu-toggle" aria-label="Menu">☰</button>
+    <a class="brand" href="/">Mixer</a>
+    <nav>
+      <a href="/">Docs</a>
+      <a href="/keys.html">Keys</a>
+      <a href="/inbox.html">Inbox</a>
+      <a href="/files.html" class="active">Files</a>
+    </nav>
+    <div class="spacer"></div>
+    <div id="user-info" class="user-info"></div>
+  </header>
+
+  <main class="main-content">
+    <div style="max-width: 1000px; margin: 0 auto">
+      <h1>Files</h1>
+      
+      <div class="doc-meta-card" style="margin-bottom: var(--space-7)">
+        <h3>Upload File</h3>
+        <form hx-post="/files" hx-encoding="multipart/form-data" hx-target="#files-list">
+          <div class="form-row">
+            <input type="file" name="file" class="input" required style="padding: var(--space-1)">
+            <button type="submit" class="btn-primary">Upload to R2</button>
+          </div>
+        </form>
+      </div>
+
+      <h2 class="sidebar-title">All Files</h2>
+      <div id="files-list" hx-get="/files" hx-trigger="load" hx-headers='{"Accept": "text/html"}'>
+        <p class="muted">Loading...</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
