@@ -1,6 +1,5 @@
 // File upload/download endpoints using R2 storage.
 import { Hono } from 'hono'
-import { z } from 'zod'
 import { authorOf, isCollectionAllowed } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
 
@@ -41,7 +40,7 @@ filesRoute.get('/', async (c) => {
 
   if (accept.includes('text/html')) {
     let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:var(--space-4)">\n'
-    for (const file of result.results) {
+    for (const file of result.results as any[]) {
       const isImage = file.mime_type.startsWith('image/')
       html += `  <div class="doc-meta-card" style="display:flex; gap:var(--space-4); align-items:start">\n`
       if (isImage) {

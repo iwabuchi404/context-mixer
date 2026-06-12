@@ -176,7 +176,7 @@ inboxRoute.get('/', async (c) => {
 
   if (accept.includes('text/html')) {
     let html = '<div style="display:flex; flex-direction:column; gap:var(--space-4)">\n'
-    for (const item of result.results) {
+    for (const item of result.results as any[]) {
       html += `  <div class="doc-meta-card">\n`
       html += `    <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3)">\n`
       html += `      <strong style="font-size:var(--text-sm)">${item.document_title}</strong>\n`

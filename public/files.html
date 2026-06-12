@@ -10,16 +10,14 @@
 </head>
 <body hx-headers='{"Accept": "text/html"}'>
   <header>
-    <button class="menu-toggle" aria-label="Menu">☰</button>
-    <a class="brand" href="/">Mixer</a>
+    <a class="brand" href="/">Context Mixer</a>
+    <span class="spacer"></span>
     <nav>
-      <a href="/">Docs</a>
-      <a href="/keys.html">Keys</a>
-      <a href="/inbox.html">Inbox</a>
-      <a href="/files.html" class="active">Files</a>
+      <a href="/keys.html">キー</a>
+      <a href="/inbox.html">受信箱</a>
+      <a href="/files.html" style="color:var(--accent)">ファイル</a>
     </nav>
-    <div class="spacer"></div>
-    <div id="user-info" class="user-info"></div>
+    <button id="signout" class="btn-quiet">サインアウト</button>
   </header>
 
   <main class="main-content">
@@ -37,7 +35,7 @@
       </div>
 
       <h2 class="sidebar-title">All Files</h2>
-      <div id="files-list" hx-get="/files" hx-trigger="load" hx-headers='{"Accept": "text/html"}'>
+      <div id="files-list" hx-get="/files" hx-trigger="auth-ready from:body" hx-headers='{"Accept": "text/html"}'>
         <p class="muted">Loading...</p>
       </div>
     </div>

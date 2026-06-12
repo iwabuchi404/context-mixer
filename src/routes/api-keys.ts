@@ -40,7 +40,7 @@ apiKeysRoute.get('/', async (c) => {
     ).all()
 
     let html = '<ul class="plain">\n'
-    for (const key of result.results) {
+    for (const key of result.results as any[]) {
       const scopes = JSON.parse(key.scopes)
       html += `  <li>\n`
       html += `    <div class="row">\n`
@@ -225,7 +225,7 @@ apiKeysRoute.delete('/:id', async (c) => {
     ).all()
 
     let html = '<ul class="plain">\n'
-    for (const key of result.results) {
+    for (const key of result.results as any[]) {
       const scopes = JSON.parse(key.scopes)
       html += `  <li>\n`
       html += `    <div class="row">\n`
