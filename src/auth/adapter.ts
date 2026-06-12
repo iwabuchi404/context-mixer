@@ -23,6 +23,7 @@ export type Env = {
   R2: R2Bucket
   CLERK_PUBLISHABLE_KEY: string
   CLERK_SECRET_KEY: string
+  CLERK_FRONTEND_API: string
 }
 
 export type AppEnv = {
