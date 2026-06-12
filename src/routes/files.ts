@@ -2,6 +2,10 @@
 import { Hono } from 'hono'
 import { authorOf, isCollectionAllowed } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
+import { escapeHtml as esc } from '../services/markdown'
+
+// Max upload size (R2 free tier friendly; also caps memory use per request)
+const MAX_FILE_BYTES = 10 * 1024 * 1024 // 10 MB
 
 export const filesRoute = new Hono<AppEnv>()
 
@@ -29,40 +33,43 @@ const getExtension = (filename: string, mimeType: string): string => {
   return mimeMap[mimeType] || 'bin'
 }
 
-// GET /files - List files
-filesRoute.get('/', async (c) => {
+// Renders the files grid as an HTML fragment (served via /ui/files).
+export const renderFilesList = async (c: any): Promise<string> => {
   const limit = parseInt(c.req.query('limit') || '50')
-  const accept = c.req.header('Accept') || ''
-
   const result = await c.env.DB.prepare(`
     SELECT * FROM files ORDER BY created_at DESC LIMIT ?
   `).bind(limit).all()
 
-  if (accept.includes('text/html')) {
-    let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:var(--space-4)">\n'
-    for (const file of result.results as any[]) {
-      const isImage = file.mime_type.startsWith('image/')
-      html += `  <div class="doc-meta-card" style="display:flex; gap:var(--space-4); align-items:start">\n`
-      if (isImage) {
-        html += `    <img src="/files/${file.id}/raw" style="width:64px; height:64px; object-fit:cover; border-radius:var(--radius-sm); border:1px solid var(--border)">\n`
-      } else {
-        html += `    <div style="width:64px; height:64px; background:var(--surface-dim); display:flex; align-items:center; justify-content:center; border-radius:var(--radius-sm); font-size:24px">📄</div>\n`
-      }
-      html += `    <div style="flex:1; min-width:0">\n`
-      html += `      <div style="font-weight:600; font-size:var(--text-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis"><a href="/files/${file.id}/raw" target="_blank">${file.filename}</a></div>\n`
-      html += `      <div class="muted" style="font-size:var(--text-xs); margin-top:2px">${file.mime_type} ・ ${(file.size_bytes / 1024).toFixed(1)} KB</div>\n`
-      html += `      <div class="muted" style="font-size:10px; margin-top:4px">Embed: <code style="font-size:9px">/files/${file.id}/raw</code></div>\n`
-      html += `      <button class="btn-quiet btn-danger btn-sm" style="margin-top:var(--space-2); padding-left:0" hx-delete="/files/${file.id}" hx-confirm="Delete this file?" hx-target="#files-list">Delete</button>\n`
-      html += `    </div>\n`
-      html += `  </div>\n`
+  let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:var(--space-4)">\n'
+  for (const file of result.results as any[]) {
+    const isImage = typeof file.mime_type === 'string' && file.mime_type.startsWith('image/')
+    html += `  <div class="doc-meta-card" style="display:flex; gap:var(--space-4); align-items:start">\n`
+    if (isImage) {
+      html += `    <img src="/files/${esc(file.id)}/raw" style="width:64px; height:64px; object-fit:cover; border-radius:var(--radius-sm); border:1px solid var(--border)">\n`
+    } else {
+      html += `    <div style="width:64px; height:64px; background:var(--surface-dim); display:flex; align-items:center; justify-content:center; border-radius:var(--radius-sm); font-size:24px">📄</div>\n`
     }
-    if (result.results.length === 0) {
-      html += '  <div class="muted" style="grid-column:1/-1; padding:var(--space-8); text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md)">No files uploaded.</div>\n'
-    }
-    html += '</div>\n'
-    return c.html(html)
+    html += `    <div style="flex:1; min-width:0">\n`
+    html += `      <div style="font-weight:600; font-size:var(--text-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis"><a href="/files/${esc(file.id)}/raw" target="_blank">${esc(file.filename)}</a></div>\n`
+    html += `      <div class="muted" style="font-size:var(--text-xs); margin-top:2px">${esc(file.mime_type)} ・ ${(file.size_bytes / 1024).toFixed(1)} KB</div>\n`
+    html += `      <div class="muted" style="font-size:10px; margin-top:4px">Embed: <code style="font-size:9px">/files/${esc(file.id)}/raw</code></div>\n`
+    html += `      <button class="btn-quiet btn-danger btn-sm" style="margin-top:var(--space-2); padding-left:0" hx-delete="/files/${esc(file.id)}" hx-confirm="Delete this file?" hx-target="#files-list">Delete</button>\n`
+    html += `    </div>\n`
+    html += `  </div>\n`
   }
+  if (result.results.length === 0) {
+    html += '  <div class="muted" style="grid-column:1/-1; padding:var(--space-8); text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md)">No files uploaded.</div>\n'
+  }
+  html += '</div>\n'
+  return html
+}
 
+// GET /files - List files (JSON API; the HTML fragment is /ui/files)
+filesRoute.get('/', async (c) => {
+  const limit = parseInt(c.req.query('limit') || '50')
+  const result = await c.env.DB.prepare(`
+    SELECT * FROM files ORDER BY created_at DESC LIMIT ?
+  `).bind(limit).all()
   return c.json({ data: result.results })
 })
 
@@ -76,6 +83,10 @@ filesRoute.post('/', async (c) => {
 
     if (!file) {
       return c.json({ error: { code: 'MISSING_FILE', message: 'No file uploaded' } }, 400)
+    }
+
+    if (file.size > MAX_FILE_BYTES) {
+      return c.json({ error: { code: 'FILE_TOO_LARGE', message: `File exceeds ${MAX_FILE_BYTES / 1024 / 1024} MB` } }, 413)
     }
 
     const documentId = body.document_id as string | undefined
@@ -113,7 +124,7 @@ filesRoute.post('/', async (c) => {
 
     const accept = c.req.header('Accept') || ''
     if (accept.includes('text/html')) {
-      return c.redirect('/files')
+      return c.html(await renderFilesList(c))
     }
 
     // Fetch created file
@@ -151,7 +162,7 @@ filesRoute.delete('/:id', async (c) => {
   await c.env.DB.prepare('DELETE FROM files WHERE id = ?').bind(id).run()
 
   if (accept.includes('text/html')) {
-    return c.redirect('/files')
+    return c.html(await renderFilesList(c))
   }
 
   return c.json({ success: true, id })

@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { AppEnv } from './auth/adapter'
 import { authMiddleware } from './auth/middleware'
+import { rateLimit } from './auth/rate-limit'
 import { healthRoute } from './routes/health'
 import { authRoute } from './routes/auth'
 import { entrypointRoute } from './routes/entrypoint'
@@ -18,6 +19,9 @@ const app = new Hono<AppEnv>()
 
 // CORS for development
 app.use('*', cors())
+
+// Rate limiting (runs before auth so unauthenticated floods are cheap to reject)
+app.use('*', rateLimit)
 
 // Auth (skips public paths: /, /health, /auth/*, POST /inbox/:token)
 app.use('*', authMiddleware)
