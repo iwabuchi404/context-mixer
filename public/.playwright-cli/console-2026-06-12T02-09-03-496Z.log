@@ -1,0 +1,20 @@
+Total messages: 5 (Errors: 1, Warnings: 3)
+
+[ERROR] Failed to load resource: the server responded with a status of 401 (Unauthorized) @ http://127.0.0.1:8787/favicon.ico:0
+[WARNING] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview @ https://welcomed-kitten-74.clerk.accounts.dev/npm/@clerk/clerk-js@5/dist/clerk.browser.js:18
+[WARNING] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview @ https://welcomed-kitten-74.accounts.dev/assets/index-BcUAVa_V.js:26
+[WARNING] Clerk: Structural CSS detected that may break on updates.
+
+Found:
+  - CSS "body.cl-component"
+  - CSS ".cl-component .button:focus-visible"
+
+These selectors depend on the internal DOM structure of Clerk's components, which may change when Clerk deploys component updates.
+To prevent breaking changes, install @clerk/ui and pass it to ClerkProvider:
+
+  import { ui } from '@clerk/ui'
+  <ClerkProvider ui={ui}>
+
+Learn more: https://clerk.com/docs/reference/components/versioning
+(code=structural_css_pin_clerk_ui) @ https://welcomed-kitten-74.accounts.dev/assets/index-BcUAVa_V.js:26
+[VERBOSE] [DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o @ https://welcomed-kitten-74.accounts.dev/sign-in?redirect_url=http%3A%2F%2F127.0.0.1%3A8787%2F:0

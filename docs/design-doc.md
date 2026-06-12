@@ -4,7 +4,9 @@
 
 - 実装済み: スキーマ、ドキュメント/コレクションCRUD、FTS5検索、認証（Clerkセッション + APIキー二系統、スコープ/コレクション制限、書き込み署名）、APIキー管理API、/me/entrypoint、セクション単位API（GET/PATCH、slugは見出しテキスト由来・日本語可・コードフェンス内見出しは無視）、append、履歴API（/history・/history/:rev）
 - 実装済み（追加）: ドキュメントリンク（`[[doc_xxx]]` 記法、書き込み時洗い替え、/links・/backlinks、link_warnings）
-- 未実装: files(R2)、inbox、エクスポート、GET /entrypoint（ワークスペース全体）、Web UI、MCP server
+- 実装済み（追加）: 認証ルート（/auth/login・callback・logout）、Web UI最小構成（Workers Assetsで`public/`配信、Vue 3 CDN + clerk-js。index=コレクション/ドキュメント一覧/検索、doc=編集/プレビュー/リンク/履歴、keys=APIキー発行/失効）
+- 未実装: files(R2)、inbox、エクスポート、GET /entrypoint（ワークスペース全体）、MCP server
+- 注記: ローカルD1はwrangler.tomlのdatabase_id追加で識別キーが変わり再マイグレーション済み（旧DBファイルは残存するが未使用）
 - 未検証: Clerkセッション認証の実トークンでの動作（APIキー系統はローカル検証済み）
 - 注記: APIキーのハッシュはbcryptではなくSHA-256に変更（キーは高エントロピーなので十分。bcryptはWorkers無料枠のCPU制限に対して重い）
 - ローカル開発の注意: リポジトリがSMB共有上にあるためwranglerのローカル状態（D1/SQLite）は `--persist-to %USERPROFILE%/.context-mixer/wrangler-state` でローカルディスクに保存する（npmスクリプト設定済み。共有上だとハングする）

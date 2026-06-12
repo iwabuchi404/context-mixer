@@ -1,0 +1,43 @@
+- generic [ref=e5]:
+  - generic [ref=e6]:
+    - generic [ref=e8]:
+      - heading "Sign in to ContextMixer" [level=1] [ref=e9]
+      - paragraph [ref=e10]: Welcome back! Please sign in to continue
+    - generic [ref=e11]:
+      - button "Sign in with Google Continue with Google" [ref=e14] [cursor=pointer]:
+        - generic [ref=e15]:
+          - generic "Sign in with Google" [ref=e17]
+          - generic [ref=e18]: Continue with Google
+      - paragraph [ref=e21]: or
+      - generic [ref=e23]:
+        - generic [ref=e24]:
+          - generic [ref=e27]:
+            - generic [ref=e29]: Email address
+            - textbox "Email address" [ref=e30]:
+              - /placeholder: Enter your email address
+          - generic:
+            - generic:
+              - generic:
+                - generic:
+                  - generic: Password
+                - generic:
+                  - textbox "Password":
+                    - /placeholder: Enter your password
+                  - button "Show password":
+                    - img
+        - button "Continue" [ref=e33] [cursor=pointer]:
+          - generic [ref=e34]:
+            - text: Continue
+            - img [ref=e35]
+  - generic [ref=e37]:
+    - generic [ref=e38]:
+      - generic [ref=e39]: Don’t have an account?
+      - link "Sign up" [ref=e40] [cursor=pointer]:
+        - /url: https://welcomed-kitten-74.accounts.dev/sign-up#/?redirect_url=http%3A%2F%2F127.0.0.1%3A8787%2F
+    - generic [ref=e42]:
+      - generic [ref=e44]:
+        - paragraph [ref=e45]: Secured by
+        - link "Clerk logo" [ref=e46] [cursor=pointer]:
+          - /url: https://go.clerk.com/components
+          - img [ref=e47]
+      - paragraph [ref=e52]: Development mode
