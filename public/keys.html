@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API Keys - Context Mixer</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <script src="https://unpkg.com/vue@3.5/dist/vue.global.prod.js"></script>
+</head>
+<body>
+  <header></header>
+  <main id="app" v-cloak>
+    <h1>APIキー管理</h1>
+    <p v-if="error" class="error">{{ error }}</p>
+
+    <div class="card">
+      <h2>新規発行</h2>
+      <div class="row">
+        <input v-model="form.name" type="text" class="grow" placeholder="キー名(例: claude-code)">
+        <label><input type="checkbox" v-model="form.read"> read</label>
+        <label><input type="checkbox" v-model="form.write"> write</label>
+        <button class="primary" @click="create" :disabled="!form.name.trim() || (!form.read && !form.write)">発行</button>
+      </div>
+      <div v-if="createdKey" class="card" style="border-color:#2563eb">
+        <strong>生成されたキー(この画面でしか表示されません。今すぐコピーしてください)</strong>
+        <div class="keybox">{{ createdKey }}</div>
+        <button @click="copyKey">{{ copied ? 'コピーしました' : 'コピー' }}</button>
+      </div>
+    </div>
+
+    <h2>発行済みキー</h2>
+    <ul class="plain">
+      <li v-for="key in keys" :key="key.id">
+        <div class="row">
+          <strong>{{ key.name }}</strong>
+          <span class="tag">{{ JSON.parse(key.scopes).join(', ') }}</span>
+          <span class="tag" v-if="!key.is_active" style="color:#dc2626">失効済み</span>
+          <span class="spacer" style="flex:1"></span>
+          <button v-if="key.is_active" class="danger" @click="revoke(key)">失効</button>
+        </div>
+        <div class="muted">
+          作成 {{ new Date(key.created_at).toLocaleString() }}
+          <template v-if="key.last_used_at">・最終使用 {{ new Date(key.last_used_at).toLocaleString() }}</template>
+          <template v-else>・未使用</template>
+        </div>
+      </li>
+      <li v-if="keys.length === 0" class="muted">発行済みのキーはありません。</li>
+    </ul>
+  </main>
+
+  <script type="module">
+    import { requireAuth, api, renderHeader } from '/app.js'
+
+    const clerk = await requireAuth()
+    renderHeader(clerk)
+
+    Vue.createApp({
+      data: () => ({
+        keys: [],
+        form: { name: '', read: true, write: false },
+        createdKey: '',
+        copied: false,
+        error: '',
+      }),
+      methods: {
+        async run(fn) {
+          this.error = ''
+          try { await fn() } catch (e) { this.error = e.message }
+        },
+        async reload() {
+          this.keys = await api('/api-keys')
+        },
+        async create() {
+          await this.run(async () => {
+            const scopes = [this.form.read && 'read', this.form.write && 'write'].filter(Boolean)
+            const created = await api('/api-keys', {
+              method: 'POST',
+              body: JSON.stringify({ name: this.form.name.trim(), scopes }),
+            })
+            this.createdKey = created.key
+            this.copied = false
+            this.form.name = ''
+            await this.reload()
+          })
+        },
+        async copyKey() {
+          await navigator.clipboard.writeText(this.createdKey)
+          this.copied = true
+        },
+        async revoke(key) {
+          if (!confirm(`キー「${key.name}」を失効させますか?`)) return
+          await this.run(async () => {
+            await api(`/api-keys/${key.id}`, { method: 'DELETE' })
+            await this.reload()
+          })
+        },
+      },
+      async mounted() {
+        await this.run(() => this.reload())
+      },
+    }).mount('#app')
+  </script>
+</body>
+</html>
