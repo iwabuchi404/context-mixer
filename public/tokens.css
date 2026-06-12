@@ -1,0 +1,337 @@
+/* ============================================================
+   Context Mixer Design System「台所(Daidokoro)」 v0.2
+   仕様: docs/design-system.md / プレビュー: /design
+   コンポーネントから生の色値を使わず、必ずトークンを参照する。
+   ============================================================ */
+
+:root {
+  /* --- 色(ライト) --- */
+  --bg: #FAF9F6;
+  --surface: #FFFFFF;
+  --surface-dim: #F1EFE9;
+  --text: #1C1B18;
+  --text-muted: #6F6B61;
+  --border: #E4E1D8;
+  --accent: #165E83;
+  --accent-strong: #0F4A68;
+  --accent-subtle: #E9F1F6;
+  --danger: #A8362E;
+  --mark: #F6E7A9;
+
+  /* --- タイポグラフィ --- */
+  --font-body: system-ui, -apple-system, "Hiragino Sans", "Noto Sans JP", sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+  --text-base: 16px;
+  --text-sm: 14px;
+  --text-xs: 12.5px;
+  --leading-prose: 1.9;
+  --leading-ui: 1.5;
+  --measure: 38rem;
+
+  /* --- 余白(4pxグリッド)・形状 --- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-pop: 0 4px 16px rgb(0 0 0 / 0.10);
+
+  /* --- モーション --- */
+  --ease: ease-out;
+  --dur-fast: 120ms;
+  --dur-slow: 240ms;
+
+  /* --- レイアウト --- */
+  --tree-width: 240px;
+
+  /* --- z-index(この4段以外作らない) --- */
+  --z-dropdown: 10;
+  --z-drawer: 20;
+  --z-overlay: 30;
+  --z-toast: 40;
+
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16171B;
+    --surface: #1E2024;
+    --surface-dim: #23252B;
+    --text: #E8E6E1;
+    --text-muted: #9B978E;
+    --border: #32343B;
+    --accent: #7FB0D8;
+    --accent-strong: #9CC4E4;
+    --accent-subtle: #1C2E3D;
+    --danger: #E5736C;
+    --mark: #5A4D1E;
+    --shadow-pop: 0 4px 16px rgb(0 0 0 / 0.40);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fast: 0ms;
+    --dur-slow: 0ms;
+  }
+}
+
+/* ============================================================
+   ベース
+   ============================================================ */
+
+* { box-sizing: border-box; }
+
+html { font-size: var(--text-base); }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  line-height: var(--leading-ui);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection { background: var(--accent-subtle); }
+
+mark {
+  background: var(--mark);
+  color: inherit;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+/* ============================================================
+   ボタン(3種: .btn-primary / .btn / .btn-quiet ・ 色違い .btn-danger)
+   ============================================================ */
+
+.btn, .btn-primary, .btn-quiet {
+  font: inherit;
+  font-size: var(--text-sm);
+  line-height: var(--leading-ui);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  min-height: 36px;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+
+.btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn:hover { background: var(--surface-dim); }
+
+.btn-primary {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  color: var(--bg);
+}
+.btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+
+.btn-quiet {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+}
+.btn-quiet:hover { background: var(--surface-dim); color: var(--text); }
+
+.btn-danger { color: var(--danger); border-color: var(--danger); }
+.btn-danger:hover { background: color-mix(in srgb, var(--danger) 8%, transparent); }
+
+.btn:disabled, .btn-primary:disabled, .btn-quiet:disabled { opacity: 0.45; cursor: default; }
+
+@media (max-width: 719px) {
+  .btn, .btn-primary, .btn-quiet { min-height: 44px; } /* タッチターゲット */
+}
+
+/* ============================================================
+   入力欄
+   ============================================================ */
+
+.input, .textarea, .select {
+  font: inherit;
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.input::placeholder, .textarea::placeholder { color: var(--text-muted); }
+
+.textarea {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+  resize: vertical;
+}
+
+/* ============================================================
+   本文(.prose) — 読みUXの核
+   ============================================================ */
+
+.prose {
+  max-width: var(--measure);
+  line-height: var(--leading-prose);
+  text-spacing-trim: space-all; /* 日本語の約物詰め(対応ブラウザのみ) */
+  overflow-wrap: break-word;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  line-height: 1.4;
+  font-weight: 600;
+  margin: 2em 0 0.6em;
+}
+.prose h1 { font-size: 1.6rem; margin-top: 0.5em; }
+.prose h2 {
+  font-size: 1.3rem;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border); /* 「章」の区切り */
+}
+.prose h3 { font-size: 1.1rem; }
+
+.prose p, .prose ul, .prose ol { margin: 0.9em 0; }
+.prose li { margin: 0.3em 0; }
+
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.prose a:hover { color: var(--accent-strong); }
+
+.prose blockquote {
+  margin: 1em 0;
+  padding: 0 var(--space-4);
+  border-left: 3px solid var(--border);
+  color: var(--text-muted);
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: var(--surface-dim);
+  padding: 0.15em 0.4em;
+  border-radius: var(--radius-sm);
+}
+
+.prose pre {
+  background: var(--surface-dim);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  line-height: 1.6;
+}
+.prose pre code { background: none; padding: 0; font-size: var(--text-sm); }
+
+.prose hr { border: none; border-top: 1px solid var(--border); margin: var(--space-6) 0; }
+
+/* 表はコンテナで横スクロール(モバイル崩れ防止) */
+.prose .table-wrap { overflow-x: auto; margin: 1em 0; }
+.prose table { border-collapse: collapse; font-size: var(--text-sm); }
+.prose th, .prose td {
+  border: 1px solid var(--border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+.prose th { background: var(--surface-dim); font-weight: 600; }
+
+.prose img { max-width: 100%; border-radius: var(--radius-sm); }
+
+/* 癖: 結びの「了」— 本文の終わりに必ず打たれる終止符。
+   機能はない。仕様: docs/design-system.md §6 */
+.prose::after {
+  content: "了";
+  display: block;
+  text-align: center;
+  margin-top: var(--space-6);
+  color: var(--text-muted);
+  opacity: 0.55;
+  font-size: var(--text-sm);
+}
+
+/* ============================================================
+   ツリー
+   ============================================================ */
+
+.tree { font-size: var(--text-sm); }
+
+.tree-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  text-decoration: none;
+  border-left: 2px solid transparent;
+  min-height: 32px;
+  transition: background var(--dur-fast) var(--ease);
+}
+.tree-item:hover { background: var(--surface-dim); }
+.tree-item[aria-current="page"] {
+  background: var(--accent-subtle);
+  border-left-color: var(--accent);
+  font-weight: 600;
+}
+.tree-item .muted { color: var(--text-muted); font-size: var(--text-xs); }
+
+@media (max-width: 719px) {
+  .tree-item { min-height: 44px; }
+}
+
+/* ============================================================
+   補助
+   ============================================================ */
+
+.muted { color: var(--text-muted); font-size: var(--text-sm); }
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--bg);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+.popover {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-pop);
+  padding: var(--space-4);
+}
+
+.toast {
+  position: fixed;
+  bottom: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toast);
+  background: var(--text);
+  color: var(--bg);
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+}

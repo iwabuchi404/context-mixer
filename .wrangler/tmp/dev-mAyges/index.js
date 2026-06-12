@@ -10491,6 +10491,125 @@ authRoute.post("/logout", (c) => {
   return c.json({ success: true });
 });
 
+// src/auth/adapter.ts
+var isCollectionAllowed = /* @__PURE__ */ __name((auth, collectionId) => {
+  if (auth.authorType === "human") return true;
+  if (auth.allowedCollections === null) return true;
+  return auth.allowedCollections.includes(collectionId);
+}, "isCollectionAllowed");
+var authorOf = /* @__PURE__ */ __name((auth) => ({
+  authorType: auth.authorType,
+  apiKeyId: auth.authorType === "ai" ? auth.keyId : null,
+  apiKeyName: auth.authorType === "ai" ? auth.keyName : null
+}), "authorOf");
+
+// src/routes/entrypoint.ts
+var entrypointRoute = new Hono2();
+entrypointRoute.get("/", async (c) => {
+  const auth = c.get("auth");
+  let collections = [];
+  if (auth.authorType === "ai" && auth.allowedCollections !== null) {
+    if (auth.allowedCollections.length > 0) {
+      const placeholders = auth.allowedCollections.map(() => "?").join(", ");
+      const result = await c.env.DB.prepare(`
+        SELECT id, name, description, parent_id, entrypoint_doc_id
+        FROM collections
+        WHERE id IN (${placeholders})
+        ORDER BY name
+      `).bind(...auth.allowedCollections).all();
+      collections = result.results;
+    }
+  } else {
+    const result = await c.env.DB.prepare(`
+      SELECT id, name, description, parent_id, entrypoint_doc_id
+      FROM collections
+      ORDER BY name
+    `).all();
+    collections = result.results;
+  }
+  const buildTree2 = /* @__PURE__ */ __name((parentId) => {
+    return collections.filter((c2) => c2.parent_id === parentId).map((c2) => ({
+      ...c2,
+      children: buildTree2(c2.id)
+    }));
+  }, "buildTree");
+  const tree = buildTree2(null);
+  let recentDocs = [];
+  if (auth.authorType === "ai" && auth.allowedCollections !== null) {
+    if (auth.allowedCollections.length > 0) {
+      const placeholders = auth.allowedCollections.map(() => "?").join(", ");
+      const result = await c.env.DB.prepare(`
+        SELECT id, title, collection_id, updated_at
+        FROM documents
+        WHERE status = 'published' AND collection_id IN (${placeholders})
+        ORDER BY updated_at DESC
+        LIMIT 10
+      `).bind(...auth.allowedCollections).all();
+      recentDocs = result.results;
+    }
+  } else {
+    const result = await c.env.DB.prepare(`
+      SELECT id, title, collection_id, updated_at
+      FROM documents
+      WHERE status = 'published'
+      ORDER BY updated_at DESC
+      LIMIT 10
+    `).all();
+    recentDocs = result.results;
+  }
+  return c.json({
+    collections: tree,
+    recent_documents: recentDocs
+  });
+});
+entrypointRoute.get("/collections/:id", async (c) => {
+  const auth = c.get("auth");
+  const collectionId = c.req.param("id");
+  if (!isCollectionAllowed(auth, collectionId)) {
+    return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
+  }
+  const collection = await c.env.DB.prepare("SELECT * FROM collections WHERE id = ?").bind(collectionId).first();
+  if (!collection) {
+    return c.json({ error: { code: "COLLECTION_NOT_FOUND", message: "Collection not found" } }, 404);
+  }
+  let entrypointDoc = null;
+  if (collection.entrypoint_doc_id) {
+    entrypointDoc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(collection.entrypoint_doc_id).first();
+  }
+  if (!entrypointDoc) {
+    const childCollections = await c.env.DB.prepare(`
+      SELECT id, name, description
+      FROM collections
+      WHERE parent_id = ?
+      ORDER BY name
+    `).bind(collectionId).all();
+    const recentDocs = await c.env.DB.prepare(`
+      SELECT id, title, updated_at
+      FROM documents
+      WHERE collection_id = ? AND status = 'published'
+      ORDER BY updated_at DESC
+      LIMIT 10
+    `).bind(collectionId).all();
+    return c.json({
+      collection: {
+        id: collection.id,
+        name: collection.name,
+        description: collection.description
+      },
+      child_collections: childCollections.results,
+      recent_documents: recentDocs.results
+    });
+  }
+  return c.json({
+    collection: {
+      id: collection.id,
+      name: collection.name,
+      description: collection.description
+    },
+    entrypoint_document: entrypointDoc
+  });
+});
+
 // node_modules/zod/v4/classic/external.js
 var external_exports = {};
 __export(external_exports, {
@@ -25457,18 +25576,6 @@ __name(date4, "date");
 // node_modules/zod/v4/classic/external.js
 config(en_default());
 
-// src/auth/adapter.ts
-var isCollectionAllowed = /* @__PURE__ */ __name((auth, collectionId) => {
-  if (auth.authorType === "human") return true;
-  if (auth.allowedCollections === null) return true;
-  return auth.allowedCollections.includes(collectionId);
-}, "isCollectionAllowed");
-var authorOf = /* @__PURE__ */ __name((auth) => ({
-  authorType: auth.authorType,
-  apiKeyId: auth.authorType === "ai" ? auth.keyId : null,
-  apiKeyName: auth.authorType === "ai" ? auth.keyName : null
-}), "authorOf");
-
 // src/services/sections.ts
 var slugify2 = /* @__PURE__ */ __name((title) => {
   const slug = title.toLowerCase().replace(/[*_`~[\]()!"'#。、．，]/g, "").trim().replace(/\s+/g, "-");
@@ -26257,6 +26364,291 @@ searchRoute.get("/", async (c) => {
   }
 });
 
+// src/routes/files.ts
+var filesRoute = new Hono2();
+var generateId4 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
+var getExtension = /* @__PURE__ */ __name((filename, mimeType) => {
+  const parts = filename.split(".");
+  if (parts.length > 1) {
+    return parts[parts.length - 1].toLowerCase();
+  }
+  const mimeMap = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/gif": "gif",
+    "image/webp": "webp",
+    "image/svg+xml": "svg",
+    "application/pdf": "pdf",
+    "text/plain": "txt"
+  };
+  return mimeMap[mimeType] || "bin";
+}, "getExtension");
+filesRoute.post("/", async (c) => {
+  try {
+    const auth = c.get("auth");
+    const body = await c.req.parseBody();
+    const file2 = body.file;
+    if (!file2) {
+      return c.json({ error: { code: "MISSING_FILE", message: "No file uploaded" } }, 400);
+    }
+    const documentId = body.document_id;
+    const author = authorOf(auth);
+    const now = Date.now();
+    const fileId = generateId4("file");
+    const extension = getExtension(file2.name, file2.type);
+    const r2Key = `${fileId}.${extension}`;
+    const arrayBuffer = await file2.arrayBuffer();
+    await c.env.R2.put(r2Key, arrayBuffer, {
+      httpMetadata: {
+        contentType: file2.type
+      }
+    });
+    await c.env.DB.prepare(`
+      INSERT INTO files (id, document_id, filename, mime_type, size_bytes, r2_key, created_by_type, api_key_id, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      fileId,
+      documentId || null,
+      file2.name,
+      file2.type,
+      arrayBuffer.byteLength,
+      r2Key,
+      author.authorType,
+      author.apiKeyId,
+      now
+    ).run();
+    const fileRecord = await c.env.DB.prepare("SELECT * FROM files WHERE id = ?").bind(fileId).first();
+    return c.json(fileRecord, 201);
+  } catch (error51) {
+    console.error("Error uploading file:", error51);
+    return c.json({ error: { code: "UPLOAD_ERROR", message: "Failed to upload file" } }, 500);
+  }
+});
+filesRoute.get("/:id", async (c) => {
+  const id = c.req.param("id");
+  const file2 = await c.env.DB.prepare("SELECT * FROM files WHERE id = ?").bind(id).first();
+  if (!file2) {
+    return c.json({ error: { code: "FILE_NOT_FOUND", message: "File not found" } }, 404);
+  }
+  if (file2.document_id) {
+    const doc = await c.env.DB.prepare("SELECT collection_id FROM documents WHERE id = ?").bind(file2.document_id).first();
+    if (doc && !isCollectionAllowed(c.get("auth"), doc.collection_id)) {
+      return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
+    }
+  }
+  return c.json(file2);
+});
+filesRoute.get("/:id/raw", async (c) => {
+  const id = c.req.param("id");
+  const file2 = await c.env.DB.prepare("SELECT * FROM files WHERE id = ?").bind(id).first();
+  if (!file2) {
+    return c.json({ error: { code: "FILE_NOT_FOUND", message: "File not found" } }, 404);
+  }
+  if (file2.document_id) {
+    const doc = await c.env.DB.prepare("SELECT collection_id FROM documents WHERE id = ?").bind(file2.document_id).first();
+    if (doc && !isCollectionAllowed(c.get("auth"), doc.collection_id)) {
+      return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
+    }
+  }
+  const object2 = await c.env.R2.get(file2.r2_key);
+  if (!object2) {
+    return c.json({ error: { code: "FILE_NOT_FOUND", message: "File not found in storage" } }, 404);
+  }
+  const headers = new Headers();
+  headers.set("Content-Type", file2.mime_type);
+  headers.set("Content-Disposition", `inline; filename="${file2.filename}"`);
+  return new Response(object2.body, { headers });
+});
+filesRoute.delete("/:id", async (c) => {
+  const id = c.req.param("id");
+  const file2 = await c.env.DB.prepare("SELECT * FROM files WHERE id = ?").bind(id).first();
+  if (!file2) {
+    return c.json({ error: { code: "FILE_NOT_FOUND", message: "File not found" } }, 404);
+  }
+  if (file2.document_id) {
+    const doc = await c.env.DB.prepare("SELECT collection_id FROM documents WHERE id = ?").bind(file2.document_id).first();
+    if (doc && !isCollectionAllowed(c.get("auth"), doc.collection_id)) {
+      return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
+    }
+  }
+  await c.env.R2.delete(file2.r2_key);
+  await c.env.DB.prepare("DELETE FROM files WHERE id = ?").bind(id).run();
+  return c.json({ success: true, id });
+});
+
+// src/routes/inbox.ts
+var inboxRoute = new Hono2();
+var generateId5 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
+var createTokenSchema = external_exports.object({
+  document_id: external_exports.string(),
+  expires_at: external_exports.number().optional()
+  // Unix timestamp
+});
+var updateTokenSchema = external_exports.object({
+  is_active: external_exports.boolean()
+});
+inboxRoute.post("/tokens", async (c) => {
+  try {
+    const auth = c.get("auth");
+    const body = await c.req.json();
+    const parsed = createTokenSchema.parse(body);
+    const doc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(parsed.document_id).first();
+    if (!doc) {
+      return c.json({ error: { code: "DOC_NOT_FOUND", message: "Document not found" } }, 404);
+    }
+    if (!isCollectionAllowed(auth, doc.collection_id)) {
+      return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
+    }
+    const tokenId = generateId5("token");
+    const token = crypto.randomUUID().replace(/-/g, "");
+    const now = Date.now();
+    await c.env.DB.prepare(`
+      INSERT INTO inbox_tokens (id, token, document_id, is_active, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(tokenId, token, parsed.document_id, 1, parsed.expires_at || null, now).run();
+    const tokenRecord = await c.env.DB.prepare("SELECT * FROM inbox_tokens WHERE id = ?").bind(tokenId).first();
+    return c.json(tokenRecord, 201);
+  } catch (error51) {
+    if (error51.name === "ZodError") {
+      return c.json({ error: { code: "VALIDATION_ERROR", message: error51.errors } }, 400);
+    }
+    console.error("Error creating inbox token:", error51);
+    return c.json({ error: { code: "INTERNAL_ERROR", message: "Failed to create inbox token" } }, 500);
+  }
+});
+inboxRoute.patch("/tokens/:id", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const body = await c.req.json();
+    const parsed = updateTokenSchema.parse(body);
+    const token = await c.env.DB.prepare("SELECT * FROM inbox_tokens WHERE id = ?").bind(id).first();
+    if (!token) {
+      return c.json({ error: { code: "TOKEN_NOT_FOUND", message: "Token not found" } }, 404);
+    }
+    await c.env.DB.prepare("UPDATE inbox_tokens SET is_active = ? WHERE id = ?").bind(parsed.is_active ? 1 : 0, id).run();
+    const updated = await c.env.DB.prepare("SELECT * FROM inbox_tokens WHERE id = ?").bind(id).first();
+    return c.json(updated);
+  } catch (error51) {
+    if (error51.name === "ZodError") {
+      return c.json({ error: { code: "VALIDATION_ERROR", message: error51.errors } }, 400);
+    }
+    console.error("Error updating inbox token:", error51);
+    return c.json({ error: { code: "INTERNAL_ERROR", message: "Failed to update inbox token" } }, 500);
+  }
+});
+inboxRoute.get("/tokens", async (c) => {
+  const documentId = c.req.query("document_id");
+  const limit = parseInt(c.req.query("limit") || "20");
+  let query = "SELECT * FROM inbox_tokens WHERE 1=1";
+  const params = [];
+  if (documentId) {
+    query += " AND document_id = ?";
+    params.push(documentId);
+  }
+  query += " ORDER BY created_at DESC LIMIT ?";
+  params.push(limit);
+  const result = await c.env.DB.prepare(query).bind(...params).all();
+  return c.json({ data: result.results });
+});
+inboxRoute.post("/:token", async (c) => {
+  try {
+    const token = c.req.param("token");
+    const tokenRecord = await c.env.DB.prepare(`
+      SELECT * FROM inbox_tokens WHERE token = ? AND is_active = 1
+    `).bind(token).first();
+    if (!tokenRecord) {
+      return c.json({ error: { code: "INVALID_TOKEN", message: "Invalid or inactive token" } }, 401);
+    }
+    if (tokenRecord.expires_at && tokenRecord.expires_at < Date.now()) {
+      return c.json({ error: { code: "TOKEN_EXPIRED", message: "Token has expired" } }, 401);
+    }
+    const body = await c.req.json();
+    const content = body.content;
+    if (typeof content !== "string" || content.length === 0) {
+      return c.json({ error: { code: "INVALID_CONTENT", message: "Content is required" } }, 400);
+    }
+    const sourceHint = body.source_hint || null;
+    const ip = c.req.header("CF-Connecting-IP") || c.req.header("X-Forwarded-For") || "unknown";
+    const ipHash = Array.from(ip).reduce((hash2, char) => (hash2 << 5) - hash2 + char.charCodeAt(0) | 0, 0).toString(16);
+    const itemId = generateId5("item");
+    const now = Date.now();
+    await c.env.DB.prepare(`
+      INSERT INTO inbox_items (id, inbox_token_id, document_id, content, source_hint, status, submitted_at, ip_hash)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(itemId, tokenRecord.id, tokenRecord.document_id, content, sourceHint, "pending", now, ipHash).run();
+    const item = await c.env.DB.prepare("SELECT * FROM inbox_items WHERE id = ?").bind(itemId).first();
+    return c.json(item, 201);
+  } catch (error51) {
+    console.error("Error submitting to inbox:", error51);
+    return c.json({ error: { code: "INTERNAL_ERROR", message: "Failed to submit to inbox" } }, 500);
+  }
+});
+inboxRoute.get("/", async (c) => {
+  const status = c.req.query("status") || "pending";
+  const limit = parseInt(c.req.query("limit") || "20");
+  const result = await c.env.DB.prepare(`
+    SELECT i.*, d.title as document_title
+    FROM inbox_items i
+    JOIN documents d ON i.document_id = d.id
+    WHERE i.status = ?
+    ORDER BY i.submitted_at DESC
+    LIMIT ?
+  `).bind(status, limit).all();
+  return c.json({ data: result.results });
+});
+inboxRoute.post("/:id/approve", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const item = await c.env.DB.prepare("SELECT * FROM inbox_items WHERE id = ?").bind(id).first();
+    if (!item) {
+      return c.json({ error: { code: "ITEM_NOT_FOUND", message: "Item not found" } }, 404);
+    }
+    if (item.status !== "pending") {
+      return c.json({ error: { code: "INVALID_STATUS", message: "Item is not pending" } }, 400);
+    }
+    const auth = c.get("auth");
+    const author = authorOf(auth);
+    const now = Date.now();
+    const doc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(item.document_id).first();
+    if (!doc) {
+      return c.json({ error: { code: "DOC_NOT_FOUND", message: "Document not found" } }, 404);
+    }
+    if (!isCollectionAllowed(auth, doc.collection_id)) {
+      return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
+    }
+    const separator = doc.content === "" || doc.content.endsWith("\n\n") ? "" : doc.content.endsWith("\n") ? "\n" : "\n\n";
+    const newContent = doc.content + separator + item.content;
+    await c.env.DB.prepare("UPDATE documents SET content = ?, updated_at = ? WHERE id = ?").bind(newContent, now, doc.id).run();
+    await c.env.DB.prepare(`
+      INSERT INTO document_revisions (id, document_id, title, content, author_type, api_key_id, api_key_name, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(generateId5("rev"), doc.id, doc.title, newContent, author.authorType, author.apiKeyId, author.apiKeyName, now).run();
+    await c.env.DB.prepare("UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?").bind("approved", now, id).run();
+    return c.json({ success: true, document_id: doc.id, updated_at: now });
+  } catch (error51) {
+    console.error("Error approving inbox item:", error51);
+    return c.json({ error: { code: "INTERNAL_ERROR", message: "Failed to approve item" } }, 500);
+  }
+});
+inboxRoute.post("/:id/reject", async (c) => {
+  try {
+    const id = c.req.param("id");
+    const item = await c.env.DB.prepare("SELECT * FROM inbox_items WHERE id = ?").bind(id).first();
+    if (!item) {
+      return c.json({ error: { code: "ITEM_NOT_FOUND", message: "Item not found" } }, 404);
+    }
+    if (item.status !== "pending") {
+      return c.json({ error: { code: "INVALID_STATUS", message: "Item is not pending" } }, 400);
+    }
+    const now = Date.now();
+    await c.env.DB.prepare("UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?").bind("rejected", now, id).run();
+    return c.json({ success: true, id });
+  } catch (error51) {
+    console.error("Error rejecting inbox item:", error51);
+    return c.json({ error: { code: "INTERNAL_ERROR", message: "Failed to reject item" } }, 500);
+  }
+});
+
 // src/routes/api-keys.ts
 var scopeEnum = external_exports.enum(["read", "write"]);
 var createKeySchema = external_exports.object({
@@ -26275,7 +26667,7 @@ var updateKeySchema = external_exports.object({
   is_active: external_exports.boolean().optional()
 });
 var apiKeysRoute = new Hono2();
-var generateId4 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
+var generateId6 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
 var PUBLIC_COLUMNS = "id, name, scopes, collection_ids, entry_doc_id, expires_at, last_used_at, is_active, created_at";
 apiKeysRoute.get("/", async (c) => {
   const result = await c.env.DB.prepare(
@@ -26287,7 +26679,7 @@ apiKeysRoute.post("/", async (c) => {
   try {
     const body = await c.req.json();
     const parsed = createKeySchema.parse(body);
-    const id = generateId4("key");
+    const id = generateId6("key");
     const rawKey = generateApiKey();
     const keyHash = await hashApiKey(rawKey);
     const now = Date.now();
@@ -26401,9 +26793,12 @@ app.use("*", cors());
 app.use("*", authMiddleware);
 app.route("/auth", authRoute);
 app.route("/", healthRoute);
+app.route("/entrypoint", entrypointRoute);
 app.route("/docs", documentsRoute);
 app.route("/collections", collectionsRoute);
 app.route("/search", searchRoute);
+app.route("/files", filesRoute);
+app.route("/inbox", inboxRoute);
 app.route("/api-keys", apiKeysRoute);
 app.route("/me", meRoute);
 app.notFound((c) => {
