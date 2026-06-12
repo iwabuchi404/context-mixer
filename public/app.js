@@ -46,6 +46,10 @@ function loadInitial() {
   htmx.ajax('GET', '/ui/tree', { target: '#tree-area' })
 
   const params = new URLSearchParams(location.search)
+  if (params.get('view') === 'collections') {
+    htmx.ajax('GET', '/ui/collections', { target: '#doc-view' })
+    return
+  }
   const docId = params.get('doc') || localStorage.getItem('lastDoc')
   htmx.ajax('GET', docId ? `/ui/doc/${docId}` : '/ui/welcome', { target: '#doc-view' })
 }
@@ -136,8 +140,26 @@ function setupDocView() {
       document.querySelector('.main-content')?.scrollTo(0, 0)
     }
     if (e.detail.target.id === 'tree-area') {
+      applyCollapsedState()
       markCurrent(document.getElementById('doc-view-inner')?.dataset.docId)
     }
+  })
+
+  // Collection collapse state — persisted per collection id
+  document.body.addEventListener('toggle', (e) => {
+    const group = e.target
+    if (!(group instanceof HTMLDetailsElement) || !group.classList.contains('tree-group')) return
+    const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
+    if (group.open) collapsed.delete(group.dataset.colId)
+    else collapsed.add(group.dataset.colId)
+    localStorage.setItem('collapsedCols', JSON.stringify([...collapsed]))
+  }, true)
+}
+
+function applyCollapsedState() {
+  const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
+  document.querySelectorAll('.tree-group').forEach((group) => {
+    if (collapsed.has(group.dataset.colId)) group.removeAttribute('open')
   })
 }
 
