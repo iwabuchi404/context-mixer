@@ -4,9 +4,12 @@ import type { AppEnv } from './auth/adapter'
 import { authMiddleware } from './auth/middleware'
 import { healthRoute } from './routes/health'
 import { authRoute } from './routes/auth'
+import { entrypointRoute } from './routes/entrypoint'
 import { documentsRoute } from './routes/documents'
 import { collectionsRoute } from './routes/collections'
 import { searchRoute } from './routes/search'
+import { filesRoute } from './routes/files'
+import { inboxRoute } from './routes/inbox'
 import { apiKeysRoute } from './routes/api-keys'
 import { meRoute } from './routes/me'
 
@@ -25,15 +28,14 @@ app.route('/auth', authRoute)
 app.route('/', healthRoute)
 
 // API routes
+app.route('/entrypoint', entrypointRoute)
 app.route('/docs', documentsRoute)
 app.route('/collections', collectionsRoute)
 app.route('/search', searchRoute)
+app.route('/files', filesRoute)
+app.route('/inbox', inboxRoute)
 app.route('/api-keys', apiKeysRoute)
 app.route('/me', meRoute)
-
-// Placeholder for future routes
-// app.route('/files', filesRoute)
-// app.route('/inbox', inboxRoute)
 
 // 404 handler
 app.notFound((c) => {
