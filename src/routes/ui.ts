@@ -13,8 +13,22 @@ export const uiRoute = new Hono<AppEnv>()
 
 const generateId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
+// ISO-style timestamp, fixed to JST (Workers runtime is UTC in production)
 const fmtDate = (ts: number) =>
-  new Date(ts).toLocaleString('ja-JP', { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Tokyo',
+    year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+  }).format(new Date(ts))
+
+// HX-Trigger helper: shows a system-line message and optionally refreshes the tree.
+// HTTP headers are Latin-1, so non-ASCII chars must use JSON \uXXXX escapes.
+const notify = (c: any, message: string, treeRefresh = true) => {
+  const events: Record<string, unknown> = { sysline: message }
+  if (treeRefresh) events['tree-refresh'] = true
+  const json = JSON.stringify(events).replace(/[\u0080-\uffff]/g,
+    (ch) => '\\u' + ch.charCodeAt(0).toString(16).padStart(4, '0'))
+  c.header('HX-Trigger', json)
+}
 
 // ---------------------------------------------------------------
 // Shared renderers
@@ -205,8 +219,8 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
 
   const author = lastRev
     ? (lastRev as any).author_type === 'ai'
-      ? `ai${(lastRev as any).api_key_name ? `(${esc((lastRev as any).api_key_name)})` : ''}`
-      : 'human'
+      ? `<span class="author-tag">ai${(lastRev as any).api_key_name ? `:${esc((lastRev as any).api_key_name)}` : ''}</span>`
+      : '<span class="author-tag is-human">human</span>'
     : ''
 
   let foot = ''
@@ -373,7 +387,7 @@ uiRoute.post('/doc/:id/save', async (c) => {
   await saveDoc(c, id, title, content)
 
   const result = await renderDoc(c, id)
-  c.header('HX-Trigger', 'tree-refresh')
+  notify(c, '保存しました')
   return c.html('error' in result ? errorFragment(result.error) : result.html)
 })
 
@@ -393,7 +407,7 @@ uiRoute.post('/doc/:id/append', async (c) => {
   await saveDoc(c, id, doc.title, doc.content + separator + content)
 
   const result = await renderDoc(c, id)
-  c.header('HX-Trigger', 'tree-refresh')
+  notify(c, '追記しました')
   return c.html('error' in result ? errorFragment(result.error) : result.html)
 })
 
@@ -410,7 +424,7 @@ uiRoute.post('/doc/:id/delete', async (c) => {
     c.env.DB.prepare('DELETE FROM documents WHERE id = ?').bind(id),
   ])
 
-  c.header('HX-Trigger', 'tree-refresh')
+  notify(c, '削除しました(履歴は残ります)')
   c.header('HX-Push-Url', '/')
   return c.html(await renderWelcome(c))
 })
@@ -434,7 +448,7 @@ uiRoute.post('/docs', async (c) => {
   await createRevision(c.env.DB, id, title, '', author, now)
 
   const result = await renderDoc(c, id)
-  c.header('HX-Trigger', 'tree-refresh')
+  notify(c, '作成しました')
   c.header('HX-Push-Url', `/?doc=${id}`)
   return c.html('error' in result ? errorFragment(result.error) : result.html)
 })
@@ -462,9 +476,10 @@ uiRoute.post('/collections', async (c) => {
   `).bind(generateId('col'), name, author.authorType, author.apiKeyId, author.authorType, author.apiKeyId, now, now).run()
 
   if (String(body.view ?? '') === 'page') {
-    c.header('HX-Trigger', 'tree-refresh')
+    notify(c, 'コレクションを追加しました')
     return c.html(await renderCollectionsPage(c))
   }
+  notify(c, 'コレクションを追加しました', false)
   return c.html(await renderTree(c))
 })
 
@@ -501,7 +516,7 @@ uiRoute.post('/collections/:id/rename', async (c) => {
   await c.env.DB.prepare('UPDATE collections SET name = ?, updated_at = ?, updated_by_type = ?, updated_by_key_id = ? WHERE id = ?')
     .bind(name, Date.now(), author.authorType, author.apiKeyId, id).run()
 
-  c.header('HX-Trigger', 'tree-refresh')
+  notify(c, '名前を変更しました')
   return c.html(await renderCollectionsPage(c))
 })
 
@@ -524,6 +539,6 @@ uiRoute.post('/collections/:id/delete', async (c) => {
 
   await c.env.DB.prepare('DELETE FROM collections WHERE id = ?').bind(id).run()
 
-  c.header('HX-Trigger', 'tree-refresh')
+  notify(c, 'コレクションを削除しました')
   return c.html(await renderCollectionsPage(c))
 })

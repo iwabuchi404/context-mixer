@@ -12,6 +12,7 @@
   --text: #1C1B18;
   --text-muted: #6F6B61;
   --border: #E4E1D8;
+  --border-strong: #CDC8B8; /* 骨格線(ヘッダー・サイドバー境界)専用 */
   --accent: #165E83;
   --accent-strong: #0F4A68;
   --accent-subtle: #E9F1F6;
@@ -37,8 +38,8 @@
   --space-6: 32px;
   --space-7: 48px;
   --space-8: 64px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
+  --radius-sm: 2px; /* v0.3: ほぼ直角(ソリッドライン) */
+  --radius-md: 4px;
   --shadow-pop: 0 4px 16px rgb(0 0 0 / 0.10);
 
   /* --- モーション --- */
@@ -66,6 +67,7 @@
     --text: #E8E6E1;
     --text-muted: #9B978E;
     --border: #32343B;
+    --border-strong: #4A4D57;
     --accent: #7FB0D8;
     --accent-strong: #9CC4E4;
     --accent-subtle: #1C2E3D;
@@ -323,15 +325,40 @@ mark {
   padding: var(--space-4);
 }
 
-.toast {
-  position: fixed;
-  bottom: var(--space-5);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-toast);
-  background: var(--text);
+/* 作者タグ: 「誰が書いたか」の署名。AI=藍ベタ白抜き、human=枠のみ */
+.author-tag {
+  display: inline-block;
+  background: var(--accent);
   color: var(--bg);
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-md);
-  font-size: var(--text-sm);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  padding: 0 6px;
+  vertical-align: 1px;
 }
+.author-tag.is-human {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+}
+
+/* システム行: 右下に出る操作フィードバック(システムの声)。
+   通常は細枠、エラーのみ赤ベタ白抜き。 */
+.sysline {
+  position: fixed;
+  bottom: 10px;
+  right: 12px;
+  z-index: var(--z-toast);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  padding: 2px 8px;
+}
+.sysline .ok { color: var(--accent); }
+.sysline.is-error {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--bg);
+}
+.sysline.is-error .ok { color: inherit; }
