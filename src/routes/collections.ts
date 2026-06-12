@@ -34,39 +34,6 @@ const buildTree = (collections: any[], parentId: string | null = null): any[] =>
     }))
 }
 
-// GET /collections/html - Render collections as HTML (for HTMX)
-collectionsRoute.get('/html', async (c) => {
-  const auth = c.get('auth')
-  const result = await c.env.DB.prepare(`
-    SELECT id, name, parent_id, description, is_system
-    FROM collections
-    ORDER BY name
-  `).all()
-
-  const renderTree = (parentId: string | null = null, depth = 0): string => {
-    const items = result.results.filter((c: any) => c.parent_id === parentId)
-    if (items.length === 0) return ''
-
-    let html = '<div class="tree-group">\n'
-    for (const item of items) {
-      const indent = depth * 16
-      html += `  <a href="#" class="tree-item" style="padding-left: ${indent + 12}px" \n`
-      html += `     hx-post="/collections/${item.id}/select" hx-target="#documents-list" hx-include="#selected-collection-id" \n`
-      html += `     onclick="document.querySelectorAll('.tree-item').forEach(el => el.removeAttribute('aria-current')); this.setAttribute('aria-current', 'page')">\n`
-      html += `    ${depth === 0 ? '▾ ' : ''}${item.name}\n`
-      if (item.is_system) {
-        html += `    <span class="badge" style="margin-left:auto; background:var(--surface-dim); color:var(--text-muted); font-weight:normal">sys</span>\n`
-      }
-      html += `  </a>\n`
-      html += `  ${renderTree(item.id, depth + 1)}`
-    }
-    html += '</div>\n'
-    return html
-  }
-
-  return c.html(renderTree())
-})
-
 // GET /collections - List collections (tree structure)
 collectionsRoute.get('/', async (c) => {
   const auth = c.get('auth')
@@ -88,51 +55,6 @@ collectionsRoute.get('/', async (c) => {
   const tree = buildTree(result.results)
 
   return c.json(tree)
-})
-
-// POST /collections/:id/select - Select collection and return documents list (for HTMX)
-collectionsRoute.post('/:id/select', async (c) => {
-  const auth = c.get('auth')
-  const id = c.req.param('id')
-
-  if (!isCollectionAllowed(auth, id)) {
-    return c.html('<p class="error">アクセス権限がありません</p>', 403)
-  }
-
-  const collection = await c.env.DB.prepare('SELECT * FROM collections WHERE id = ?').bind(id).first() as any
-  if (!collection) {
-    return c.html('<p class="error">コレクションが見つかりません</p>', 404)
-  }
-
-  const docsResult = await c.env.DB.prepare(`
-    SELECT id, title, updated_at, priority
-    FROM documents
-    WHERE collection_id = ? AND status = 'published'
-    ORDER BY updated_at DESC
-    LIMIT 20
-  `).bind(id).all()
-
-  let html = `<input type="hidden" id="selected-collection-id" value="${id}">\n`
-  html += `<h2 class="sidebar-title" style="margin-top:0">${collection.name} Documents</h2>\n`
-  html += '<nav class="tree">\n'
-
-  for (const doc of docsResult.results) {
-    html += `  <a href="/doc.html?id=${doc.id}" class="tree-item">\n`
-    html += `    <span class="grow">${doc.title}</span>\n`
-    if (doc.priority === 'high') {
-      html += `    <span class="badge" style="background:var(--danger)">!</span>\n`
-    }
-    html += `    <span class="muted" style="font-size:var(--text-xs)">${new Date(doc.updated_at).toLocaleDateString()}</span>\n`
-    html += `  </a>\n`
-  }
-
-  if (docsResult.results.length === 0) {
-    html += '  <div class="muted" style="padding:var(--space-3)">No documents yet.</div>\n'
-  }
-
-  html += '</nav>\n'
-  html += `<script>document.getElementById('documents-section').style.display = 'block'; document.getElementById('collection-title').textContent = '${collection.name}';</script>\n`
-  return c.html(html)
 })
 
 // GET /collections/:id - Get collection

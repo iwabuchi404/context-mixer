@@ -1,19 +1,20 @@
-// app.js - Context Mixer Client Logic
+// Context Mixer client bootstrap.
+// Auth: Clerk session token is attached to every HTMX request via the
+// htmx:confirm pause/resume pattern (tokens are short-lived, fetched per request).
 let config = null
 let clerk = null
 
 async function init() {
   const response = await fetch('/auth/config')
-  if (!response.ok) throw new Error('Failed to load config')
+  if (!response.ok) throw new Error('設定の読み込みに失敗しました')
   config = await response.json()
 
-  // Load clerk-js
   await new Promise((resolve, reject) => {
     const s = document.createElement('script')
     s.src = `${config.frontend_api}/npm/@clerk/clerk-js@5/dist/clerk.browser.js`
     s.setAttribute('data-clerk-publishable-key', config.publishable_key)
     s.onload = resolve
-    s.onerror = reject
+    s.onerror = () => reject(new Error('clerk-jsの読み込みに失敗しました'))
     document.head.appendChild(s)
   })
 
@@ -25,83 +26,128 @@ async function init() {
     return
   }
 
-  renderHeader()
   setupHtmxAuth()
-  setupMobileMenu()
+  setupHeader()
+  setupDrawer()
+  setupDocView()
+
+  await refreshToken()
+
+  // Admin pages listen for this instead of hx-trigger="load" (which races clerk-js)
+  htmx.trigger(document.body, 'auth-ready')
+
+  // Main shell: explicit initial load after auth is ready
+  if (document.getElementById('doc-view')) {
+    loadInitial()
+  }
 }
 
-function setupMobileMenu() {
-  document.body.addEventListener('click', (e) => {
-    const toggle = e.target.closest('.menu-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    const header = document.querySelector('header');
-    
-    if (toggle) {
-      if (sidebar) {
-        sidebar.classList.toggle('open');
-      } else {
-        header.classList.toggle('nav-open');
-      }
-    } else {
-      // Close when clicking outside
-      if (sidebar && sidebar.classList.contains('open') && !e.target.closest('.sidebar')) {
-        sidebar.classList.remove('open');
-      }
-      if (header && header.classList.contains('nav-open') && !e.target.closest('nav')) {
-        header.classList.remove('nav-open');
-      }
-    }
-  });
+function loadInitial() {
+  htmx.ajax('GET', '/ui/tree', { target: '#tree-area' })
 
-  // Close sidebar on HTMX navigation
-  document.body.addEventListener('htmx:afterRequest', (e) => {
-    if (e.detail.target.id === 'documents-list' || e.detail.target.id === 'doc-content') {
-      document.querySelector('.sidebar')?.classList.remove('open');
-    }
-  });
+  const params = new URLSearchParams(location.search)
+  const docId = params.get('doc') || localStorage.getItem('lastDoc')
+  htmx.ajax('GET', docId ? `/ui/doc/${docId}` : '/ui/welcome', { target: '#doc-view' })
 }
 
-function renderHeader() {
-  const el = document.querySelector('#user-info')
-  if (!el) return
-  el.innerHTML = `
-    <span class="user-id">${clerk.user.id}</span>
-    <button onclick="window.Clerk.signOut().then(() => location.reload())" class="btn-sm">Logout</button>
-  `
+// A stale lastDoc (deleted doc) leaves an error fragment — fall back to welcome once.
+// Done on afterSwap because htmx.ajax's promise resolves before the swap happens.
+let welcomeFallbackDone = false
+function maybeFallbackToWelcome() {
+  if (welcomeFallbackDone) return
+  if (!document.getElementById('doc-view-inner')) {
+    welcomeFallbackDone = true
+    localStorage.removeItem('lastDoc')
+    htmx.ajax('GET', '/ui/welcome', { target: '#doc-view' })
+  }
+}
+
+// --- auth: keep a fresh session token cached, attach it to every HTMX request ---
+// (per-request async fetching via element attributes races when requests run in
+// parallel; a cached token refreshed ahead of expiry is simpler and reliable)
+let cachedToken = null
+
+async function refreshToken() {
+  try {
+    cachedToken = await clerk.session.getToken()
+  } catch (e) {
+    console.error('Token refresh failed:', e)
+  }
 }
 
 function setupHtmxAuth() {
-  // Handle async token retrieval for HTMX
-  document.body.addEventListener('htmx:confirm', (evt) => {
-    const elt = evt.detail.elt
-    // If we already attached a fresh token to this element, let it go
-    if (elt.getAttribute('data-auth-ready') === 'true') {
-      elt.removeAttribute('data-auth-ready')
-      return
-    }
-
-    evt.preventDefault() // Pause the request
-
-    window.Clerk.session.getToken().then(token => {
-      if (token) {
-        elt.setAttribute('data-token', token)
-        elt.setAttribute('data-auth-ready', 'true')
-        evt.detail.issueRequest() // Resume the request
-      }
-    }).catch(console.error)
+  // Clerk session tokens live ~60s; refresh well before that
+  setInterval(refreshToken, 30_000)
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) refreshToken()
   })
 
-  // Inject the token into the headers
   document.body.addEventListener('htmx:configRequest', (evt) => {
-    const token = evt.detail.elt.getAttribute('data-token')
-    if (token) {
-      evt.detail.headers['Authorization'] = `Bearer ${token}`
-      evt.detail.elt.removeAttribute('data-token') // Clean up
+    if (cachedToken) {
+      evt.detail.headers['Authorization'] = `Bearer ${cachedToken}`
+    }
+  })
+
+  // Expired token (e.g. after laptop sleep): refresh and reload once
+  document.body.addEventListener('htmx:responseError', (evt) => {
+    if (evt.detail.xhr.status === 401) {
+      refreshToken().then(() => location.reload())
     }
   })
 }
 
-init().catch(err => {
+function setupHeader() {
+  document.getElementById('signout')?.addEventListener('click', () => {
+    clerk.signOut().then(() => location.reload())
+  })
+}
+
+// --- mobile drawer ---
+function setupDrawer() {
+  document.body.addEventListener('click', (e) => {
+    const sidebar = document.getElementById('sidebar')
+    if (!sidebar) return
+    if (e.target.closest('.menu-toggle')) {
+      sidebar.classList.toggle('open')
+    } else if (sidebar.classList.contains('open') && !e.target.closest('#sidebar')) {
+      sidebar.classList.remove('open')
+    }
+  })
+}
+
+// --- reading pane lifecycle ---
+function setupDocView() {
+  // Refresh the tree when the server says so (create/save/delete)
+  document.body.addEventListener('tree-refresh', () => {
+    htmx.ajax('GET', '/ui/tree', { target: '#tree-area' })
+  })
+
+  document.body.addEventListener('htmx:afterSwap', (e) => {
+    if (e.detail.target.id === 'doc-view') {
+      maybeFallbackToWelcome()
+      const inner = document.getElementById('doc-view-inner')
+      const docId = inner?.dataset.docId
+      const title = inner?.dataset.docTitle
+      if (docId) localStorage.setItem('lastDoc', docId)
+      document.title = title ? `${title} - Context Mixer` : 'Context Mixer'
+      markCurrent(docId)
+      document.getElementById('sidebar')?.classList.remove('open')
+      e.detail.target.scrollTop = 0
+      document.querySelector('.main-content')?.scrollTo(0, 0)
+    }
+    if (e.detail.target.id === 'tree-area') {
+      markCurrent(document.getElementById('doc-view-inner')?.dataset.docId)
+    }
+  })
+}
+
+function markCurrent(docId) {
+  document.querySelectorAll('.tree-item[aria-current]').forEach((el) => el.removeAttribute('aria-current'))
+  if (!docId) return
+  document.querySelectorAll(`.tree-item[data-doc-id="${docId}"]`).forEach((el) => el.setAttribute('aria-current', 'page'))
+}
+
+init().catch((err) => {
   console.error('Initialization failed:', err)
-  document.body.innerHTML = `<div style="padding:2rem;color:red">Initialization Error: ${err.message}</div>`
+  document.body.innerHTML = `<p class="error" style="padding:2rem">起動に失敗しました: ${err.message}</p>`
 })

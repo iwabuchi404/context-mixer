@@ -10,16 +10,14 @@
 </head>
 <body hx-headers='{"Accept": "text/html"}'>
   <header>
-    <button class="menu-toggle" aria-label="Menu">☰</button>
-    <a class="brand" href="/">Mixer</a>
+    <a class="brand" href="/">Context Mixer</a>
+    <span class="spacer"></span>
     <nav>
-      <a href="/">Docs</a>
-      <a href="/keys.html" class="active">Keys</a>
-      <a href="/inbox.html">Inbox</a>
-      <a href="/files.html">Files</a>
+      <a href="/keys.html" style="color:var(--accent)">キー</a>
+      <a href="/inbox.html">受信箱</a>
+      <a href="/files.html">ファイル</a>
     </nav>
-    <div class="spacer"></div>
-    <div id="user-info" class="user-info"></div>
+    <button id="signout" class="btn-quiet">サインアウト</button>
   </header>
 
   <main class="main-content">
@@ -39,12 +37,12 @@
           </label>
           <button class="btn-primary" hx-post="/api-keys" hx-include="#key-name,[name='scopes']" hx-target="#created-key-section">Generate</button>
         </div>
-        <div id="created-key-section" style="display:none">
+        <div id="created-key-section">
         </div>
       </div>
 
       <h2 class="sidebar-title">Existing Keys</h2>
-      <div id="keys-list" hx-get="/api-keys" hx-trigger="load">
+      <div id="keys-list" hx-get="/api-keys" hx-trigger="auth-ready from:body">
         <p class="muted">Loading...</p>
       </div>
     </div>

@@ -1,80 +1,38 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Context Mixer</title>
   <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="/style.css">
-  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </head>
-<body hx-headers='{"Accept": "text/html"}'>
+<body>
   <header>
-    <button class="menu-toggle" aria-label="Menu">☰</button>
-    <a class="brand" href="/">Mixer</a>
+    <button class="menu-toggle" aria-label="メニュー">☰</button>
+    <a class="brand" href="/">Context Mixer</a>
+    <span class="spacer"></span>
     <nav>
-      <a href="/" class="active">Docs</a>
-      <a href="/keys.html">Keys</a>
-      <a href="/inbox.html">Inbox</a>
-      <a href="/files.html">Files</a>
+      <a href="/keys.html">キー</a>
+      <a href="/inbox.html">受信箱</a>
+      <a href="/files.html">ファイル</a>
     </nav>
-    <div class="spacer"></div>
-    <div id="user-info" class="user-info"></div>
+    <button id="signout" class="btn-quiet">サインアウト</button>
   </header>
 
   <main class="app-layout">
-    <!-- Sidebar: Collections -->
-    <aside class="sidebar">
-      <div class="sidebar-section">
-        <h2 class="sidebar-title">Collections</h2>
-        <nav class="tree" id="collections-list" hx-get="/collections/html" hx-trigger="load">
-          <p class="muted">Loading...</p>
-        </nav>
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-search">
+        <input id="q" name="q" class="input" type="search" placeholder="検索"
+               autocomplete="off"
+               hx-get="/ui/search" hx-trigger="input changed delay:300ms, search" hx-target="#tree-area">
       </div>
-      
-      <div class="spacer"></div>
-      
-      <div class="sidebar-section" style="border-top: 1px solid var(--border)">
-        <div class="form-row">
-          <input type="text" id="new-col-name" class="input" placeholder="+ Collection" style="font-size: var(--text-xs)">
-          <button class="btn-primary" style="padding: var(--space-1) var(--space-2); min-height: 28px;"
-                  hx-post="/collections" hx-include="#new-col-name" hx-target="#collections-list">Create</button>
-        </div>
-      </div>
+      <div id="tree-area"></div>
     </aside>
 
-    <!-- Main View -->
     <div class="main-content">
-      <section id="documents-section" style="display:none; margin-bottom: var(--space-7)">
-        <div style="display: flex; align-items: baseline; gap: var(--space-4); margin-bottom: var(--space-5)">
-          <h1 id="collection-title" style="margin:0">Documents</h1>
-          <div class="spacer"></div>
-          <div class="form-row">
-            <input type="text" id="new-doc-title" class="input" placeholder="New Document title..." style="width: 240px">
-            <button class="btn-primary" hx-post="/docs" hx-include="#new-doc-title,#selected-collection-id" hx-target="#documents-list">Create Doc</button>
-          </div>
-        </div>
-        
-        <input type="hidden" id="selected-collection-id" name="collection_id">
-        <div id="documents-list">
-          <!-- Populated by collection selection -->
-        </div>
-      </section>
-
-      <section id="search-section">
-        <h2 class="sidebar-title" style="margin-bottom: var(--space-4)">Quick Search</h2>
-        <div class="card" style="padding: 0; border: none;">
-          <input type="text" id="search-query" class="input" placeholder="Type to search documents..." name="q" 
-                 hx-get="/search/html" 
-                 hx-trigger="keyup changed delay:300ms" 
-                 hx-target="#search-results"
-                 style="font-size: 1.1rem; padding: var(--space-4);">
-          
-          <div id="search-results" style="margin-top: var(--space-5)">
-            <p class="muted">Enter keywords to find documents across all collections.</p>
-          </div>
-        </div>
-      </section>
+      <div id="doc-view"></div>
     </div>
   </main>
 

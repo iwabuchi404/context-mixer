@@ -1,74 +1,13 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Doc - Mixer</title>
-  <link rel="stylesheet" href="/style.css">
-  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
-</head>
-<body hx-headers='{"Accept": "text/html"}'>
-  <header>
-    <button class="menu-toggle" aria-label="Menu">☰</button>
-    <a class="brand" href="/">Mixer</a>
-    <nav>
-      <a href="/" class="active">Docs</a>
-      <a href="/keys.html">Keys</a>
-      <a href="/inbox.html">Inbox</a>
-      <a href="/files.html">Files</a>
-    </nav>
-    <div style="flex:1"></div>
-    <div id="user-info"></div>
-  </header>
-
-  <main style="padding: 20px 40px">
-    <div id="doc-content" hx-get="/docs/edit" hx-include="#doc-id" hx-trigger="load">
-      <p class="muted">Loading document...</p>
-    </div>
-    <input type="hidden" id="doc-id" name="id">
-  </main>
-
-  <script src="/app.js"></script>
+  <meta charset="utf-8">
+  <title>Context Mixer</title>
   <script>
-    const urlParams = new URLSearchParams(window.location.search);
-    const docId = urlParams.get('id');
-    if (docId) document.getElementById('doc-id').value = docId;
-
-    function renderPreview() {
-      const content = document.getElementById('content')?.value;
-      const preview = document.getElementById('preview');
-      if (content && preview) preview.innerHTML = marked.parse(content);
-    }
-
-    function toggleMode() {
-      const e = document.getElementById('edit-section');
-      const p = document.getElementById('preview-section');
-      const b = document.getElementById('toggle-btn');
-      if (e.style.display === 'none') {
-        e.style.display = 'block'; p.style.display = 'none'; b.textContent = 'Preview';
-      } else {
-        e.style.display = 'none'; p.style.display = 'block'; b.textContent = 'Edit';
-        renderPreview();
-      }
-    }
-
-    function scrollToSection(slug) {
-      const ta = document.getElementById('content');
-      const lines = ta.value.split('\n');
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (line.startsWith('#')) {
-          const title = line.replace(/^#+\s+/, '');
-          const lineSlug = title.toLowerCase().replace(/[^\w\u4e00-\u9fa5]+/g, '-');
-          if (lineSlug === slug) {
-            ta.scrollTop = i * 20; // Approx
-            ta.focus();
-            break;
-          }
-        }
-      }
-    }
+    // 旧URL互換: /doc.html?id=xxx → /?doc=xxx
+    const id = new URLSearchParams(location.search).get('id')
+    location.replace(id ? `/?doc=${encodeURIComponent(id)}` : '/')
   </script>
-</body>
+</head>
+<body></body>
 </html>

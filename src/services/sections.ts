@@ -13,7 +13,7 @@ export type Section = {
 
 // GitHub-style slug: lowercase, spaces to hyphens, unicode letters kept.
 // Japanese titles stay readable; clients URL-encode when calling the API.
-const slugify = (title: string): string => {
+export const slugify = (title: string): string => {
   const slug = title
     .toLowerCase()
     .replace(/[*_`~[\]()!"'#。、．，]/g, '')

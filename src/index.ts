@@ -12,6 +12,7 @@ import { filesRoute } from './routes/files'
 import { inboxRoute } from './routes/inbox'
 import { apiKeysRoute } from './routes/api-keys'
 import { meRoute } from './routes/me'
+import { uiRoute } from './routes/ui'
 
 const app = new Hono<AppEnv>()
 
@@ -36,6 +37,9 @@ app.route('/files', filesRoute)
 app.route('/inbox', inboxRoute)
 app.route('/api-keys', apiKeysRoute)
 app.route('/me', meRoute)
+
+// Web UI fragments (HTMX)
+app.route('/ui', uiRoute)
 
 // 404 handler
 app.notFound((c) => {
