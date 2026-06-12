@@ -96,8 +96,30 @@ function setupHtmxAuth() {
   document.body.addEventListener('htmx:responseError', (evt) => {
     if (evt.detail.xhr.status === 401) {
       refreshToken().then(() => location.reload())
+    } else {
+      showSysline(`操作に失敗しました (HTTP ${evt.detail.xhr.status})`, true)
     }
   })
+  document.body.addEventListener('htmx:sendError', () => {
+    showSysline('接続できません — ネットワークを確認してください', true)
+  })
+}
+
+// --- system line: operation feedback in the bottom-right corner ---
+// Normal messages are quiet (thin border); errors turn solid red.
+let syslineTimer = null
+function showSysline(message, isError = false) {
+  document.getElementById('sysline')?.remove()
+  const el = document.createElement('div')
+  el.id = 'sysline'
+  el.className = 'sysline' + (isError ? ' is-error' : '')
+  const mark = document.createElement('span')
+  mark.className = 'ok'
+  mark.textContent = isError ? '✗' : '✓'
+  el.append(mark, ` ${message} — ${new Date().toTimeString().slice(0, 5)}`)
+  document.body.appendChild(el)
+  clearTimeout(syslineTimer)
+  syslineTimer = setTimeout(() => el.remove(), isError ? 8000 : 4000)
 }
 
 function setupHeader() {
@@ -124,6 +146,11 @@ function setupDocView() {
   // Refresh the tree when the server says so (create/save/delete)
   document.body.addEventListener('tree-refresh', () => {
     htmx.ajax('GET', '/ui/tree', { target: '#tree-area' })
+  })
+
+  // Server-sent system line messages (HX-Trigger: {"sysline": "..."})
+  document.body.addEventListener('sysline', (e) => {
+    showSysline(e.detail.value)
   })
 
   document.body.addEventListener('htmx:afterSwap', (e) => {

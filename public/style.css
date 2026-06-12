@@ -10,7 +10,7 @@ header {
   align-items: center;
   gap: var(--space-3);
   padding: 0 var(--space-4);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border-strong);
   background: var(--bg);
 }
 
@@ -50,13 +50,28 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 }
 
 .sidebar {
-  border-right: 1px solid var(--border);
+  border-right: 1px solid var(--border-strong);
   overflow-y: auto;
   padding: var(--space-3);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
 }
+
+/* 検索のプロンプト記号 */
+.sidebar-search { position: relative; flex: none; }
+.sidebar-search::before {
+  content: "❯";
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  pointer-events: none;
+}
+.sidebar-search .input { padding-left: 28px; }
 
 .main-content {
   overflow-y: auto;
@@ -84,6 +99,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 .tree-col-name {
   flex: 1;
   min-width: 0;
+  font-family: var(--font-mono); /* 機械の事実(構造名)は等幅 */
   font-size: var(--text-xs);
   font-weight: 600;
   color: var(--text-muted);
@@ -187,7 +203,9 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 
 .meta-line {
   color: var(--text-muted);
+  font-family: var(--font-mono); /* 機械の事実(日時・パス・作者)は等幅 */
   font-size: var(--text-xs);
+  letter-spacing: -0.02em;
   margin: var(--space-2) 0 var(--space-5);
 }
 .meta-line .crumb {

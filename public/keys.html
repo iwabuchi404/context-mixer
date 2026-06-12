@@ -52,11 +52,11 @@
   <script>
     function copyKey(key) {
       navigator.clipboard.writeText(key).then(() => {
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.textContent = 'Key copied to clipboard';
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 2000);
+        const line = document.createElement('div');
+        line.className = 'sysline';
+        line.innerHTML = '<span class="ok">✓</span> キーをコピーしました';
+        document.body.appendChild(line);
+        setTimeout(() => line.remove(), 3000);
       });
     }
   </script>
