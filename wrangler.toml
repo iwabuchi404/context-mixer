@@ -5,6 +5,7 @@ compatibility_date = "2024-01-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "context-mixer-db"
+database_id = "YOUR_D1_DATABASE_ID"
 
 [[r2_buckets]]
 binding = "R2"
@@ -12,7 +13,7 @@ bucket_name = "context-mixer-files"
 
 [vars]
 CLERK_PUBLISHABLE_KEY = "pk_test_d2VsY29tZWQta2l0dGVuLTc0LmNsZXJrLmFjY291bnRzLmRldiQ"
-
+CLERK_FRONTEND_API = "https://welcome-kitten-74.clerk.accounts.dev"
 # CLERK_SECRET_KEY:
 #   local      -> .dev.vars
 #   production -> npx wrangler secret put CLERK_SECRET_KEY

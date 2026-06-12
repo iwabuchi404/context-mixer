@@ -3,6 +3,7 @@ import { cors } from 'hono/cors'
 import type { AppEnv } from './auth/adapter'
 import { authMiddleware } from './auth/middleware'
 import { healthRoute } from './routes/health'
+import { authRoute } from './routes/auth'
 import { documentsRoute } from './routes/documents'
 import { collectionsRoute } from './routes/collections'
 import { searchRoute } from './routes/search'
@@ -14,8 +15,11 @@ const app = new Hono<AppEnv>()
 // CORS for development
 app.use('*', cors())
 
-// Auth (skips public paths: /, /health, POST /inbox/:token)
+// Auth (skips public paths: /, /health, /auth/*, POST /inbox/:token)
 app.use('*', authMiddleware)
+
+// Auth routes (public)
+app.route('/auth', authRoute)
 
 // Health check
 app.route('/', healthRoute)
