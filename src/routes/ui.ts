@@ -54,27 +54,25 @@ const renderTree = async (c: any): Promise<string> => {
         ...docs.filter((d) => d.priority === 'normal'),
         ...docs.filter((d) => d.priority === 'archive'),
       ]
-      html += `<section class="tree-group" style="--depth:${depth}">
-        <div class="tree-head">
-          <span class="tree-col-name">${esc(col.name)}</span>
-          <details class="tree-new">
-            <summary title="このコレクションにメモを追加">＋</summary>
-            <form hx-post="/ui/docs" hx-target="#doc-view">
-              <input type="hidden" name="collection_id" value="${esc(col.id)}">
-              <input class="input" name="title" placeholder="タイトル(Enterで作成)" required autocomplete="off">
-            </form>
-          </details>
-        </div>\n`
+      // <details> per collection: collapsible, state remembered client-side
+      html += `<details class="tree-group" data-col-id="${esc(col.id)}" style="--depth:${depth}" open>
+        <summary class="tree-head"><span class="tree-col-name">${esc(col.name)}</span></summary>\n`
       for (const doc of sorted) {
         const cls = doc.priority === 'archive' ? 'is-archive' : ''
         const mark = doc.priority === 'high' ? '<span class="pri" title="priority: high">●</span>' : ''
         html += docLink(doc.id, doc.title, cls, mark) + '\n'
       }
-      if (sorted.length === 0) {
-        html += '<p class="tree-empty">まだメモがありません</p>\n'
-      }
+      // add-doc form sits at the bottom of the document list
+      html += `<details class="tree-new">
+        <summary>＋ メモを追加</summary>
+        <form hx-post="/ui/docs" hx-target="#doc-view">
+          <input type="hidden" name="collection_id" value="${esc(col.id)}">
+          <input class="input" name="title" placeholder="タイトル" required autocomplete="off">
+          <button class="btn btn-sm" type="submit">作成</button>
+        </form>
+      </details>\n`
       html += renderGroup(col.id, depth + 1)
-      html += '</section>\n'
+      html += '</details>\n'
     }
     return html
   }
@@ -87,11 +85,54 @@ const renderTree = async (c: any): Promise<string> => {
   html += `<details class="tree-new tree-new-col">
     <summary>＋ コレクション</summary>
     <form hx-post="/ui/collections" hx-target="#tree-area">
-      <input class="input" name="name" placeholder="コレクション名(Enterで作成)" required autocomplete="off">
+      <input class="input" name="name" placeholder="コレクション名" required autocomplete="off">
+      <button class="btn btn-sm" type="submit">作成</button>
     </form>
   </details>\n`
   html += '</nav>\n'
   return html
+}
+
+// Collection management page (rendered into the reading pane)
+const renderCollectionsPage = async (c: any, errorMessage?: string): Promise<string> => {
+  const auth: AuthContext = c.get('auth')
+  const [colsResult, countsResult] = await Promise.all([
+    c.env.DB.prepare('SELECT id, name, parent_id, updated_at FROM collections ORDER BY name').all(),
+    c.env.DB.prepare(`SELECT collection_id, COUNT(*) AS n FROM documents WHERE status = 'published' GROUP BY collection_id`).all(),
+  ])
+  const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
+  const counts = new Map<string, number>((countsResult.results as any[]).map((r) => [r.collection_id, r.n]))
+
+  const rows = (parentId: string | null, depth: number): string => {
+    let html = ''
+    for (const col of collections.filter((x) => x.parent_id === parentId)) {
+      html += `<li class="col-row" style="--depth:${depth}">
+        <form hx-post="/ui/collections/${esc(col.id)}/rename" hx-target="#doc-view">
+          <input class="input col-name-input" name="name" value="${esc(col.name)}" required>
+          <span class="muted col-count">${counts.get(col.id) ?? 0}件</span>
+          <button class="btn btn-sm" type="submit">名前を変更</button>
+          <button class="btn-quiet danger-link btn-sm" type="button"
+                  hx-post="/ui/collections/${esc(col.id)}/delete" hx-target="#doc-view"
+                  hx-confirm="コレクション「${esc(col.name)}」を削除しますか?">削除</button>
+        </form>
+      </li>\n`
+      html += rows(col.id, depth + 1)
+    }
+    return html
+  }
+
+  return `
+<div id="doc-view-inner" data-doc-title="コレクション">
+  <div class="doc-head"><h1 class="doc-title">コレクション</h1></div>
+  <p class="meta-line">${collections.length}個のコレクション</p>
+  ${errorMessage ? `<p class="error">${esc(errorMessage)}</p>` : ''}
+  <ul class="col-list">${rows(null, 0)}</ul>
+  <form class="col-new" hx-post="/ui/collections" hx-target="#doc-view">
+    <input type="hidden" name="view" value="page">
+    <input class="input" name="name" placeholder="新しいコレクション名" required autocomplete="off">
+    <button class="btn-primary" type="submit">追加</button>
+  </form>
+</div>`
 }
 
 const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error: string; status: 404 | 403 }> => {
@@ -148,7 +189,9 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
     <h1 class="doc-title">${esc(doc.title)}</h1>
     <button class="btn-quiet" hx-get="/ui/doc/${esc(doc.id)}/edit" hx-target="#doc-view">✎ 編集</button>
   </div>
-  <p class="meta-line">${esc((collection as any)?.name ?? '')} ・ ${fmtDate(doc.updated_at)}${author ? ` ・ ${author}` : ''}</p>
+  <p class="meta-line"><a class="crumb" href="/?view=collections"
+      hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">コレクション</a>
+    / ${esc((collection as any)?.name ?? '')} ・ ${fmtDate(doc.updated_at)}${author ? ` ・ ${author}` : ''}</p>
   ${tocMobile}
   <div class="doc-columns">
     <article class="prose">${body}</article>
@@ -361,7 +404,11 @@ uiRoute.post('/docs', async (c) => {
   return c.html('error' in result ? errorFragment(result.error) : result.html)
 })
 
-// POST /ui/collections - Create collection (from the tree's inline form)
+// GET /ui/collections - Collection management page
+uiRoute.get('/collections', async (c) => c.html(await renderCollectionsPage(c)))
+
+// POST /ui/collections - Create collection
+// view=page → returns the management page; otherwise the tree (sidebar form)
 uiRoute.post('/collections', async (c) => {
   const auth = c.get('auth')
   if (auth.authorType === 'ai' && auth.allowedCollections !== null) {
@@ -379,5 +426,53 @@ uiRoute.post('/collections', async (c) => {
     VALUES (?, ?, NULL, NULL, 0, NULL, ?, ?, ?, ?, ?, ?)
   `).bind(generateId('col'), name, author.authorType, author.apiKeyId, author.authorType, author.apiKeyId, now, now).run()
 
+  if (String(body.view ?? '') === 'page') {
+    c.header('HX-Trigger', 'tree-refresh')
+    return c.html(await renderCollectionsPage(c))
+  }
   return c.html(await renderTree(c))
+})
+
+// POST /ui/collections/:id/rename
+uiRoute.post('/collections/:id/rename', async (c) => {
+  const auth = c.get('auth')
+  const id = c.req.param('id')
+  if (!isCollectionAllowed(auth, id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  const body = await c.req.parseBody()
+  const name = String(body.name ?? '').trim()
+  if (!name) return c.html(await renderCollectionsPage(c, '名前を入力してください'))
+
+  const existing = await c.env.DB.prepare('SELECT id FROM collections WHERE id = ?').bind(id).first()
+  if (!existing) return c.html(await renderCollectionsPage(c, 'コレクションが見つかりません'))
+
+  const author = authorOf(auth)
+  await c.env.DB.prepare('UPDATE collections SET name = ?, updated_at = ?, updated_by_type = ?, updated_by_key_id = ? WHERE id = ?')
+    .bind(name, Date.now(), author.authorType, author.apiKeyId, id).run()
+
+  c.header('HX-Trigger', 'tree-refresh')
+  return c.html(await renderCollectionsPage(c))
+})
+
+// POST /ui/collections/:id/delete - Refuses when not empty (same rule as the API)
+uiRoute.post('/collections/:id/delete', async (c) => {
+  const auth = c.get('auth')
+  const id = c.req.param('id')
+  if (!isCollectionAllowed(auth, id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  const [docsCount, childrenCount] = await Promise.all([
+    c.env.DB.prepare('SELECT COUNT(*) AS n FROM documents WHERE collection_id = ?').bind(id).first() as Promise<any>,
+    c.env.DB.prepare('SELECT COUNT(*) AS n FROM collections WHERE parent_id = ?').bind(id).first() as Promise<any>,
+  ])
+  if (docsCount.n > 0) {
+    return c.html(await renderCollectionsPage(c, 'ドキュメントが残っているため削除できません(先にドキュメントを削除または移動してください)'))
+  }
+  if (childrenCount.n > 0) {
+    return c.html(await renderCollectionsPage(c, 'サブコレクションがあるため削除できません'))
+  }
+
+  await c.env.DB.prepare('DELETE FROM collections WHERE id = ?').bind(id).run()
+
+  c.header('HX-Trigger', 'tree-refresh')
+  return c.html(await renderCollectionsPage(c))
 })
