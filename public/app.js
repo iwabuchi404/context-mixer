@@ -145,21 +145,23 @@ function setupDocView() {
     }
   })
 
-  // Collection collapse state — persisted per collection id
-  document.body.addEventListener('toggle', (e) => {
-    const group = e.target
-    if (!(group instanceof HTMLDetailsElement) || !group.classList.contains('tree-group')) return
+  // Collection collapse toggle (the icon next to the name) — persisted per collection id
+  document.body.addEventListener('click', (e) => {
+    const toggle = e.target.closest('.tree-toggle')
+    if (!toggle) return
+    const group = toggle.closest('.tree-group')
+    group.classList.toggle('collapsed')
     const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
-    if (group.open) collapsed.delete(group.dataset.colId)
-    else collapsed.add(group.dataset.colId)
+    if (group.classList.contains('collapsed')) collapsed.add(group.dataset.colId)
+    else collapsed.delete(group.dataset.colId)
     localStorage.setItem('collapsedCols', JSON.stringify([...collapsed]))
-  }, true)
+  })
 }
 
 function applyCollapsedState() {
   const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
   document.querySelectorAll('.tree-group').forEach((group) => {
-    if (collapsed.has(group.dataset.colId)) group.removeAttribute('open')
+    if (collapsed.has(group.dataset.colId)) group.classList.add('collapsed')
   })
 }
 
