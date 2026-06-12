@@ -54,16 +54,22 @@ const renderTree = async (c: any): Promise<string> => {
         ...docs.filter((d) => d.priority === 'normal'),
         ...docs.filter((d) => d.priority === 'archive'),
       ]
-      // <details> per collection: collapsible, state remembered client-side
-      html += `<details class="tree-group" data-col-id="${esc(col.id)}" style="--depth:${depth}" open>
-        <summary class="tree-head"><span class="tree-col-name">${esc(col.name)}</span></summary>\n`
+      // collection name navigates to the collections page; the toggle icon
+      // (separate, on the right) collapses the group (state kept client-side)
+      html += `<section class="tree-group" data-col-id="${esc(col.id)}" style="--depth:${depth}">
+        <div class="tree-head">
+          <a class="tree-col-name" href="/?view=collections"
+             hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">${esc(col.name)}</a>
+          <button class="tree-toggle" type="button" aria-label="折りたたみ">▾</button>
+        </div>
+        <div class="tree-children">\n`
       for (const doc of sorted) {
         const cls = doc.priority === 'archive' ? 'is-archive' : ''
         const mark = doc.priority === 'high' ? '<span class="pri" title="priority: high">●</span>' : ''
         html += docLink(doc.id, doc.title, cls, mark) + '\n'
       }
-      // add-doc form sits at the bottom of the document list
-      html += `<details class="tree-new">
+      // add-doc form sits at the bottom of the document list, indented one level
+      html += `<details class="tree-new tree-new-doc">
         <summary>＋ メモを追加</summary>
         <form hx-post="/ui/docs" hx-target="#doc-view">
           <input type="hidden" name="collection_id" value="${esc(col.id)}">
@@ -72,7 +78,7 @@ const renderTree = async (c: any): Promise<string> => {
         </form>
       </details>\n`
       html += renderGroup(col.id, depth + 1)
-      html += '</details>\n'
+      html += '</div></section>\n'
     }
     return html
   }
@@ -93,30 +99,59 @@ const renderTree = async (c: any): Promise<string> => {
   return html
 }
 
+// Header row of a collection block on the management page.
+// editing=true swaps the plain title for a rename form.
+const colHead = (col: { id: string; name: string }, count: number, editing = false): string => {
+  if (editing) {
+    return `<div class="col-head" id="col-head-${esc(col.id)}">
+      <form hx-post="/ui/collections/${esc(col.id)}/rename" hx-target="#doc-view">
+        <input class="input col-name-input" name="name" value="${esc(col.name)}" required autofocus>
+        <button class="btn btn-sm" type="submit">保存</button>
+        <button class="btn-quiet btn-sm" type="button"
+                hx-get="/ui/collections/${esc(col.id)}/head" hx-target="#col-head-${esc(col.id)}" hx-swap="outerHTML">キャンセル</button>
+      </form>
+    </div>`
+  }
+  return `<div class="col-head" id="col-head-${esc(col.id)}">
+    <h2 class="col-title">${esc(col.name)}</h2>
+    <span class="muted col-count">${count}件</span>
+    <button class="btn-quiet btn-sm" type="button"
+            hx-get="/ui/collections/${esc(col.id)}/head?edit=1" hx-target="#col-head-${esc(col.id)}" hx-swap="outerHTML">名前を変更</button>
+    <button class="btn-quiet danger-link btn-sm" type="button"
+            hx-post="/ui/collections/${esc(col.id)}/delete" hx-target="#doc-view"
+            hx-confirm="コレクション「${esc(col.name)}」を削除しますか?">削除</button>
+  </div>`
+}
+
 // Collection management page (rendered into the reading pane)
 const renderCollectionsPage = async (c: any, errorMessage?: string): Promise<string> => {
   const auth: AuthContext = c.get('auth')
-  const [colsResult, countsResult] = await Promise.all([
-    c.env.DB.prepare('SELECT id, name, parent_id, updated_at FROM collections ORDER BY name').all(),
-    c.env.DB.prepare(`SELECT collection_id, COUNT(*) AS n FROM documents WHERE status = 'published' GROUP BY collection_id`).all(),
+  const [colsResult, docsResult] = await Promise.all([
+    c.env.DB.prepare('SELECT id, name, parent_id FROM collections ORDER BY name').all(),
+    c.env.DB.prepare(`
+      SELECT id, title, collection_id FROM documents
+      WHERE status = 'published' ORDER BY updated_at DESC
+    `).all(),
   ])
   const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
-  const counts = new Map<string, number>((countsResult.results as any[]).map((r) => [r.collection_id, r.n]))
+  const docsByCollection = new Map<string, any[]>()
+  for (const doc of docsResult.results as any[]) {
+    if (!docsByCollection.has(doc.collection_id)) docsByCollection.set(doc.collection_id, [])
+    docsByCollection.get(doc.collection_id)!.push(doc)
+  }
 
-  const rows = (parentId: string | null, depth: number): string => {
+  const blocks = (parentId: string | null, depth: number): string => {
     let html = ''
     for (const col of collections.filter((x) => x.parent_id === parentId)) {
-      html += `<li class="col-row" style="--depth:${depth}">
-        <form hx-post="/ui/collections/${esc(col.id)}/rename" hx-target="#doc-view">
-          <input class="input col-name-input" name="name" value="${esc(col.name)}" required>
-          <span class="muted col-count">${counts.get(col.id) ?? 0}件</span>
-          <button class="btn btn-sm" type="submit">名前を変更</button>
-          <button class="btn-quiet danger-link btn-sm" type="button"
-                  hx-post="/ui/collections/${esc(col.id)}/delete" hx-target="#doc-view"
-                  hx-confirm="コレクション「${esc(col.name)}」を削除しますか?">削除</button>
-        </form>
-      </li>\n`
-      html += rows(col.id, depth + 1)
+      const docs = docsByCollection.get(col.id) ?? []
+      html += `<section class="col-block" style="--depth:${depth}">
+        ${colHead(col, docs.length)}
+        <nav class="tree col-docs">
+          ${docs.map((d) => docLink(d.id, d.title)).join('\n')}
+          ${docs.length === 0 ? '<p class="tree-empty">まだメモがありません</p>' : ''}
+        </nav>
+      </section>\n`
+      html += blocks(col.id, depth + 1)
     }
     return html
   }
@@ -126,7 +161,7 @@ const renderCollectionsPage = async (c: any, errorMessage?: string): Promise<str
   <div class="doc-head"><h1 class="doc-title">コレクション</h1></div>
   <p class="meta-line">${collections.length}個のコレクション</p>
   ${errorMessage ? `<p class="error">${esc(errorMessage)}</p>` : ''}
-  <ul class="col-list">${rows(null, 0)}</ul>
+  ${blocks(null, 0)}
   <form class="col-new" hx-post="/ui/collections" hx-target="#doc-view">
     <input type="hidden" name="view" value="page">
     <input class="input" name="name" placeholder="新しいコレクション名" required autocomplete="off">
@@ -431,6 +466,22 @@ uiRoute.post('/collections', async (c) => {
     return c.html(await renderCollectionsPage(c))
   }
   return c.html(await renderTree(c))
+})
+
+// GET /ui/collections/:id/head - Header row of a collection block (?edit=1 → rename form)
+uiRoute.get('/collections/:id/head', async (c) => {
+  const auth = c.get('auth')
+  const id = c.req.param('id')
+  if (!isCollectionAllowed(auth, id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  const col = await c.env.DB.prepare('SELECT id, name FROM collections WHERE id = ?').bind(id).first() as any
+  if (!col) return c.html(errorFragment('コレクションが見つかりません'), 404)
+
+  const count = await c.env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM documents WHERE collection_id = ? AND status = 'published'`
+  ).bind(id).first() as any
+
+  return c.html(colHead(col, count.n, c.req.query('edit') === '1'))
 })
 
 // POST /ui/collections/:id/rename
