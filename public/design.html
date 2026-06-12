@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Design System 台所 v0.2 - Context Mixer</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/tokens.css">
+  <style>
+    /* このページ専用のプレビュー用スタイル */
+    main { max-width: 880px; margin: 0 auto; padding: var(--space-6) var(--space-4) var(--space-8); }
+    section { margin-bottom: var(--space-7); }
+    h2.ds { font-size: 1.2rem; border-bottom: 1px solid var(--border); padding-bottom: var(--space-2); }
+    .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--space-3); }
+    .swatch { border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; }
+    .swatch .chip { height: 56px; }
+    .swatch .label { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); font-family: var(--font-mono); }
+    .specimen { display: flex; flex-direction: column; gap: var(--space-3); }
+    .row { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+    .spacebar { background: var(--accent-subtle); height: 16px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>台所 v0.2 <span class="muted">デザインシステム プレビュー</span></h1>
+    <p class="muted">仕様: docs/design-system.md ・ OSのダークモードを切り替えて両テーマを確認できます。</p>
+
+    <section>
+      <h2 class="ds">色</h2>
+      <div class="swatches">
+        <div class="swatch"><div class="chip" style="background:var(--bg)"></div><div class="label">--bg</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--surface)"></div><div class="label">--surface</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--surface-dim)"></div><div class="label">--surface-dim</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--text)"></div><div class="label">--text</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--text-muted)"></div><div class="label">--text-muted</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--border)"></div><div class="label">--border</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--accent)"></div><div class="label">--accent</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--accent-subtle)"></div><div class="label">--accent-subtle</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--danger)"></div><div class="label">--danger</div></div>
+        <div class="swatch"><div class="chip" style="background:var(--mark)"></div><div class="label">--mark</div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="ds">本文(.prose)</h2>
+      <article class="prose">
+        <h1>設計メモ: コンテキスト圧縮</h1>
+        <p>AIが扱うコンテキストは有限である。だからこそ、<a href="#">ナレッジベース側</a>が<strong>粒度を選んで返せる</strong>ことに価値がある。検索の精度を上げるより、探索のコストを下げる。これが本サービスの設計哲学だ。<mark>検索ヒット</mark>はこのように表示される。</p>
+        <h2>取得の三段階</h2>
+        <p>AIの典型的な探索フローは次のとおり。まず <code>view=meta</code> で概要だけを見て、必要なら目次、最後にセクション本文だけを取る。</p>
+        <ul>
+          <li>meta — タイトルと概要(数十トークン)</li>
+          <li>outline — 見出し構造のみ</li>
+          <li>sections/:slug — 必要な部分だけ</li>
+        </ul>
+        <blockquote><p>検索精度の不足は、AIの探索判断力で補う。</p></blockquote>
+        <h3>コード例</h3>
+        <pre><code>GET /docs/:id?view=outline
+GET /docs/:id/sections/設計方針</code></pre>
+        <div class="table-wrap">
+          <table>
+            <tr><th>view</th><th>返すもの</th><th>目安</th></tr>
+            <tr><td>meta</td><td>タイトル+セクション一覧</td><td>数十トークン</td></tr>
+            <tr><td>full</td><td>全文</td><td>可変</td></tr>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <section>
+      <h2 class="ds">ボタン</h2>
+      <div class="row">
+        <button class="btn-primary">追記する</button>
+        <button class="btn">キャンセル</button>
+        <button class="btn-quiet">✎ 編集</button>
+        <button class="btn btn-danger">削除</button>
+        <button class="btn-primary" disabled>無効</button>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="ds">入力欄</h2>
+      <div class="specimen" style="max-width:28rem">
+        <input class="input" placeholder="キーワード検索">
+        <textarea class="textarea" rows="3" placeholder="ここに書く…"></textarea>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="ds">ツリー</h2>
+      <nav class="tree" style="max-width:260px">
+        <a class="tree-item" href="#">▾ projects</a>
+        <a class="tree-item" href="#" style="padding-left:var(--space-5)">▾ elbow</a>
+        <a class="tree-item" aria-current="page" href="#" style="padding-left:var(--space-7)">設計メモ</a>
+        <a class="tree-item" href="#" style="padding-left:var(--space-7)">調査ログ <span class="muted">昨日</span></a>
+        <a class="tree-item" href="#" style="padding-left:var(--space-5)">▸ 日報</a>
+        <a class="tree-item" href="#">▸ refs <span class="badge">3</span></a>
+      </nav>
+    </section>
+
+    <section>
+      <h2 class="ds">補助部品</h2>
+      <div class="row">
+        <span class="badge">3</span>
+        <span class="muted">補助テキスト(--text-muted)</span>
+        <div class="popover">ポップオーバー(リンクプレビュー等)</div>
+      </div>
+    </section>
+
+    <section>
+      <h2 class="ds">余白スケール</h2>
+      <div class="specimen">
+        <div class="spacebar" style="width:var(--space-1)"></div>
+        <div class="spacebar" style="width:var(--space-2)"></div>
+        <div class="spacebar" style="width:var(--space-3)"></div>
+        <div class="spacebar" style="width:var(--space-4)"></div>
+        <div class="spacebar" style="width:var(--space-5)"></div>
+        <div class="spacebar" style="width:var(--space-6)"></div>
+        <div class="spacebar" style="width:var(--space-7)"></div>
+        <div class="spacebar" style="width:var(--space-8)"></div>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
