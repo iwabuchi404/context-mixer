@@ -10,10 +10,8 @@ import { clerkSession, ensureUser, verifySession } from './clerk'
 const isPublic = (method: string, path: string): boolean => {
   if (path === '/health' || path === '/' || path === '/config' || path === '/favicon.svg') return true
   if (path.startsWith('/auth/') || path.startsWith('/public/')) return true
-  // MCP endpoint (public for now, OAuth auth to be added)
-  if (path.startsWith('/mcp')) return true
-  // OAuth endpoints (public for MCP authentication)
-  if (path.startsWith('/oauth')) return true
+  // NOTE: /mcp and /oauth are intentionally NOT public — the routes are
+  // disabled in index.ts pending a security rework. Do not re-add here.
   // External submission endpoint only. NOT /inbox/tokens (auth-required management).
   if (method === 'POST' && /^\/inbox\/[^/]+$/.test(path) && path !== '/inbox/tokens') return true
   return false

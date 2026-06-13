@@ -1,0 +1,95 @@
+- main [ref=e2]:
+  - heading "書斎 v0.1 デザインシステム プレビュー" [level=1] [ref=e3]
+  - paragraph [ref=e4]: "仕様: docs/design-system.md ・ OSのダークモードを切り替えて両テーマを確認できます。"
+  - generic [ref=e5]:
+    - heading "色" [level=2] [ref=e6]
+    - generic [ref=e7]:
+      - generic [ref=e10]: "--bg"
+      - generic [ref=e13]: "--surface"
+      - generic [ref=e16]: "--surface-dim"
+      - generic [ref=e19]: "--text"
+      - generic [ref=e22]: "--text-muted"
+      - generic [ref=e25]: "--border"
+      - generic [ref=e28]: "--accent"
+      - generic [ref=e31]: "--accent-subtle"
+      - generic [ref=e34]: "--danger"
+      - generic [ref=e37]: "--mark"
+  - generic [ref=e38]:
+    - heading "本文(.prose)" [level=2] [ref=e39]
+    - article [ref=e40]:
+      - 'heading "設計メモ: コンテキスト圧縮" [level=1] [ref=e41]'
+      - paragraph [ref=e42]:
+        - text: AIが扱うコンテキストは有限である。だからこそ、
+        - link "ナレッジベース側" [ref=e43] [cursor=pointer]:
+          - /url: "#"
+        - text: が
+        - strong [ref=e44]: 粒度を選んで返せる
+        - text: ことに価値がある。検索の精度を上げるより、探索のコストを下げる。これが本サービスの設計哲学だ。
+        - mark [ref=e45]: 検索ヒット
+        - text: はこのように表示される。
+      - heading "取得の三段階" [level=2] [ref=e46]
+      - paragraph [ref=e47]:
+        - text: AIの典型的な探索フローは次のとおり。まず
+        - code [ref=e48]: view=meta
+        - text: で概要だけを見て、必要なら目次、最後にセクション本文だけを取る。
+      - list [ref=e49]:
+        - listitem [ref=e50]: meta — タイトルと概要(数十トークン)
+        - listitem [ref=e51]: outline — 見出し構造のみ
+        - listitem [ref=e52]: sections/:slug — 必要な部分だけ
+      - blockquote [ref=e53]:
+        - paragraph [ref=e54]: 検索精度の不足は、AIの探索判断力で補う。
+      - heading "コード例" [level=3] [ref=e55]
+      - code [ref=e57]: GET /docs/:id?view=outline GET /docs/:id/sections/設計方針
+      - table [ref=e59]:
+        - rowgroup [ref=e60]:
+          - row "view 返すもの 目安" [ref=e61]:
+            - columnheader "view" [ref=e62]
+            - columnheader "返すもの" [ref=e63]
+            - columnheader "目安" [ref=e64]
+          - row "meta タイトル+セクション一覧 数十トークン" [ref=e65]:
+            - cell "meta" [ref=e66]
+            - cell "タイトル+セクション一覧" [ref=e67]
+            - cell "数十トークン" [ref=e68]
+          - row "full 全文 可変" [ref=e69]:
+            - cell "full" [ref=e70]
+            - cell "全文" [ref=e71]
+            - cell "可変" [ref=e72]
+  - generic [ref=e73]:
+    - heading "ボタン" [level=2] [ref=e74]
+    - generic [ref=e75]:
+      - button "追記する" [ref=e76] [cursor=pointer]
+      - button "キャンセル" [ref=e77] [cursor=pointer]
+      - button "✎ 編集" [ref=e78] [cursor=pointer]
+      - button "削除" [ref=e79] [cursor=pointer]
+      - button "無効" [disabled] [ref=e80]
+  - generic [ref=e81]:
+    - heading "入力欄" [level=2] [ref=e82]
+    - generic [ref=e83]:
+      - textbox "キーワード検索" [ref=e84]
+      - textbox "ここに書く…" [ref=e85]
+  - generic [ref=e86]:
+    - heading "ツリー" [level=2] [ref=e87]
+    - navigation [ref=e88]:
+      - link "▾ projects" [ref=e89] [cursor=pointer]:
+        - /url: "#"
+      - link "▾ elbow" [ref=e90] [cursor=pointer]:
+        - /url: "#"
+      - link "設計メモ" [ref=e91] [cursor=pointer]:
+        - /url: "#"
+      - link "調査ログ 昨日" [ref=e92] [cursor=pointer]:
+        - /url: "#"
+        - text: 調査ログ
+        - generic [ref=e93]: 昨日
+      - link "▸ 日報" [ref=e94] [cursor=pointer]:
+        - /url: "#"
+      - link "▸ refs 3" [ref=e95] [cursor=pointer]:
+        - /url: "#"
+        - text: ▸ refs
+        - generic [ref=e96]: "3"
+  - generic [ref=e97]:
+    - heading "補助部品" [level=2] [ref=e98]
+    - generic [ref=e99]:
+      - generic [ref=e100]: "3"
+      - generic [ref=e101]: 補助テキスト(--text-muted)
+      - generic [ref=e102]: ポップオーバー(リンクプレビュー等)
+  - heading "余白スケール" [level=2] [ref=e104]

@@ -1,0 +1,1 @@
+{"jsonrpc":"2.0","method":"tools/call","params":{"name":"write_doc","arguments":{"title":"MCP Test Document","content":"# Test\n\nThis is a test document from MCP.","collection_id":"col_mcp_test"}},"id":3}
