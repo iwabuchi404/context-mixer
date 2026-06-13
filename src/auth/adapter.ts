@@ -25,6 +25,8 @@ export type Env = {
   CLERK_SECRET_KEY: string
   CLERK_FRONTEND_API: string
   CLERK_SIGN_IN_URL: string
+  OAUTH_CLIENT_ID: string
+  OAUTH_CLIENT_SECRET: string
 }
 
 export type AppEnv = {
