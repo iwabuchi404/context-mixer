@@ -22,11 +22,9 @@ bucket_name = "context-mixer-files"
 binding = "OAUTH_KV"
 id = "YOUR_OAUTH_KV_ID"
 
-[vars]
-CLERK_PUBLISHABLE_KEY = "pk_test_d2VsY29tZWQta2l0dGVuLTc0LmNsZXJrLmFjY291bnRzLmRldiQ"
-CLERK_FRONTEND_API = "https://welcomed-kitten-74.clerk.accounts.dev"
-CLERK_SIGN_IN_URL = "https://welcomed-kitten-74.accounts.dev/sign-in"
-
-# CLERK_SECRET_KEY:
-#   local      -> .dev.vars
-#   production -> npx wrangler secret put CLERK_SECRET_KEY
+# NOTE: Clerk config is intentionally NOT in [vars]. Plain-text [vars] are pushed
+# on every `wrangler deploy` and overwrite the dashboard, so the DEV keys here used
+# to clobber the production (pk_live / flog404.work) values on each deploy.
+#   local      -> .dev.vars (DEV instance: welcomed-kitten-74)
+#   production -> dashboard Secrets (survive deploys): CLERK_PUBLISHABLE_KEY,
+#                 CLERK_FRONTEND_API, CLERK_SIGN_IN_URL, CLERK_SECRET_KEY
