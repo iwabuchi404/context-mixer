@@ -14,6 +14,8 @@ import { inboxRoute } from './routes/inbox'
 import { apiKeysRoute } from './routes/api-keys'
 import { meRoute } from './routes/me'
 import { uiRoute } from './routes/ui'
+import { mcpRoute } from './mcp/handler'
+import { oauthRoute } from './mcp/oauth-handler'
 
 const app = new Hono<AppEnv>()
 
@@ -44,6 +46,12 @@ app.route('/me', meRoute)
 
 // Web UI fragments (HTMX)
 app.route('/ui', uiRoute)
+
+// MCP endpoint (public for now, OAuth auth to be added)
+app.route('/mcp', mcpRoute)
+
+// OAuth endpoints for MCP authentication
+app.route('/oauth', oauthRoute)
 
 // 404 handler
 app.notFound((c) => {

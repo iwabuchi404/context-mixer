@@ -172,3 +172,15 @@ CREATE TRIGGER IF NOT EXISTS documents_fts_delete AFTER DELETE ON documents BEGI
   INSERT INTO documents_fts(documents_fts, rowid, title, content)
   VALUES ('delete', old.rowid, old.title, old.content);
 END;
+
+-- ============================================================
+-- OAuth Tokens (for MCP authentication)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS oauth_tokens (
+  token          TEXT PRIMARY KEY,
+  user_id        TEXT NOT NULL,
+  expires_at     INTEGER NOT NULL,
+  created_at     INTEGER NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_oauth_tokens_expires ON oauth_tokens(expires_at);
