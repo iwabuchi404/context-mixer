@@ -20,7 +20,7 @@ bucket_name = "context-mixer-files"
 #   npx wrangler kv namespace create OAUTH_KV  → paste the returned id here.
 [[kv_namespaces]]
 binding = "OAUTH_KV"
-id = "REPLACE_WITH_PRODUCTION_KV_ID"
+id = "YOUR_OAUTH_KV_ID"
 
 [vars]
 CLERK_PUBLISHABLE_KEY = "pk_test_d2VsY29tZWQta2l0dGVuLTc0LmNsZXJrLmFjY291bnRzLmRldiQ"
