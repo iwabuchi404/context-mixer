@@ -7,6 +7,7 @@
 import type { AppEnv, AiAuth } from '../auth/adapter'
 import { authorOf, isCollectionAllowed } from '../auth/adapter'
 import { createRevision } from '../routes/documents'
+import { buildTree } from '../routes/collections'
 import { parseSections } from '../services/sections'
 import { syncDocumentLinks } from '../services/links'
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
@@ -110,9 +111,9 @@ export async function getDoc(
 export async function writeDoc(
   env: Env,
   auth: AiAuth,
-  params: { id?: string; title: string; content: string; collection_id: string }
+  params: { id?: string; title: string; content: string; collection_id: string; parent_id?: string }
 ): Promise<CallToolResult> {
-  const { id, title, content, collection_id } = params
+  const { id, title, content, collection_id, parent_id } = params
   const now = Date.now()
   const author = authorOf(auth)
 
@@ -137,12 +138,24 @@ export async function writeDoc(
   const collection = await env.DB.prepare('SELECT id FROM collections WHERE id = ?').bind(collection_id).first()
   if (!collection) return err('Collection not found')
 
+  // Verify parent document if specified and build path in one query
+  let parentId = null
+  let path: string
   const docId = generateId('doc')
-  const path = `/${collection_id}/${docId}`
+  if (parent_id) {
+    const parent = await env.DB.prepare('SELECT id, collection_id, path FROM documents WHERE id = ?').bind(parent_id).first() as any
+    if (!parent) return err('Parent document not found')
+    if (parent.collection_id !== collection_id) return err('Parent document must be in the same collection')
+    parentId = parent_id
+    path = `${parent.path}/${docId}`
+  } else {
+    path = `/${collection_id}/${docId}`
+  }
+
   await env.DB.prepare(`
     INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
-    VALUES (?, ?, ?, ?, NULL, ?, 'normal', 'published', ?, ?, ?, ?)
-  `).bind(docId, title, content, collection_id, path, author.authorType, author.apiKeyId, now, now).run()
+    VALUES (?, ?, ?, ?, ?, ?, 'normal', 'published', ?, ?, ?, ?)
+  `).bind(docId, title, content, collection_id, parentId, path, author.authorType, author.apiKeyId, now, now).run()
   await createRevision(env.DB, docId, title, content, author, now)
   await syncDocumentLinks(env.DB, docId, content)
 
@@ -174,7 +187,7 @@ export async function appendDoc(
   return ok(updated)
 }
 
-// Tool: list_collections (read)
+// Tool: list_collections (read) — returns tree structure
 export async function listCollections(env: Env, auth: AiAuth): Promise<CallToolResult> {
   const result = await env.DB.prepare(`
     SELECT id, name, parent_id, description, is_system, entrypoint_doc_id,
@@ -182,7 +195,14 @@ export async function listCollections(env: Env, auth: AiAuth): Promise<CallToolR
     FROM collections ORDER BY name
   `).all()
   const visible = (result.results as any[]).filter((c) => isCollectionAllowed(auth, c.id))
-  return ok(visible)
+
+  // Restricted keys may not see parent collections, so return flat list with empty children
+  // to avoid silently dropping collections whose parents are hidden.
+  if (auth.allowedCollections !== null) {
+    return ok(visible.map((c: any) => ({ ...c, children: [] })))
+  }
+
+  return ok(buildTree(visible))
 }
 
 // Tool: get_entrypoint (read)

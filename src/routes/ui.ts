@@ -53,29 +53,52 @@ const renderTree = async (c: any): Promise<string> => {
   const [colsResult, docsResult] = await Promise.all([
     c.env.DB.prepare('SELECT id, name, parent_id FROM collections ORDER BY name').all(),
     c.env.DB.prepare(`
-      SELECT id, title, collection_id, priority
+      SELECT id, title, collection_id, parent_id, priority
       FROM documents WHERE status = 'published'
       ORDER BY updated_at DESC
     `).all(),
   ])
 
   const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
-  const docsByCollection = new Map<string, any[]>()
+  const docsByParent = new Map<string, Map<string | null, any[]>>()
   for (const doc of docsResult.results as any[]) {
-    if (!docsByCollection.has(doc.collection_id)) docsByCollection.set(doc.collection_id, [])
-    docsByCollection.get(doc.collection_id)!.push(doc)
+    if (!docsByParent.has(doc.collection_id)) docsByParent.set(doc.collection_id, new Map())
+    const parentMap = docsByParent.get(doc.collection_id)!
+    const pid = doc.parent_id || null
+    if (!parentMap.has(pid)) parentMap.set(pid, [])
+    parentMap.get(pid)!.push(doc)
+  }
+
+  // Render documents recursively with hierarchy support (depth cap guards against parent_id cycles)
+  const renderDocs = (collectionId: string, parentId: string | null, docDepth: number): string => {
+    if (docDepth > 20) return ''
+    const parentMap = docsByParent.get(collectionId)
+    if (!parentMap) return ''
+    const docs = parentMap.get(parentId) ?? []
+    // priority: high pinned on top, archive sinks to the bottom (dimmed)
+    const sorted = [
+      ...docs.filter((d) => d.priority === 'high'),
+      ...docs.filter((d) => d.priority === 'normal'),
+      ...docs.filter((d) => d.priority === 'archive'),
+    ]
+    let html = ''
+    for (const doc of sorted) {
+      const cls = doc.priority === 'archive' ? 'is-archive' : ''
+      const mark = doc.priority === 'high' ? '<span class="pri" title="priority: high">●</span>' : ''
+      html += `<div class="tree-doc-item" style="--doc-depth:${docDepth}">
+        ${docLink(doc.id, doc.title, cls, mark)}
+        <button class="doc-add-btn" type="button" title="子ドキュメントを追加"
+                hx-get="/ui/doc/${esc(doc.id)}/new-child" hx-target="#doc-view">＋</button>
+      </div>\n`
+      // Render children recursively
+      html += renderDocs(collectionId, doc.id, docDepth + 1)
+    }
+    return html
   }
 
   const renderGroup = (parentId: string | null, depth: number): string => {
     let html = ''
     for (const col of collections.filter((x) => x.parent_id === parentId)) {
-      const docs = docsByCollection.get(col.id) ?? []
-      // priority: high pinned on top, archive sinks to the bottom (dimmed)
-      const sorted = [
-        ...docs.filter((d) => d.priority === 'high'),
-        ...docs.filter((d) => d.priority === 'normal'),
-        ...docs.filter((d) => d.priority === 'archive'),
-      ]
       // collection name navigates to the collections page; the toggle icon
       // (separate, on the right) collapses the group (state kept client-side)
       html += `<section class="tree-group" data-col-id="${esc(col.id)}" style="--depth:${depth}">
@@ -85,11 +108,8 @@ const renderTree = async (c: any): Promise<string> => {
           <button class="tree-toggle" type="button" aria-label="折りたたみ">▾</button>
         </div>
         <div class="tree-children">\n`
-      for (const doc of sorted) {
-        const cls = doc.priority === 'archive' ? 'is-archive' : ''
-        const mark = doc.priority === 'high' ? '<span class="pri" title="priority: high">●</span>' : ''
-        html += docLink(doc.id, doc.title, cls, mark) + '\n'
-      }
+      // Render documents with hierarchy (root docs only, parent_id=null)
+      html += renderDocs(col.id, null, 0)
       // add-doc form sits at the bottom of the document list, indented one level
       html += `<details class="tree-new tree-new-doc">
         <summary>＋ メモを追加</summary>
@@ -151,26 +171,48 @@ const renderCollectionsPage = async (c: any, errorMessage?: string): Promise<str
   const [colsResult, docsResult] = await Promise.all([
     c.env.DB.prepare('SELECT id, name, parent_id FROM collections ORDER BY name').all(),
     c.env.DB.prepare(`
-      SELECT id, title, collection_id FROM documents
+      SELECT id, title, collection_id, parent_id FROM documents
       WHERE status = 'published' ORDER BY updated_at DESC
     `).all(),
   ])
   const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
-  const docsByCollection = new Map<string, any[]>()
+  const docsByCollection = new Map<string, Map<string | null, any[]>>()
   for (const doc of docsResult.results as any[]) {
-    if (!docsByCollection.has(doc.collection_id)) docsByCollection.set(doc.collection_id, [])
-    docsByCollection.get(doc.collection_id)!.push(doc)
+    if (!docsByCollection.has(doc.collection_id)) docsByCollection.set(doc.collection_id, new Map())
+    const parentMap = docsByCollection.get(doc.collection_id)!
+    const pid = doc.parent_id || null
+    if (!parentMap.has(pid)) parentMap.set(pid, [])
+    parentMap.get(pid)!.push(doc)
+  }
+
+  const renderDocTree = (collectionId: string, parentId: string | null, depth: number): string => {
+    if (depth > 20) return ''
+    const parentMap = docsByCollection.get(collectionId)
+    if (!parentMap) return ''
+    const docs = parentMap.get(parentId) ?? []
+    let html = ''
+    for (const doc of docs) {
+      html += `<div style="padding-left: ${depth * 16}px;">${docLink(doc.id, doc.title)}</div>\n`
+      html += renderDocTree(collectionId, doc.id, depth + 1)
+    }
+    return html
+  }
+
+  const countDocs = (collectionId: string): number => {
+    const parentMap = docsByCollection.get(collectionId)
+    if (!parentMap) return 0
+    return Array.from(parentMap.values()).reduce((s, a) => s + a.length, 0)
   }
 
   const blocks = (parentId: string | null, depth: number): string => {
     let html = ''
     for (const col of collections.filter((x) => x.parent_id === parentId)) {
-      const docs = docsByCollection.get(col.id) ?? []
+      const docCount = countDocs(col.id)
       html += `<section class="col-block" style="--depth:${depth}">
-        ${colHead(col, docs.length)}
+        ${colHead(col, docCount)}
         <nav class="tree col-docs">
-          ${docs.map((d) => docLink(d.id, d.title)).join('\n')}
-          ${docs.length === 0 ? '<p class="tree-empty">まだメモがありません</p>' : ''}
+          ${renderDocTree(col.id, null, 0)}
+          ${docCount === 0 ? '<p class="tree-empty">まだメモがありません</p>' : ''}
         </nav>
       </section>\n`
       html += blocks(col.id, depth + 1)
@@ -240,15 +282,37 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
     </section>\n`
   }
 
+  // Build breadcrumb: collection > grandparent > ... > parent (single CTE query, depth-capped at 20)
+  let breadcrumb = `<a class="crumb" href="/?view=collections"
+      hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">コレクション</a> / ${esc((collection as any)?.name ?? '')}`
+
+  if (doc.parent_id) {
+    const ancestorRows = await c.env.DB.prepare(`
+      WITH RECURSIVE anc(id, title, parent_id, depth) AS (
+        SELECT id, title, parent_id, 0 FROM documents WHERE id = ?
+        UNION ALL
+        SELECT d.id, d.title, d.parent_id, a.depth + 1
+        FROM documents d JOIN anc a ON d.id = a.parent_id
+        WHERE a.depth < 20
+      )
+      SELECT id, title, depth FROM anc WHERE id != ? ORDER BY depth DESC
+    `).bind(doc.id, doc.id).all()
+    const ancestors = ancestorRows.results as any[]
+    if (ancestors.length > 0) {
+      breadcrumb += ' / ' + ancestors.map((p) =>
+        `<a class="crumb" href="/?doc=${esc(p.id)}"
+        hx-get="/ui/doc/${esc(p.id)}" hx-target="#doc-view" hx-push-url="/?doc=${esc(p.id)}">${esc(p.title)}</a>`
+      ).join(' / ')
+    }
+  }
+
   const html = `
 <div id="doc-view-inner" data-doc-id="${esc(doc.id)}" data-doc-title="${esc(doc.title)}">
   <div class="doc-head">
     <h1 class="doc-title">${esc(doc.title)}</h1>
     <button class="btn-quiet" hx-get="/ui/doc/${esc(doc.id)}/edit" hx-target="#doc-view">✎ 編集</button>
   </div>
-  <p class="meta-line"><a class="crumb" href="/?view=collections"
-      hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">コレクション</a>
-    / ${esc((collection as any)?.name ?? '')} ・ ${fmtDate(doc.updated_at)}${author ? ` ・ ${author}` : ''}</p>
+  <p class="meta-line">${breadcrumb} ・ ${fmtDate(doc.updated_at)}${author ? ` ・ ${author}` : ''}</p>
   ${tocMobile}
   <div class="doc-columns">
     <article class="prose">${body}</article>
@@ -437,22 +501,58 @@ uiRoute.post('/doc/:id/delete', async (c) => {
   return c.html(await renderWelcome(c))
 })
 
+// GET /ui/doc/:id/new-child - Child document creation form
+uiRoute.get('/doc/:id/new-child', async (c) => {
+  const auth = c.get('auth')
+  const id = c.req.param('id')
+  const doc = await c.env.DB.prepare('SELECT id, title, collection_id FROM documents WHERE id = ?').bind(id).first() as any
+  if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  return c.html(`
+<div id="doc-view-inner" data-doc-title="子ドキュメント作成">
+  <div class="doc-head"><h1 class="doc-title">子ドキュメント作成</h1></div>
+  <p class="meta-line">親: <a class="crumb" href="/?doc=${esc(doc.id)}"
+      hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view" hx-push-url="/?doc=${esc(doc.id)}">${esc(doc.title)}</a></p>
+  <form hx-post="/ui/docs" hx-target="#doc-view">
+    <input type="hidden" name="collection_id" value="${esc(doc.collection_id)}">
+    <input type="hidden" name="parent_id" value="${esc(doc.id)}">
+    <input class="input doc-title-input" name="title" placeholder="タイトル" required autofocus autocomplete="off">
+    <button class="btn-primary" type="submit">作成</button>
+    <button class="btn-quiet" type="button" hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view">キャンセル</button>
+  </form>
+</div>`)
+})
+
 // POST /ui/docs - Create document (from the tree's inline form)
 uiRoute.post('/docs', async (c) => {
   const auth = c.get('auth')
   const body = await c.req.parseBody()
   const title = String(body.title ?? '').trim()
   const collectionId = String(body.collection_id ?? '')
+  const parentId = String(body.parent_id ?? '').trim() || null
   if (!title || !collectionId) return c.html(errorFragment('タイトルが必要です'), 400)
   if (!isCollectionAllowed(auth, collectionId)) return c.html(errorFragment('アクセス権がありません'), 403)
 
   const author = authorOf(auth)
   const id = generateId('doc')
   const now = Date.now()
+
+  // Verify parent and build path in one query
+  let path: string
+  if (parentId) {
+    const parent = await c.env.DB.prepare('SELECT collection_id, path FROM documents WHERE id = ?').bind(parentId).first() as any
+    if (!parent) return c.html(errorFragment('親ドキュメントが見つかりません'), 404)
+    if (parent.collection_id !== collectionId) return c.html(errorFragment('親ドキュメントが異なるコレクションです'), 400)
+    path = `${parent.path}/${id}`
+  } else {
+    path = `/${collectionId}/${id}`
+  }
+
   await c.env.DB.prepare(`
     INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
-    VALUES (?, ?, '', ?, NULL, ?, 'normal', 'published', ?, ?, ?, ?)
-  `).bind(id, title, collectionId, `/${collectionId}/${id}`, author.authorType, author.apiKeyId, now, now).run()
+    VALUES (?, ?, '', ?, ?, ?, 'normal', 'published', ?, ?, ?, ?)
+  `).bind(id, title, collectionId, parentId, path, author.authorType, author.apiKeyId, now, now).run()
   await createRevision(c.env.DB, id, title, '', author, now)
 
   const result = await renderDoc(c, id)

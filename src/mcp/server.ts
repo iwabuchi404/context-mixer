@@ -26,14 +26,15 @@ export const toolDefinitions = {
     }
   },
   write_doc: {
-    description: 'Create or update a document',
+    description: 'Create or update a document. When creating, specify parent_id to create as a child document.',
     inputSchema: {
       type: 'object' as const,
       properties: {
         id: { type: 'string', description: 'Document ID (omit to create new)' },
         title: { type: 'string', description: 'Document title' },
         content: { type: 'string', description: 'Document content (markdown)' },
-        collection_id: { type: 'string', description: 'Collection ID' }
+        collection_id: { type: 'string', description: 'Collection ID' },
+        parent_id: { type: 'string', description: 'Parent document ID (optional, for creating child documents)' }
       },
       required: ['title', 'content', 'collection_id']
     }
@@ -50,7 +51,7 @@ export const toolDefinitions = {
     }
   },
   list_collections: {
-    description: 'List all collections',
+    description: 'List all collections as a tree structure with nested children',
     inputSchema: {
       type: 'object' as const,
       properties: {}

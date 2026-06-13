@@ -5,7 +5,7 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// .wrangler/tmp/bundle-mzpjer/checked-fetch.js
+// .wrangler/tmp/bundle-EovuP5/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init) {
   const url2 = request instanceof URL ? request : new URL(
@@ -53,13 +53,13 @@ var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {
       if (handler) {
         try {
           res = await handler(context, () => dispatch(i + 1));
-        } catch (err) {
-          if (err instanceof Error && onError) {
-            context.error = err;
-            res = await onError(err, context);
+        } catch (err3) {
+          if (err3 instanceof Error && onError) {
+            context.error = err3;
+            res = await onError(err3, context);
             isError = true;
           } else {
-            throw err;
+            throw err3;
           }
         }
       } else {
@@ -80,8 +80,8 @@ var compose = /* @__PURE__ */ __name((middleware, onError, onNotFound) => {
 var GET_MATCH_RESULT = /* @__PURE__ */ Symbol();
 
 // node_modules/hono/dist/utils/body.js
-var parseBody = /* @__PURE__ */ __name(async (request, options = /* @__PURE__ */ Object.create(null)) => {
-  const { all = false, dot = false } = options;
+var parseBody = /* @__PURE__ */ __name(async (request, options2 = /* @__PURE__ */ Object.create(null)) => {
+  const { all = false, dot = false } = options2;
   const headers = request instanceof HonoRequest ? request.raw.headers : request.headers;
   const contentType = headers.get("Content-Type");
   if (contentType?.startsWith("multipart/form-data") || contentType?.startsWith("application/x-www-form-urlencoded")) {
@@ -89,25 +89,25 @@ var parseBody = /* @__PURE__ */ __name(async (request, options = /* @__PURE__ */
   }
   return {};
 }, "parseBody");
-async function parseFormData(request, options) {
+async function parseFormData(request, options2) {
   const formData = await request.formData();
   if (formData) {
-    return convertFormDataToBodyData(formData, options);
+    return convertFormDataToBodyData(formData, options2);
   }
   return {};
 }
 __name(parseFormData, "parseFormData");
-function convertFormDataToBodyData(formData, options) {
+function convertFormDataToBodyData(formData, options2) {
   const form = /* @__PURE__ */ Object.create(null);
   formData.forEach((value, key) => {
-    const shouldParseAllValues = options.all || key.endsWith("[]");
+    const shouldParseAllValues = options2.all || key.endsWith("[]");
     if (!shouldParseAllValues) {
       form[key] = value;
     } else {
       handleParsingAllValues(form, key, value);
     }
   });
-  if (options.dot) {
+  if (options2.dot) {
     Object.entries(form).forEach(([key, value]) => {
       const shouldParseDotValues = key.includes(".");
       if (shouldParseDotValues) {
@@ -440,8 +440,8 @@ var HonoRequest = class {
     });
     return headerData;
   }
-  async parseBody(options) {
-    return parseBody(this, options);
+  async parseBody(options2) {
+    return parseBody(this, options2);
   }
   #cachedBody = /* @__PURE__ */ __name((key) => {
     const { bodyCache, raw: raw2 } = this;
@@ -747,14 +747,14 @@ var Context = class {
    * @param req - The Request object.
    * @param options - Optional configuration options for the context.
    */
-  constructor(req, options) {
+  constructor(req, options2) {
     this.#rawRequest = req;
-    if (options) {
-      this.#executionCtx = options.executionCtx;
-      this.env = options.env;
-      this.#notFoundHandler = options.notFoundHandler;
-      this.#path = options.path;
-      this.#matchResult = options.matchResult;
+    if (options2) {
+      this.#executionCtx = options2.executionCtx;
+      this.env = options2.env;
+      this.#notFoundHandler = options2.notFoundHandler;
+      this.#path = options2.path;
+      this.#matchResult = options2.matchResult;
     }
   }
   /**
@@ -894,14 +894,14 @@ var Context = class {
    * })
    * ```
    */
-  header = /* @__PURE__ */ __name((name, value, options) => {
+  header = /* @__PURE__ */ __name((name, value, options2) => {
     if (this.finalized) {
       this.#res = createResponseInstance(this.#res.body, this.#res);
     }
     const headers = this.#res ? this.#res.headers : this.#preparedHeaders ??= new Headers();
     if (value === void 0) {
       headers.delete(name);
-    } else if (options?.append) {
+    } else if (options2?.append) {
       headers.append(name, value);
     } else {
       headers.set(name, value);
@@ -1048,9 +1048,9 @@ var Context = class {
       setDefaultContentType("application/json", headers)
     );
   }, "json");
-  html = /* @__PURE__ */ __name((html, arg, headers) => {
-    const res = /* @__PURE__ */ __name((html2) => this.#newResponse(html2, arg, setDefaultContentType("text/html; charset=UTF-8", headers)), "res");
-    return typeof html === "object" ? resolveCallback(html, HtmlEscapedCallbackPhase.Stringify, false, {}).then(res) : res(html);
+  html = /* @__PURE__ */ __name((html2, arg, headers) => {
+    const res = /* @__PURE__ */ __name((html22) => this.#newResponse(html22, arg, setDefaultContentType("text/html; charset=UTF-8", headers)), "res");
+    return typeof html2 === "object" ? resolveCallback(html2, HtmlEscapedCallbackPhase.Stringify, false, {}).then(res) : res(html2);
   }, "html");
   /**
    * `.redirect()` can Redirect, default status code is 302.
@@ -1113,12 +1113,12 @@ var COMPOSED_HANDLER = "__COMPOSED_HANDLER";
 var notFoundHandler = /* @__PURE__ */ __name((c) => {
   return c.text("404 Not Found", 404);
 }, "notFoundHandler");
-var errorHandler = /* @__PURE__ */ __name((err, c) => {
-  if ("getResponse" in err) {
-    const res = err.getResponse();
+var errorHandler = /* @__PURE__ */ __name((err3, c) => {
+  if ("getResponse" in err3) {
+    const res = err3.getResponse();
     return c.newResponse(res.body, res);
   }
-  console.error(err);
+  console.error(err3);
   return c.text("Internal Server Error", 500);
 }, "errorHandler");
 var Hono = class _Hono {
@@ -1144,7 +1144,7 @@ var Hono = class _Hono {
   _basePath = "/";
   #path = "/";
   routes = [];
-  constructor(options = {}) {
+  constructor(options2 = {}) {
     const allMethods = [...METHODS, METHOD_NAME_ALL_LOWERCASE];
     allMethods.forEach((method) => {
       this[method] = (args1, ...args) => {
@@ -1182,9 +1182,9 @@ var Hono = class _Hono {
       });
       return this;
     };
-    const { strict, ...optionsWithoutStrict } = options;
+    const { strict, ...optionsWithoutStrict } = options2;
     Object.assign(this, optionsWithoutStrict);
-    this.getPath = strict ?? true ? options.getPath ?? getPath : getPathNoStrict;
+    this.getPath = strict ?? true ? options2.getPath ?? getPath : getPathNoStrict;
   }
   #clone() {
     const clone2 = new _Hono({
@@ -1320,24 +1320,24 @@ var Hono = class _Hono {
    * })
    * ```
    */
-  mount(path, applicationHandler, options) {
+  mount(path, applicationHandler, options2) {
     let replaceRequest;
     let optionHandler;
-    if (options) {
-      if (typeof options === "function") {
-        optionHandler = options;
+    if (options2) {
+      if (typeof options2 === "function") {
+        optionHandler = options2;
       } else {
-        optionHandler = options.optionHandler;
-        if (options.replaceRequest === false) {
+        optionHandler = options2.optionHandler;
+        if (options2.replaceRequest === false) {
           replaceRequest = /* @__PURE__ */ __name((request) => request, "replaceRequest");
         } else {
-          replaceRequest = options.replaceRequest;
+          replaceRequest = options2.replaceRequest;
         }
       }
     }
     const getOptions = optionHandler ? (c) => {
-      const options2 = optionHandler(c);
-      return Array.isArray(options2) ? options2 : [options2];
+      const options22 = optionHandler(c);
+      return Array.isArray(options22) ? options22 : [options22];
     } : (c) => {
       let executionContext = void 0;
       try {
@@ -1377,11 +1377,11 @@ var Hono = class _Hono {
     this.router.add(method, path, [handler, r]);
     this.routes.push(r);
   }
-  #handleError(err, c) {
-    if (err instanceof Error) {
-      return this.errorHandler(err, c);
+  #handleError(err3, c) {
+    if (err3 instanceof Error) {
+      return this.errorHandler(err3, c);
     }
-    throw err;
+    throw err3;
   }
   #dispatch(request, executionCtx, env2, method) {
     if (method === "HEAD") {
@@ -1402,12 +1402,12 @@ var Hono = class _Hono {
         res = matchResult[0][0][0][0](c, async () => {
           c.res = await this.#notFoundHandler(c);
         });
-      } catch (err) {
-        return this.#handleError(err, c);
+      } catch (err3) {
+        return this.#handleError(err3, c);
       }
       return res instanceof Promise ? res.then(
         (resolved) => resolved || (c.finalized ? c.res : this.#notFoundHandler(c))
-      ).catch((err) => this.#handleError(err, c)) : res ?? this.#notFoundHandler(c);
+      ).catch((err3) => this.#handleError(err3, c)) : res ?? this.#notFoundHandler(c);
     }
     const composed = compose(matchResult[0], this.errorHandler, this.#notFoundHandler);
     return (async () => {
@@ -1419,8 +1419,8 @@ var Hono = class _Hono {
           );
         }
         return context.res;
-      } catch (err) {
-        return this.#handleError(err, c);
+      } catch (err3) {
+        return this.#handleError(err3, c);
       }
     })();
   }
@@ -2138,22 +2138,22 @@ var Hono2 = class extends Hono {
    *
    * @param options - Optional configuration options for the Hono instance.
    */
-  constructor(options = {}) {
-    super(options);
-    this.router = options.router ?? new SmartRouter({
+  constructor(options2 = {}) {
+    super(options2);
+    this.router = options2.router ?? new SmartRouter({
       routers: [new RegExpRouter(), new TrieRouter()]
     });
   }
 };
 
 // node_modules/hono/dist/middleware/cors/index.js
-var cors = /* @__PURE__ */ __name((options) => {
+var cors = /* @__PURE__ */ __name((options2) => {
   const opts = {
     origin: "*",
     allowMethods: ["GET", "HEAD", "PUT", "POST", "DELETE", "PATCH"],
     allowHeaders: [],
     exposeHeaders: [],
-    ...options
+    ...options2
   };
   const findAllowOrigin = ((optsOrigin) => {
     if (typeof optsOrigin === "string") {
@@ -2228,6 +2228,3019 @@ var cors = /* @__PURE__ */ __name((options) => {
     }
   }, "cors2");
 }, "cors");
+
+// node_modules/@cloudflare/workers-oauth-provider/dist/oauth-provider.js
+import { WorkerEntrypoint } from "cloudflare:workers";
+var EMA_ID_JAG_JWT_TYPE = "oauth-id-jag+jwt";
+var EMA_ID_JAG_GRANT_PROFILE = "urn:ietf:params:oauth:grant-profile:id-jag";
+var EMA_MAX_JWT_BYTES = 16 * 1024;
+var EMA_JWKS_MAX_SIZE_BYTES = 64 * 1024;
+var EMA_JWKS_FETCH_TIMEOUT_MS = 1e4;
+var EMA_DEFAULT_JWKS_CACHE_TTL_SECONDS = 300;
+var EMA_DEFAULT_CLOCK_SKEW_SECONDS = 60;
+var EMA_DEFAULT_MAX_ASSERTION_LIFETIME_SECONDS = 300;
+var EMA_JWKS_FORCE_REFRESH_COOLDOWN_SECONDS = 30;
+var EMA_DEFAULT_JWT_ALGORITHM = "RS256";
+var EMA_SUPPORTED_JWT_ALGORITHMS = /* @__PURE__ */ new Set(["RS256", "ES256"]);
+var ok = /* @__PURE__ */ __name((value) => ({
+  ok: true,
+  value
+}), "ok");
+var err = /* @__PURE__ */ __name((error51) => ({
+  ok: false,
+  error: error51
+}), "err");
+function emaErrorToWire(e) {
+  switch (e.reason) {
+    case "assertion_missing":
+      return {
+        code: "invalid_request",
+        message: "assertion is required"
+      };
+    case "invalid_scope_param":
+      return {
+        code: "invalid_request",
+        message: "Invalid scope parameter format"
+      };
+    case "resource_invalid":
+    case "resource_mismatch":
+      return {
+        code: "invalid_target",
+        message: "Invalid resource"
+      };
+    case "mapper_denied":
+    case "mapper_threw":
+      return {
+        code: "invalid_grant",
+        message: "Assertion was not authorized"
+      };
+    case "invalid_mapped_user":
+      return {
+        code: "invalid_grant",
+        message: "Invalid mapped user"
+      };
+    case "invalid_mapped_scope":
+      return {
+        code: "invalid_grant",
+        message: "Invalid mapped scope"
+      };
+    case "invalid_mapped_props":
+      return {
+        code: "invalid_grant",
+        message: "Invalid mapped props"
+      };
+    case "invalid_mapped_ttl":
+      return {
+        code: "invalid_grant",
+        message: "Invalid access token TTL"
+      };
+    case "assertion_expired_after_processing":
+      return {
+        code: "invalid_grant",
+        message: "Assertion has expired"
+      };
+    case "assertion_too_large":
+    case "assertion_malformed":
+    case "invalid_typ":
+    case "invalid_alg":
+    case "issuer_not_trusted":
+    case "no_matching_key":
+    case "signature_failed":
+    case "jwks_fetch_failed":
+    case "invalid_claim":
+    case "aud_mismatch":
+    case "expired":
+    case "iat_in_future":
+    case "nbf_in_future":
+    case "lifetime_too_long":
+    case "replayed":
+    case "client_id_mismatch":
+      return {
+        code: "invalid_grant",
+        message: "Invalid assertion"
+      };
+  }
+}
+__name(emaErrorToWire, "emaErrorToWire");
+async function sha256Hex(input) {
+  const data = new TextEncoder().encode(input);
+  const buffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(buffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(sha256Hex, "sha256Hex");
+var EMA_JTI_KV_PREFIX = "enterprise-jti:";
+function createKvJtiStore() {
+  return { async markUsed({ issuer, jti, exp, now, env: env2 }) {
+    const ttl = Math.max(1, exp - now);
+    const key = `${EMA_JTI_KV_PREFIX}${await sha256Hex(`${issuer}
+${jti}`)}`;
+    if (await env2.OAUTH_KV.get(key)) return err({
+      reason: "replayed",
+      jti
+    });
+    await env2.OAUTH_KV.put(key, "1", { expirationTtl: ttl });
+    return ok(void 0);
+  } };
+}
+__name(createKvJtiStore, "createKvJtiStore");
+function createDefaultJwksProvider(opts = {}) {
+  const cache2 = /* @__PURE__ */ new Map();
+  const cacheTtl = opts.cacheTtlSeconds ?? EMA_DEFAULT_JWKS_CACHE_TTL_SECONDS;
+  return { async fetch(issuer, { forceRefresh, now }) {
+    const cached2 = cache2.get(issuer.issuer);
+    if (!forceRefresh && cached2 && cached2.expiresAt > now) return ok(cached2.jwks);
+    if (forceRefresh && cached2 && cached2.nextForceRefreshAllowedAt > now) return ok(cached2.jwks);
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), EMA_JWKS_FETCH_TIMEOUT_MS);
+    try {
+      const response = await fetch(issuer.jwksUri, {
+        headers: { Accept: "application/json" },
+        signal: abortController.signal,
+        cf: { cacheEverything: true }
+      });
+      if (!response.ok) return err({
+        reason: "jwks_fetch_failed",
+        status: response.status
+      });
+      const contentLength = response.headers.get("content-length");
+      if (contentLength && parseInt(contentLength, 10) > EMA_JWKS_MAX_SIZE_BYTES) return err({
+        reason: "jwks_fetch_failed",
+        status: response.status
+      });
+      const rawJwks = await readJsonWithSizeLimit(response, EMA_JWKS_MAX_SIZE_BYTES);
+      if (!rawJwks.ok) return err({ reason: "jwks_fetch_failed" });
+      if (!Array.isArray(rawJwks.value.keys)) return err({ reason: "jwks_fetch_failed" });
+      const jwks = { keys: rawJwks.value.keys };
+      cache2.set(issuer.issuer, {
+        jwks,
+        expiresAt: now + cacheTtl,
+        nextForceRefreshAllowedAt: now + EMA_JWKS_FORCE_REFRESH_COOLDOWN_SECONDS
+      });
+      return ok(jwks);
+    } catch {
+      return err({ reason: "jwks_fetch_failed" });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  } };
+}
+__name(createDefaultJwksProvider, "createDefaultJwksProvider");
+async function readJsonWithSizeLimit(response, maxBytes) {
+  if (!response.body) return { ok: false };
+  const reader = response.body.getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total > maxBytes) {
+        reader.cancel();
+        return { ok: false };
+      }
+      chunks.push(value);
+    }
+  } finally {
+    reader.releaseLock();
+  }
+  const merged = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  try {
+    const parsed = JSON.parse(new TextDecoder().decode(merged));
+    if (typeof parsed !== "object" || parsed === null) return { ok: false };
+    return {
+      ok: true,
+      value: parsed
+    };
+  } catch {
+    return { ok: false };
+  }
+}
+__name(readJsonWithSizeLimit, "readJsonWithSizeLimit");
+function parseIdJag(assertion, maxBytes) {
+  if (typeof assertion !== "string" || assertion.length === 0) return err({ reason: "assertion_missing" });
+  if (assertion.length > maxBytes) return err({
+    reason: "assertion_too_large",
+    size: assertion.length,
+    max: maxBytes
+  });
+  const parts = assertion.split(".");
+  if (parts.length !== 3 || parts.some((part) => part.length === 0)) return err({ reason: "assertion_malformed" });
+  const [encodedHeader, encodedClaims, encodedSignature] = parts;
+  let header;
+  let rawClaims;
+  let signature;
+  try {
+    header = parseJwtJsonPart(encodedHeader);
+    rawClaims = parseJwtJsonPart(encodedClaims);
+    signature = base64UrlToBytes(encodedSignature);
+  } catch {
+    return err({ reason: "assertion_malformed" });
+  }
+  const signingInput = new TextEncoder().encode(`${encodedHeader}.${encodedClaims}`);
+  return ok({
+    header,
+    rawClaims,
+    signingInput,
+    signature
+  });
+}
+__name(parseIdJag, "parseIdJag");
+function selectJwk(jwks, alg, kid) {
+  const matching = (jwks.keys ?? []).filter((key) => {
+    if (kid && key.kid !== kid) return false;
+    if (key.alg && key.alg !== alg) return false;
+    if (key.use && key.use !== "sig") return false;
+    if (Array.isArray(key.key_ops) && !key.key_ops.includes("verify")) return false;
+    if (alg.startsWith("RS") && key.kty !== "RSA") return false;
+    if (alg.startsWith("ES") && key.kty !== "EC") return false;
+    return true;
+  });
+  if (kid) {
+    const picked = matching[0];
+    if (!picked) return err({
+      reason: "no_matching_key",
+      kid
+    });
+    return ok(picked);
+  }
+  if (matching.length !== 1) return err({ reason: "no_matching_key" });
+  return ok(matching[0]);
+}
+__name(selectJwk, "selectJwk");
+async function verifyIdJagSignature(input) {
+  try {
+    const { importAlgorithm, verifyAlgorithm } = getJwtCryptoAlgorithms(input.alg);
+    const key = await crypto.subtle.importKey("jwk", input.jwk, importAlgorithm, false, ["verify"]);
+    return await crypto.subtle.verify(verifyAlgorithm, key, input.signature, input.signingInput);
+  } catch {
+    return false;
+  }
+}
+__name(verifyIdJagSignature, "verifyIdJagSignature");
+function validateIdJagHeader(header, expectedTyp, supportedAlgs) {
+  const typ = header.typ;
+  if (typeof typ !== "string" || typ !== expectedTyp) return err({
+    reason: "invalid_typ",
+    got: typ
+  });
+  const alg = header.alg;
+  if (typeof alg !== "string" || alg === "none" || !supportedAlgs.has(alg)) return err({
+    reason: "invalid_alg",
+    got: alg
+  });
+  const kidRaw = header.kid;
+  return ok({
+    typ,
+    alg,
+    kid: typeof kidRaw === "string" && kidRaw.length > 0 ? kidRaw : void 0
+  });
+}
+__name(validateIdJagHeader, "validateIdJagHeader");
+async function resolveTrustedIssuer(input) {
+  const { iss, alg, resolver, env: env2, request, clientInfo } = input;
+  if (typeof iss !== "string" || iss.length === 0) return err({
+    reason: "invalid_claim",
+    claim: "iss"
+  });
+  let resolved;
+  try {
+    resolved = await resolver({
+      iss,
+      env: env2,
+      request,
+      clientInfo
+    });
+  } catch {
+    return err({
+      reason: "issuer_not_trusted",
+      iss
+    });
+  }
+  if (!resolved) return err({
+    reason: "issuer_not_trusted",
+    iss
+  });
+  if (resolved.issuer !== iss) return err({
+    reason: "issuer_not_trusted",
+    iss
+  });
+  if (!isWellFormedTrustedIssuer(resolved)) return err({
+    reason: "issuer_not_trusted",
+    iss
+  });
+  if (!(resolved.algorithms ?? [EMA_DEFAULT_JWT_ALGORITHM]).includes(alg)) return err({
+    reason: "issuer_not_trusted",
+    iss
+  });
+  return ok(resolved);
+}
+__name(resolveTrustedIssuer, "resolveTrustedIssuer");
+function isWellFormedTrustedIssuer(issuer) {
+  let issuerUrl;
+  try {
+    issuerUrl = new URL(issuer.issuer);
+  } catch {
+    return false;
+  }
+  if (issuerUrl.protocol !== "https:") return false;
+  let jwksUrl;
+  try {
+    jwksUrl = new URL(issuer.jwksUri);
+  } catch {
+    return false;
+  }
+  if (jwksUrl.protocol !== "https:") return false;
+  const algorithms = issuer.algorithms ?? [EMA_DEFAULT_JWT_ALGORITHM];
+  if (algorithms.length === 0) return false;
+  for (const alg of algorithms) if (!EMA_SUPPORTED_JWT_ALGORITHMS.has(alg)) return false;
+  if (issuer.audience !== void 0) try {
+    new URL(issuer.audience);
+  } catch {
+    return false;
+  }
+  return true;
+}
+__name(isWellFormedTrustedIssuer, "isWellFormedTrustedIssuer");
+function validateIdJagClaims(input) {
+  const { rawClaims, trustedIssuer, expectedAudience, clientId, configuredResource, matchOriginOnly } = input;
+  const { now, clockSkewSeconds, maxAssertionLifetimeSeconds } = input;
+  const iss = readRequiredString(rawClaims, "iss");
+  if (!iss.ok) return iss;
+  if (iss.value !== trustedIssuer.issuer) return err({
+    reason: "issuer_not_trusted",
+    iss: iss.value
+  });
+  const sub = readRequiredString(rawClaims, "sub");
+  if (!sub.ok) return sub;
+  const aud = readAudienceClaim(rawClaims);
+  if (!aud.ok) return aud;
+  const resource = readRequiredString(rawClaims, "resource");
+  if (!resource.ok) return resource;
+  const claimClientId = readRequiredString(rawClaims, "client_id");
+  if (!claimClientId.ok) return claimClientId;
+  const jti = readRequiredString(rawClaims, "jti");
+  if (!jti.ok) return jti;
+  const exp = readNumericDateClaim(rawClaims, "exp");
+  if (!exp.ok) return exp;
+  const iat = readNumericDateClaim(rawClaims, "iat");
+  if (!iat.ok) return iat;
+  if (!(Array.isArray(aud.value) ? aud.value : [aud.value]).includes(expectedAudience)) return err({
+    reason: "aud_mismatch",
+    expected: expectedAudience,
+    got: aud.value
+  });
+  if (claimClientId.value !== clientId) return err({
+    reason: "client_id_mismatch",
+    expected: clientId,
+    got: claimClientId.value
+  });
+  if (!validateResourceUri(resource.value)) return err({
+    reason: "resource_invalid",
+    resource: resource.value
+  });
+  if (!resourceMatches(resource.value, configuredResource, matchOriginOnly)) return err({
+    reason: "resource_mismatch",
+    expected: configuredResource,
+    got: resource.value
+  });
+  if (exp.value + clockSkewSeconds <= now) return err({
+    reason: "expired",
+    exp: exp.value,
+    now
+  });
+  if (iat.value > now + clockSkewSeconds) return err({
+    reason: "iat_in_future",
+    iat: iat.value,
+    now,
+    skew: clockSkewSeconds
+  });
+  if (rawClaims.nbf !== void 0) {
+    const nbf = readNumericDateClaim(rawClaims, "nbf");
+    if (!nbf.ok) return nbf;
+    if (nbf.value > now + clockSkewSeconds) return err({
+      reason: "nbf_in_future",
+      nbf: nbf.value,
+      now,
+      skew: clockSkewSeconds
+    });
+  }
+  const lifetime = exp.value - iat.value;
+  if (lifetime > maxAssertionLifetimeSeconds + clockSkewSeconds) return err({
+    reason: "lifetime_too_long",
+    lifetime,
+    max: maxAssertionLifetimeSeconds
+  });
+  let scope;
+  let assertionScopes = [];
+  if (rawClaims.scope !== void 0) {
+    const parsed = readRequiredString(rawClaims, "scope");
+    if (!parsed.ok) return parsed;
+    const tokens = parsed.value.split(" ").filter(Boolean);
+    for (const token of tokens) if (!isValidOAuthScopeToken(token)) return err({
+      reason: "invalid_claim",
+      claim: "scope"
+    });
+    scope = parsed.value;
+    assertionScopes = tokens;
+  }
+  return ok({
+    claims: {
+      ...rawClaims,
+      iss: iss.value,
+      sub: sub.value,
+      aud: aud.value,
+      resource: resource.value,
+      client_id: claimClientId.value,
+      jti: jti.value,
+      exp: exp.value,
+      iat: iat.value,
+      scope
+    },
+    resource: resource.value,
+    assertionScopes
+  });
+}
+__name(validateIdJagClaims, "validateIdJagClaims");
+function parseEmaScopeParam(scope, assertionScopes) {
+  let requested;
+  if (scope === void 0) requested = [...assertionScopes];
+  else if (typeof scope === "string") {
+    const tokens = scope.split(" ").filter(Boolean);
+    for (const token of tokens) if (!isValidOAuthScopeToken(token)) return err({ reason: "invalid_scope_param" });
+    requested = tokens;
+  } else if (Array.isArray(scope) && scope.every((value) => typeof value === "string")) {
+    requested = [];
+    for (const part of scope) {
+      const tokens = part.split(" ").filter(Boolean);
+      for (const token of tokens) if (!isValidOAuthScopeToken(token)) return err({ reason: "invalid_scope_param" });
+      requested.push(...tokens);
+    }
+  } else return err({ reason: "invalid_scope_param" });
+  if (assertionScopes.length > 0) {
+    const allowed = new Set(assertionScopes);
+    requested = requested.filter((token) => allowed.has(token));
+  }
+  return ok(requested);
+}
+__name(parseEmaScopeParam, "parseEmaScopeParam");
+function validateEmaMapperResult(result) {
+  if (result === null) return err({ reason: "mapper_denied" });
+  if (typeof result !== "object") return err({ reason: "invalid_mapped_user" });
+  const r = result;
+  if (typeof r.userId !== "string" || r.userId.length === 0 || r.userId.includes(":")) return err({ reason: "invalid_mapped_user" });
+  if (!Array.isArray(r.scope) || !r.scope.every((s2) => typeof s2 === "string" && isValidOAuthScopeToken(s2))) return err({ reason: "invalid_mapped_scope" });
+  if (!("props" in r) || r.props === void 0) return err({ reason: "invalid_mapped_props" });
+  if (r.accessTokenTTL !== void 0) {
+    if (typeof r.accessTokenTTL !== "number" || !Number.isFinite(r.accessTokenTTL) || r.accessTokenTTL <= 0) return err({ reason: "invalid_mapped_ttl" });
+  }
+  return ok({
+    userId: r.userId,
+    scope: r.scope,
+    props: r.props,
+    metadata: r.metadata,
+    accessTokenTTL: r.accessTokenTTL
+  });
+}
+__name(validateEmaMapperResult, "validateEmaMapperResult");
+function computeEmaAccessTokenTTL(input) {
+  const { configuredDefaultSeconds, assertionExp, mapperTtl, now } = input;
+  if (assertionExp - now <= 0) return err({ reason: "assertion_expired_after_processing" });
+  return ok(mapperTtl ?? configuredDefaultSeconds);
+}
+__name(computeEmaAccessTokenTTL, "computeEmaAccessTokenTTL");
+function readRequiredString(claims, claimName) {
+  const value = claims[claimName];
+  if (typeof value !== "string" || value.length === 0) return err({
+    reason: "invalid_claim",
+    claim: claimName
+  });
+  return ok(value);
+}
+__name(readRequiredString, "readRequiredString");
+function readAudienceClaim(claims) {
+  const aud = claims.aud;
+  if (typeof aud === "string" && aud.length > 0) return ok(aud);
+  if (Array.isArray(aud) && aud.length > 0 && aud.every((v) => typeof v === "string" && v.length > 0)) return ok(aud);
+  return err({
+    reason: "invalid_claim",
+    claim: "aud"
+  });
+}
+__name(readAudienceClaim, "readAudienceClaim");
+function readNumericDateClaim(claims, claimName) {
+  const value = claims[claimName];
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0) return err({
+    reason: "invalid_claim",
+    claim: claimName
+  });
+  return ok(value);
+}
+__name(readNumericDateClaim, "readNumericDateClaim");
+var PROTECTED_RESOURCE_WELL_KNOWN_PREFIX = "/.well-known/oauth-protected-resource";
+var NO_CACHE_HEADERS = {
+  "Cache-Control": "no-store",
+  Pragma: "no-cache"
+};
+if (!(typeof Cloudflare !== "undefined" && Cloudflare.compatibilityFlags?.global_fetch_strictly_public === true)) console.warn(`CIMD (Client ID Metadata Document) is disabled: add '"compatibility_flags": ["global_fetch_strictly_public"]' to your wrangler.jsonc to enable. See: https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public`);
+var HandlerType = /* @__PURE__ */ (function(HandlerType$1) {
+  HandlerType$1[HandlerType$1["EXPORTED_HANDLER"] = 0] = "EXPORTED_HANDLER";
+  HandlerType$1[HandlerType$1["WORKER_ENTRYPOINT"] = 1] = "WORKER_ENTRYPOINT";
+  return HandlerType$1;
+})(HandlerType || {});
+var GrantType = /* @__PURE__ */ (function(GrantType$1) {
+  GrantType$1["AUTHORIZATION_CODE"] = "authorization_code";
+  GrantType$1["REFRESH_TOKEN"] = "refresh_token";
+  GrantType$1["TOKEN_EXCHANGE"] = "urn:ietf:params:oauth:grant-type:token-exchange";
+  GrantType$1["JWT_BEARER"] = "urn:ietf:params:oauth:grant-type:jwt-bearer";
+  return GrantType$1;
+})({});
+var OAuthProvider = class {
+  static {
+    __name(this, "OAuthProvider");
+  }
+  #impl;
+  /**
+  * Creates a new OAuth provider instance
+  * @param options - Configuration options for the provider
+  */
+  constructor(options2) {
+    this.#impl = new OAuthProviderImpl(options2);
+  }
+  /**
+  * Main fetch handler for the Worker
+  * Routes requests to the appropriate handler based on the URL
+  * @param request - The HTTP request
+  * @param env - Cloudflare Worker environment variables
+  * @param ctx - Cloudflare Worker execution context
+  * @returns A Promise resolving to an HTTP Response
+  */
+  fetch(request, env2, ctx) {
+    return this.#impl.fetch(request, env2, ctx);
+  }
+  /**
+  * Purges expired and orphaned data from the KV namespace.
+  * Can be called directly from a scheduled handler without needing a request context.
+  *
+  * @param env - Cloudflare Worker environment variables (must include OAUTH_KV binding)
+  * @param options - Optional configuration for batch size and which purge types to enable
+  * @returns Statistics about what was checked and purged
+  */
+  purgeExpiredData(env2, options2) {
+    return this.#impl.createOAuthHelpers(env2).purgeExpiredData(options2);
+  }
+};
+var OAuthProviderImpl = class OAuthProviderImpl2 {
+  static {
+    __name(this, "OAuthProviderImpl");
+  }
+  /**
+  * Creates a new OAuth provider instance
+  * @param options - Configuration options for the provider
+  */
+  constructor(options2) {
+    this.typedApiHandlers = [];
+    const hasSingleHandlerConfig = !!(options2.apiRoute && options2.apiHandler);
+    const hasMultiHandlerConfig = !!options2.apiHandlers;
+    if (hasSingleHandlerConfig && hasMultiHandlerConfig) throw new TypeError("Cannot use both apiRoute/apiHandler and apiHandlers. Use either apiRoute + apiHandler OR apiHandlers, not both.");
+    if (!hasSingleHandlerConfig && !hasMultiHandlerConfig) throw new TypeError("Must provide either apiRoute + apiHandler OR apiHandlers. No API route configuration provided.");
+    this.typedDefaultHandler = this.validateHandler(options2.defaultHandler, "defaultHandler");
+    if (hasSingleHandlerConfig) {
+      const apiHandler = this.validateHandler(options2.apiHandler, "apiHandler");
+      if (Array.isArray(options2.apiRoute)) options2.apiRoute.forEach((route, index) => {
+        this.validateEndpoint(route, `apiRoute[${index}]`);
+        this.typedApiHandlers.push([route, apiHandler]);
+      });
+      else {
+        this.validateEndpoint(options2.apiRoute, "apiRoute");
+        this.typedApiHandlers.push([options2.apiRoute, apiHandler]);
+      }
+    } else for (const [route, handler] of Object.entries(options2.apiHandlers)) {
+      this.validateEndpoint(route, `apiHandlers key: ${route}`);
+      this.typedApiHandlers.push([route, this.validateHandler(handler, `apiHandlers[${route}]`)]);
+    }
+    this.validateEndpoint(options2.authorizeEndpoint, "authorizeEndpoint");
+    this.validateEndpoint(options2.tokenEndpoint, "tokenEndpoint");
+    if (options2.clientRegistrationEndpoint) this.validateEndpoint(options2.clientRegistrationEndpoint, "clientRegistrationEndpoint");
+    this.options = {
+      accessTokenTTL: DEFAULT_ACCESS_TOKEN_TTL,
+      refreshTokenTTL: DEFAULT_REFRESH_TOKEN_TTL,
+      clientRegistrationTTL: DEFAULT_CLIENT_REGISTRATION_TTL,
+      onError: /* @__PURE__ */ __name(({ status, code, description }) => console.warn(`OAuth error response: ${status} ${code} - ${description}`), "onError"),
+      ...options2
+    };
+    this.validateEmaOptions(this.options.enterpriseManagedAuthorization);
+    if (this.options.enterpriseManagedAuthorization) {
+      this.jwksProvider = createDefaultJwksProvider({ cacheTtlSeconds: this.options.enterpriseManagedAuthorization.jwksCacheTtlSeconds });
+      this.jtiStore = createKvJtiStore();
+    }
+  }
+  /**
+  * Validates that an endpoint is either an absolute path or a full URL
+  * @param endpoint - The endpoint to validate
+  * @param name - The name of the endpoint property for error messages
+  * @throws TypeError if the endpoint is invalid
+  */
+  validateEndpoint(endpoint, name) {
+    if (this.isPath(endpoint)) {
+      if (!endpoint.startsWith("/")) throw new TypeError(`${name} path must be an absolute path starting with /`);
+    } else try {
+      new URL(endpoint);
+    } catch (e) {
+      throw new TypeError(`${name} must be either an absolute path starting with / or a valid URL`);
+    }
+  }
+  /**
+  * Validates that a handler is either an ExportedHandler or a class extending WorkerEntrypoint
+  * @param handler - The handler to validate
+  * @param name - The name of the handler property for error messages
+  * @returns The type of the handler (EXPORTED_HANDLER or WORKER_ENTRYPOINT)
+  * @throws TypeError if the handler is invalid
+  */
+  validateHandler(handler, name) {
+    if (typeof handler === "object" && handler !== null && typeof handler.fetch === "function") return {
+      type: HandlerType.EXPORTED_HANDLER,
+      handler
+    };
+    if (typeof handler === "function" && handler.prototype instanceof WorkerEntrypoint) return {
+      type: HandlerType.WORKER_ENTRYPOINT,
+      handler
+    };
+    throw new TypeError(`${name} must be either an ExportedHandler object with a fetch method or a class extending WorkerEntrypoint`);
+  }
+  /**
+  * Validates MCP Enterprise-Managed Authorization configuration at construction time.
+  *
+  * Presence of `enterpriseManagedAuthorization` on options enables the feature —
+  * there is no separate `enabled` flag (which would silently disable EMA when
+  * forgotten). Configuration is checked structurally; runtime concerns
+  * (JWKS reachability etc.) are checked when assertions arrive.
+  */
+  validateEmaOptions(options2) {
+    if (!options2) return;
+    if (typeof options2.trustedIssuers !== "function") throw new TypeError("enterpriseManagedAuthorization.trustedIssuers must be a resolver function: (input) => EmaTrustedIssuer | null");
+    if (typeof options2.mapClaims !== "function") throw new TypeError("enterpriseManagedAuthorization.mapClaims must be a function");
+    if (!this.options.resourceMetadata?.resource) throw new TypeError("enterpriseManagedAuthorization requires resourceMetadata.resource to be configured");
+    if (options2.jwksCacheTtlSeconds !== void 0 && options2.jwksCacheTtlSeconds <= 0) throw new TypeError("enterpriseManagedAuthorization.jwksCacheTtlSeconds must be greater than 0");
+    if (options2.clockSkewSeconds !== void 0 && options2.clockSkewSeconds < 0) throw new TypeError("enterpriseManagedAuthorization.clockSkewSeconds must be non-negative");
+    if (options2.maxAssertionLifetimeSeconds !== void 0 && options2.maxAssertionLifetimeSeconds <= 0) throw new TypeError("enterpriseManagedAuthorization.maxAssertionLifetimeSeconds must be greater than 0");
+  }
+  /**
+  * Main fetch handler for the Worker
+  * Routes requests to the appropriate handler based on the URL
+  * @param request - The HTTP request
+  * @param env - Cloudflare Worker environment variables
+  * @param ctx - Cloudflare Worker execution context
+  * @returns A Promise resolving to an HTTP Response
+  */
+  async fetch(request, env2, ctx) {
+    const url2 = new URL(request.url);
+    if (request.method === "OPTIONS") {
+      if (this.isApiRequest(url2) || url2.pathname === "/.well-known/oauth-authorization-server" || this.isProtectedResourceMetadataRequest(url2) || this.isTokenEndpoint(url2) || this.options.clientRegistrationEndpoint && this.isClientRegistrationEndpoint(url2)) return this.addCorsHeaders(new Response(null, {
+        status: 204,
+        headers: { "Content-Length": "0" }
+      }), request);
+    }
+    if (url2.pathname === "/.well-known/oauth-authorization-server") {
+      const response = await this.handleMetadataDiscovery(url2);
+      return this.addCorsHeaders(response, request);
+    }
+    if (this.isProtectedResourceMetadataRequest(url2)) {
+      const response = this.handleProtectedResourceMetadata(url2);
+      return this.addCorsHeaders(response, request);
+    }
+    if (this.isTokenEndpoint(url2)) {
+      const parsed = await this.parseTokenEndpointRequest(request, env2);
+      if (parsed instanceof Response) return this.addCorsHeaders(parsed, request);
+      let response;
+      if (parsed.isRevocationRequest) response = await this.handleRevocationRequest(parsed.body, parsed.clientInfo, env2);
+      else response = await this.handleTokenRequest(parsed.body, parsed.clientInfo, env2, url2, request);
+      return this.addCorsHeaders(response, request);
+    }
+    if (this.options.clientRegistrationEndpoint && this.isClientRegistrationEndpoint(url2)) {
+      const response = await this.handleClientRegistration(request, env2);
+      return this.addCorsHeaders(response, request);
+    }
+    if (this.isApiRequest(url2)) {
+      const response = await this.handleApiRequest(request, env2, ctx);
+      return this.addCorsHeaders(response, request);
+    }
+    if (!env2.OAUTH_PROVIDER) env2.OAUTH_PROVIDER = this.createOAuthHelpers(env2);
+    if (this.typedDefaultHandler.type === HandlerType.EXPORTED_HANDLER) return this.typedDefaultHandler.handler.fetch(request, env2, ctx);
+    else return new this.typedDefaultHandler.handler(ctx, env2).fetch(request);
+  }
+  /**
+  * Decodes a token and returns token data with decrypted props
+  * @param token - The granted token
+  * @param env - Cloudflare Worker environment variables
+  * @returns Promise resolving to token data with decrypted props, or null if token is invalid
+  */
+  async unwrapToken(token, env2) {
+    const parts = token.split(":");
+    if (!(parts.length === 3)) return null;
+    const [userId, grantId] = parts;
+    const id = await generateTokenId(token);
+    const tokenData = await env2.OAUTH_KV.get(`token:${userId}:${grantId}:${id}`, { type: "json" });
+    if (!tokenData) return null;
+    const now = Math.floor(Date.now() / 1e3);
+    if (tokenData.expiresAt < now) return null;
+    const decryptedProps = await decryptProps(await unwrapKeyWithToken(token, tokenData.wrappedEncryptionKey), tokenData.grant.encryptedProps);
+    const { grant } = tokenData;
+    return {
+      id: tokenData.id,
+      grantId: tokenData.grantId,
+      userId: tokenData.userId,
+      createdAt: tokenData.createdAt,
+      expiresAt: tokenData.expiresAt,
+      audience: tokenData.audience,
+      scope: tokenData.scope || grant.scope,
+      grant: {
+        clientId: grant.clientId,
+        scope: grant.scope,
+        props: decryptedProps
+      }
+    };
+  }
+  /**
+  * Determines if an endpoint configuration is a path or a full URL
+  * @param endpoint - The endpoint configuration
+  * @returns True if the endpoint is a path (starts with /), false if it's a full URL
+  */
+  isPath(endpoint) {
+    return endpoint.startsWith("/");
+  }
+  /**
+  * Matches a URL against an endpoint pattern that can be a full URL or just a path
+  * @param url - The URL to check
+  * @param endpoint - The endpoint pattern (full URL or path)
+  * @returns True if the URL matches the endpoint pattern
+  */
+  matchEndpoint(url2, endpoint) {
+    if (this.isPath(endpoint)) return url2.pathname === endpoint;
+    else {
+      const endpointUrl = new URL(endpoint);
+      return url2.hostname === endpointUrl.hostname && url2.pathname === endpointUrl.pathname;
+    }
+  }
+  /**
+  * Checks if a URL matches the configured token endpoint
+  * @param url - The URL to check
+  * @returns True if the URL matches the token endpoint
+  */
+  isTokenEndpoint(url2) {
+    return this.matchEndpoint(url2, this.options.tokenEndpoint);
+  }
+  /**
+  * Checks if a URL matches the configured client registration endpoint
+  * @param url - The URL to check
+  * @returns True if the URL matches the client registration endpoint
+  */
+  isClientRegistrationEndpoint(url2) {
+    if (!this.options.clientRegistrationEndpoint) return false;
+    return this.matchEndpoint(url2, this.options.clientRegistrationEndpoint);
+  }
+  /**
+  * Checks if a URL is a request for OAuth Protected Resource Metadata (RFC 9728).
+  * Matches both the root well-known path and path-suffixed variants per RFC 9728 §3.1.
+  */
+  isProtectedResourceMetadataRequest(url2) {
+    return url2.pathname === PROTECTED_RESOURCE_WELL_KNOWN_PREFIX || url2.pathname.startsWith(PROTECTED_RESOURCE_WELL_KNOWN_PREFIX + "/");
+  }
+  /**
+  * Derives the resource identifier from a protected resource metadata well-known URL.
+  * Per RFC 9728 §3.1, the well-known URI is inserted after the authority and before the path,
+  * so the resource identifier is reconstructed by removing the well-known prefix.
+  *
+  * Examples:
+  *   /.well-known/oauth-protected-resource       → origin (e.g. https://example.com)
+  *   /.well-known/oauth-protected-resource/mcp   → origin + /mcp (e.g. https://example.com/mcp)
+  */
+  deriveResourceIdentifier(requestUrl) {
+    const suffix = requestUrl.pathname.slice(37);
+    if (!suffix || suffix === "/") return requestUrl.origin;
+    return `${requestUrl.origin}${suffix}`;
+  }
+  /**
+  * Parses and validates a token endpoint request (used for both token exchange and revocation)
+  * @param request - The HTTP request to parse
+  * @returns Promise with parsed body and client info, or error response
+  */
+  async parseTokenEndpointRequest(request, env2) {
+    if (request.method !== "POST") return this.createErrorResponse("invalid_request", {
+      description: "Method not allowed",
+      statusCode: 405
+    });
+    let contentType = request.headers.get("Content-Type") || "";
+    let body = {};
+    if (!contentType.includes("application/x-www-form-urlencoded")) return this.createErrorResponse("invalid_request", {
+      description: "Content-Type must be application/x-www-form-urlencoded",
+      statusCode: 400
+    });
+    const formData = await request.formData();
+    const processedKeys = /* @__PURE__ */ new Set();
+    for (const [key, value] of formData.entries()) {
+      if (processedKeys.has(key)) continue;
+      processedKeys.add(key);
+      const allValues = formData.getAll(key);
+      if (key !== "resource" && allValues.length > 1) return this.createErrorResponse("invalid_request", {
+        description: `Request parameter "${key}" must not be repeated`,
+        statusCode: 400
+      });
+      body[key] = allValues.length > 1 ? allValues : value;
+    }
+    const authHeader = request.headers.get("Authorization");
+    let clientId = "";
+    let clientSecret = "";
+    if (authHeader && authHeader.startsWith("Basic ")) {
+      if (body.client_id || body.client_secret) return this.createErrorResponse("invalid_request", {
+        description: "Client must not use multiple authentication methods",
+        statusCode: 400
+      });
+      const credentials = atob(authHeader.substring(6));
+      const separatorIndex = credentials.indexOf(":");
+      if (separatorIndex === -1) return this.createErrorResponse("invalid_client", {
+        description: "Client authentication failed: invalid Basic credentials",
+        statusCode: 401
+      });
+      const id = credentials.substring(0, separatorIndex);
+      const secret = credentials.substring(separatorIndex + 1);
+      clientId = decodeFormUrlEncodedComponent(id);
+      clientSecret = decodeFormUrlEncodedComponent(secret);
+    } else {
+      clientId = body.client_id;
+      clientSecret = body.client_secret || "";
+    }
+    if (!clientId) return this.createErrorResponse("invalid_client", {
+      description: "Client ID is required",
+      statusCode: 401
+    });
+    const clientInfo = await this.getClient(env2, clientId);
+    if (!clientInfo) return this.createErrorResponse("invalid_client", {
+      description: "Client not found",
+      statusCode: 401
+    });
+    if (!(clientInfo.tokenEndpointAuthMethod === "none")) {
+      if (!clientSecret) return this.createErrorResponse("invalid_client", {
+        description: "Client authentication failed: missing client_secret",
+        statusCode: 401
+      });
+      if (!clientInfo.clientSecret) return this.createErrorResponse("invalid_client", {
+        description: "Client authentication failed: client has no registered secret",
+        statusCode: 401
+      });
+      if (await hashSecret(clientSecret) !== clientInfo.clientSecret) return this.createErrorResponse("invalid_client", {
+        description: "Client authentication failed: invalid client_secret",
+        statusCode: 401
+      });
+    }
+    return {
+      body,
+      clientInfo,
+      isRevocationRequest: !body.grant_type && !!body.token
+    };
+  }
+  /**
+  * Checks if a URL matches a specific API route
+  * @param url - The URL to check
+  * @param route - The API route to check against
+  * @returns True if the URL matches the API route
+  */
+  matchApiRoute(url2, route) {
+    if (this.isPath(route)) {
+      if (route === "/") return url2.pathname === "/";
+      return url2.pathname.startsWith(route);
+    } else {
+      const apiUrl = new URL(route);
+      return url2.hostname === apiUrl.hostname && url2.pathname.startsWith(apiUrl.pathname);
+    }
+  }
+  /**
+  * Checks if a URL is an API request based on the configured API route(s)
+  * @param url - The URL to check
+  * @returns True if the URL matches any of the API routes
+  */
+  isApiRequest(url2) {
+    for (const [route, _2] of this.typedApiHandlers) if (this.matchApiRoute(url2, route)) return true;
+    return false;
+  }
+  /**
+  * Finds the appropriate API handler for a URL
+  * @param url - The URL to find a handler for
+  * @returns The TypedHandler for the URL, or undefined if no handler matches
+  */
+  findApiHandlerForUrl(url2) {
+    for (const [route, handler] of this.typedApiHandlers) if (this.matchApiRoute(url2, route)) return handler;
+  }
+  /**
+  * Gets the full URL for an endpoint, using the provided request URL's
+  * origin for endpoints specified as just paths
+  * @param endpoint - The endpoint configuration (path or full URL)
+  * @param requestUrl - The URL of the incoming request
+  * @returns The full URL for the endpoint
+  */
+  getFullEndpointUrl(endpoint, requestUrl) {
+    if (this.isPath(endpoint)) return `${requestUrl.origin}${endpoint}`;
+    else return endpoint;
+  }
+  /**
+  * Gets the authorization server issuer using the same derivation as RFC 8414 metadata.
+  */
+  getAuthorizationServerIssuer(requestUrl) {
+    const tokenEndpoint = this.getFullEndpointUrl(this.options.tokenEndpoint, requestUrl);
+    return new URL(tokenEndpoint).origin;
+  }
+  /**
+  * Adds CORS headers to a response
+  * @param response - The response to add CORS headers to
+  * @param request - The original request
+  * @returns A new Response with CORS headers added
+  */
+  addCorsHeaders(response, request) {
+    const origin = request.headers.get("Origin");
+    if (!origin) return response;
+    const newResponse = new Response(response.body, response);
+    newResponse.headers.set("Access-Control-Allow-Origin", origin);
+    newResponse.headers.set("Access-Control-Allow-Methods", "*");
+    newResponse.headers.set("Access-Control-Allow-Headers", "Authorization, *");
+    newResponse.headers.set("Access-Control-Max-Age", "86400");
+    return newResponse;
+  }
+  /**
+  * Handles the OAuth metadata discovery endpoint
+  * Implements RFC 8414 for OAuth Server Metadata
+  * @param requestUrl - The URL of the incoming request
+  * @returns Response with OAuth server metadata
+  */
+  async handleMetadataDiscovery(requestUrl) {
+    const tokenEndpoint = this.getFullEndpointUrl(this.options.tokenEndpoint, requestUrl);
+    const authorizeEndpoint = this.getFullEndpointUrl(this.options.authorizeEndpoint, requestUrl);
+    let registrationEndpoint = void 0;
+    if (this.options.clientRegistrationEndpoint) registrationEndpoint = this.getFullEndpointUrl(this.options.clientRegistrationEndpoint, requestUrl);
+    const responseTypesSupported = ["code"];
+    if (this.options.allowImplicitFlow) responseTypesSupported.push("token");
+    const grantTypesSupported = [GrantType.AUTHORIZATION_CODE, GrantType.REFRESH_TOKEN];
+    if (this.options.allowTokenExchangeGrant) grantTypesSupported.push(GrantType.TOKEN_EXCHANGE);
+    const authorizationGrantProfilesSupported = [];
+    if (this.options.enterpriseManagedAuthorization) {
+      grantTypesSupported.push(GrantType.JWT_BEARER);
+      authorizationGrantProfilesSupported.push(EMA_ID_JAG_GRANT_PROFILE);
+    }
+    const metadata = {
+      issuer: new URL(tokenEndpoint).origin,
+      authorization_endpoint: authorizeEndpoint,
+      token_endpoint: tokenEndpoint,
+      registration_endpoint: registrationEndpoint,
+      scopes_supported: this.options.scopesSupported,
+      response_types_supported: responseTypesSupported,
+      response_modes_supported: this.options.allowImplicitFlow ? ["query", "fragment"] : ["query"],
+      grant_types_supported: grantTypesSupported,
+      ...authorizationGrantProfilesSupported.length > 0 ? { authorization_grant_profiles_supported: authorizationGrantProfilesSupported } : {},
+      token_endpoint_auth_methods_supported: [
+        "client_secret_basic",
+        "client_secret_post",
+        "none"
+      ],
+      revocation_endpoint: tokenEndpoint,
+      code_challenge_methods_supported: this.options.allowPlainPKCE !== false ? ["plain", "S256"] : ["S256"],
+      client_id_metadata_document_supported: !!this.options.clientIdMetadataDocumentEnabled && this.hasGlobalFetchStrictlyPublic()
+    };
+    return new Response(JSON.stringify(metadata), { headers: { "Content-Type": "application/json" } });
+  }
+  /**
+  * Handles the OAuth Protected Resource Metadata endpoint
+  * Implements RFC 9728 for OAuth Protected Resource Metadata
+  * @param requestUrl - The URL of the incoming request
+  * @returns Response with protected resource metadata
+  */
+  handleProtectedResourceMetadata(requestUrl) {
+    const rm = this.options.resourceMetadata;
+    const tokenEndpointUrl = this.getFullEndpointUrl(this.options.tokenEndpoint, requestUrl);
+    const authServerOrigin = new URL(tokenEndpointUrl).origin;
+    const metadata = {
+      resource: rm?.resource ?? this.deriveResourceIdentifier(requestUrl),
+      authorization_servers: rm?.authorization_servers ?? [authServerOrigin],
+      scopes_supported: rm?.scopes_supported ?? this.options.scopesSupported,
+      bearer_methods_supported: rm?.bearer_methods_supported ?? ["header"]
+    };
+    if (rm?.resource_name) metadata.resource_name = rm.resource_name;
+    return new Response(JSON.stringify(metadata), { headers: { "Content-Type": "application/json" } });
+  }
+  /**
+  * Handles client authentication and token issuance via the token endpoint
+  * Supports authorization_code and refresh_token grant types
+  * @param body - The parsed request body
+  * @param clientInfo - The authenticated client information
+  * @param env - Cloudflare Worker environment variables
+  * @returns Response with token data or error
+  */
+  async handleTokenRequest(body, clientInfo, env2, requestUrl, request) {
+    try {
+      const grantType = body.grant_type;
+      if (grantType === GrantType.AUTHORIZATION_CODE) return await this.handleAuthorizationCodeGrant(body, clientInfo, env2);
+      else if (grantType === GrantType.REFRESH_TOKEN) return await this.handleRefreshTokenGrant(body, clientInfo, env2);
+      else if (grantType === GrantType.TOKEN_EXCHANGE && this.options.allowTokenExchangeGrant) return await this.handleTokenExchangeGrant(body, clientInfo, env2);
+      else if (grantType === GrantType.JWT_BEARER) return await this.handleJwtBearerGrant(body, clientInfo, env2, requestUrl, request);
+      else return this.createErrorResponse("unsupported_grant_type", { description: "Grant type not supported" });
+    } catch (error51) {
+      const response = this.createOAuthErrorResponse(error51);
+      if (response) return response;
+      throw error51;
+    }
+  }
+  /**
+  * Build a structured OAuth `/token` error response from an OAuth error.
+  *
+  * The supported form is throwing this package's exported `OAuthError`.
+  * Anything else is re-thrown so unexpected failures still surface as 500s.
+  *
+  * Use `headers['Retry-After']` for rate-limit / transient-failure backoff
+  * hints (see RFC 7231 §7.1.3 — either an integer seconds value or an
+  * HTTP-date is allowed).
+  */
+  createOAuthErrorResponse(error51) {
+    if (!(error51 instanceof OAuthError)) return void 0;
+    return this.createErrorResponse(error51.code, error51.options);
+  }
+  /**
+  * Handles the authorization code grant type
+  * Exchanges an authorization code for access and refresh tokens
+  * @param body - The parsed request body
+  * @param clientInfo - The authenticated client information
+  * @param env - Cloudflare Worker environment variables
+  * @returns Response with token data or error
+  */
+  async handleAuthorizationCodeGrant(body, clientInfo, env2) {
+    const code = body.code;
+    const redirectUri = body.redirect_uri;
+    const codeVerifier = body.code_verifier;
+    if (!code) return this.createErrorResponse("invalid_request", { description: "Authorization code is required" });
+    const codeParts = code.split(":");
+    if (codeParts.length !== 3) return this.createErrorResponse("invalid_grant", { description: "Invalid authorization code format" });
+    const [userId, grantId, _2] = codeParts;
+    const grantKey = `grant:${userId}:${grantId}`;
+    const grantData = await env2.OAUTH_KV.get(grantKey, { type: "json" });
+    if (!grantData) return this.createErrorResponse("invalid_grant", { description: "Grant not found or authorization code expired" });
+    const codeHash = await hashSecret(code);
+    if (!grantData.authCodeId || codeHash !== grantData.authCodeId) return this.createErrorResponse("invalid_grant", { description: "Invalid authorization code" });
+    if (grantData.clientId !== clientInfo.clientId) return this.createErrorResponse("invalid_grant", { description: "Client ID mismatch" });
+    if (!grantData.authCodeWrappedKey) {
+      try {
+        await this.createOAuthHelpers(env2).revokeGrant(grantId, userId);
+      } catch {
+      }
+      return this.createErrorResponse("invalid_grant", { description: "Authorization code already used" });
+    }
+    const isPkceEnabled = !!grantData.codeChallenge;
+    if (!redirectUri && !isPkceEnabled) return this.createErrorResponse("invalid_request", { description: "redirect_uri is required when not using PKCE" });
+    if (redirectUri && !isValidRedirectUri(redirectUri, clientInfo.redirectUris)) return this.createErrorResponse("invalid_grant", { description: "Invalid redirect URI" });
+    if (!isPkceEnabled && codeVerifier) return this.createErrorResponse("invalid_request", { description: "code_verifier provided for a flow that did not use PKCE" });
+    if (isPkceEnabled) {
+      if (!codeVerifier) return this.createErrorResponse("invalid_request", { description: "code_verifier is required for PKCE" });
+      let calculatedChallenge;
+      if (grantData.codeChallengeMethod === "S256") {
+        const data = new TextEncoder().encode(codeVerifier);
+        const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        calculatedChallenge = base64UrlEncode(String.fromCharCode(...hashArray));
+      } else calculatedChallenge = codeVerifier;
+      if (calculatedChallenge !== grantData.codeChallenge) return this.createErrorResponse("invalid_grant", { description: "Invalid PKCE code_verifier" });
+    }
+    let accessTokenTTL = this.options.accessTokenTTL;
+    let refreshTokenTTL = this.options.refreshTokenTTL;
+    const encryptionKey = await unwrapKeyWithToken(code, grantData.authCodeWrappedKey);
+    let grantEncryptionKey = encryptionKey;
+    let accessTokenEncryptionKey = encryptionKey;
+    let encryptedAccessTokenProps = grantData.encryptedProps;
+    let tokenScopes = this.downscope(body.scope, grantData.scope);
+    if (this.options.tokenExchangeCallback) {
+      const decryptedProps = await decryptProps(encryptionKey, grantData.encryptedProps);
+      let grantProps = decryptedProps;
+      let accessTokenProps = decryptedProps;
+      const callbackOptions = {
+        grantType: GrantType.AUTHORIZATION_CODE,
+        clientId: clientInfo.clientId,
+        userId,
+        grantId,
+        scope: grantData.scope,
+        requestedScope: tokenScopes,
+        props: decryptedProps
+      };
+      const callbackResult = await Promise.resolve(this.options.tokenExchangeCallback(callbackOptions));
+      if (callbackResult) {
+        if (callbackResult.newProps) {
+          grantProps = callbackResult.newProps;
+          if (!callbackResult.accessTokenProps) accessTokenProps = callbackResult.newProps;
+        }
+        if (callbackResult.accessTokenProps) accessTokenProps = callbackResult.accessTokenProps;
+        if (callbackResult.accessTokenTTL !== void 0) accessTokenTTL = callbackResult.accessTokenTTL;
+        if ("refreshTokenTTL" in callbackResult) refreshTokenTTL = callbackResult.refreshTokenTTL;
+        if (callbackResult.accessTokenScope) tokenScopes = this.downscope(callbackResult.accessTokenScope, grantData.scope);
+      }
+      const grantResult = await encryptProps(grantProps);
+      grantData.encryptedProps = grantResult.encryptedData;
+      grantEncryptionKey = grantResult.key;
+      if (accessTokenProps !== grantProps) {
+        const tokenResult = await encryptProps(accessTokenProps);
+        encryptedAccessTokenProps = tokenResult.encryptedData;
+        accessTokenEncryptionKey = tokenResult.key;
+      } else {
+        encryptedAccessTokenProps = grantData.encryptedProps;
+        accessTokenEncryptionKey = grantEncryptionKey;
+      }
+    }
+    const now = Math.floor(Date.now() / 1e3);
+    const useRefreshToken = refreshTokenTTL !== 0;
+    delete grantData.codeChallenge;
+    delete grantData.codeChallengeMethod;
+    delete grantData.authCodeWrappedKey;
+    let refreshToken;
+    if (useRefreshToken) {
+      refreshToken = `${userId}:${grantId}:${generateRandomString(TOKEN_LENGTH)}`;
+      const refreshTokenId = await generateTokenId(refreshToken);
+      const refreshTokenWrappedKey = await wrapKeyWithToken(refreshToken, grantEncryptionKey);
+      const expiresAt = refreshTokenTTL !== void 0 ? now + refreshTokenTTL : void 0;
+      grantData.refreshTokenId = refreshTokenId;
+      grantData.refreshTokenWrappedKey = refreshTokenWrappedKey;
+      grantData.previousRefreshTokenId = void 0;
+      grantData.previousRefreshTokenWrappedKey = void 0;
+      grantData.expiresAt = expiresAt;
+    }
+    await this.saveGrantWithTTL(env2, grantKey, grantData, now);
+    const originOnly = !!this.options.resourceMatchOriginOnly;
+    if (body.resource && grantData.resource) {
+      const requestedResources = Array.isArray(body.resource) ? body.resource : [body.resource];
+      const grantedResources = Array.isArray(grantData.resource) ? grantData.resource : [grantData.resource];
+      for (const requested of requestedResources) if (!grantedResources.some((granted) => resourceMatches(requested, granted, originOnly))) return this.createErrorResponse("invalid_target", { description: "Requested resource was not included in the authorization request" });
+    }
+    const audience = parseResourceParameter(body.resource || grantData.resource);
+    if ((body.resource || grantData.resource) && !audience) return this.createErrorResponse("invalid_target", { description: "The resource parameter must be a valid absolute URI without a fragment" });
+    const tokenResponse = {
+      access_token: await this.createAccessToken({
+        userId,
+        grantId,
+        clientId: grantData.clientId,
+        scope: tokenScopes,
+        encryptedProps: encryptedAccessTokenProps,
+        encryptionKey: accessTokenEncryptionKey,
+        expiresIn: accessTokenTTL,
+        audience,
+        env: env2
+      }),
+      token_type: "bearer",
+      expires_in: accessTokenTTL,
+      scope: tokenScopes.join(" ")
+    };
+    if (refreshToken) tokenResponse.refresh_token = refreshToken;
+    if (audience) tokenResponse.resource = audience;
+    return new Response(JSON.stringify(tokenResponse), { headers: {
+      "Content-Type": "application/json",
+      ...NO_CACHE_HEADERS
+    } });
+  }
+  /**
+  * Handles the refresh token grant type
+  * Issues a new access token using a refresh token
+  * @param body - The parsed request body
+  * @param clientInfo - The authenticated client information
+  * @param env - Cloudflare Worker environment variables
+  * @returns Response with token data or error
+  */
+  async handleRefreshTokenGrant(body, clientInfo, env2) {
+    const refreshToken = body.refresh_token;
+    if (!refreshToken) return this.createErrorResponse("invalid_request", { description: "Refresh token is required" });
+    const tokenParts = refreshToken.split(":");
+    if (tokenParts.length !== 3) return this.createErrorResponse("invalid_grant", { description: "Invalid token format" });
+    const [userId, grantId, _2] = tokenParts;
+    const providedTokenHash = await generateTokenId(refreshToken);
+    const grantKey = `grant:${userId}:${grantId}`;
+    const grantData = await env2.OAUTH_KV.get(grantKey, { type: "json" });
+    if (!grantData) return this.createErrorResponse("invalid_grant", { description: "Grant not found" });
+    const isCurrentToken = grantData.refreshTokenId === providedTokenHash;
+    const isPreviousToken = grantData.previousRefreshTokenId === providedTokenHash;
+    if (!isCurrentToken && !isPreviousToken) return this.createErrorResponse("invalid_grant", { description: "Invalid refresh token" });
+    if (grantData.clientId !== clientInfo.clientId) return this.createErrorResponse("invalid_grant", { description: "Client ID mismatch" });
+    if (grantData.expiresAt !== void 0) {
+      if (Math.floor(Date.now() / 1e3) >= grantData.expiresAt) return this.createErrorResponse("invalid_grant", { description: "Refresh token has expired" });
+    }
+    const newAccessToken = `${userId}:${grantId}:${generateRandomString(TOKEN_LENGTH)}`;
+    const accessTokenId = await generateTokenId(newAccessToken);
+    let accessTokenTTL = this.options.accessTokenTTL;
+    let wrappedKeyToUse;
+    if (isCurrentToken) wrappedKeyToUse = grantData.refreshTokenWrappedKey;
+    else wrappedKeyToUse = grantData.previousRefreshTokenWrappedKey;
+    const encryptionKey = await unwrapKeyWithToken(refreshToken, wrappedKeyToUse);
+    let grantEncryptionKey = encryptionKey;
+    let accessTokenEncryptionKey = encryptionKey;
+    let encryptedAccessTokenProps = grantData.encryptedProps;
+    let tokenScopes = this.downscope(body.scope, grantData.scope);
+    let grantPropsChanged = false;
+    if (this.options.tokenExchangeCallback) {
+      const decryptedProps = await decryptProps(encryptionKey, grantData.encryptedProps);
+      let grantProps = decryptedProps;
+      let accessTokenProps = decryptedProps;
+      const callbackOptions = {
+        grantType: GrantType.REFRESH_TOKEN,
+        clientId: clientInfo.clientId,
+        userId,
+        grantId,
+        scope: grantData.scope,
+        requestedScope: tokenScopes,
+        props: decryptedProps
+      };
+      const callbackResult = await Promise.resolve(this.options.tokenExchangeCallback(callbackOptions));
+      if (callbackResult) {
+        if (callbackResult.newProps) {
+          grantProps = callbackResult.newProps;
+          grantPropsChanged = true;
+          if (!callbackResult.accessTokenProps) accessTokenProps = callbackResult.newProps;
+        }
+        if (callbackResult.accessTokenProps) accessTokenProps = callbackResult.accessTokenProps;
+        if (callbackResult.accessTokenTTL !== void 0) accessTokenTTL = callbackResult.accessTokenTTL;
+        if ("refreshTokenTTL" in callbackResult) return this.createErrorResponse("invalid_request", { description: "refreshTokenTTL cannot be changed during refresh token exchange" });
+        if (callbackResult.accessTokenScope) tokenScopes = this.downscope(callbackResult.accessTokenScope, grantData.scope);
+      }
+      if (grantPropsChanged) {
+        const grantResult = await encryptProps(grantProps);
+        grantData.encryptedProps = grantResult.encryptedData;
+        if (grantResult.key !== encryptionKey) {
+          grantEncryptionKey = grantResult.key;
+          wrappedKeyToUse = await wrapKeyWithToken(refreshToken, grantEncryptionKey);
+        } else grantEncryptionKey = grantResult.key;
+      }
+      if (accessTokenProps !== grantProps) {
+        const tokenResult = await encryptProps(accessTokenProps);
+        encryptedAccessTokenProps = tokenResult.encryptedData;
+        accessTokenEncryptionKey = tokenResult.key;
+      } else {
+        encryptedAccessTokenProps = grantData.encryptedProps;
+        accessTokenEncryptionKey = grantEncryptionKey;
+      }
+    }
+    const now = Math.floor(Date.now() / 1e3);
+    if (grantData.expiresAt !== void 0) {
+      const remainingRefreshTokenLifetime = grantData.expiresAt - now;
+      if (remainingRefreshTokenLifetime > 0) accessTokenTTL = Math.min(accessTokenTTL, remainingRefreshTokenLifetime);
+    }
+    const accessTokenExpiresAt = now + accessTokenTTL;
+    const accessTokenWrappedKey = await wrapKeyWithToken(newAccessToken, accessTokenEncryptionKey);
+    const newRefreshToken = `${userId}:${grantId}:${generateRandomString(TOKEN_LENGTH)}`;
+    const newRefreshTokenId = await generateTokenId(newRefreshToken);
+    const newRefreshTokenWrappedKey = await wrapKeyWithToken(newRefreshToken, grantEncryptionKey);
+    grantData.previousRefreshTokenId = providedTokenHash;
+    grantData.previousRefreshTokenWrappedKey = wrappedKeyToUse;
+    grantData.refreshTokenId = newRefreshTokenId;
+    grantData.refreshTokenWrappedKey = newRefreshTokenWrappedKey;
+    await this.saveGrantWithTTL(env2, grantKey, grantData, now);
+    const originOnly = !!this.options.resourceMatchOriginOnly;
+    if (body.resource && grantData.resource) {
+      const requestedResources = Array.isArray(body.resource) ? body.resource : [body.resource];
+      const grantedResources = Array.isArray(grantData.resource) ? grantData.resource : [grantData.resource];
+      for (const requested of requestedResources) if (!grantedResources.some((granted) => resourceMatches(requested, granted, originOnly))) return this.createErrorResponse("invalid_target", { description: "Requested resource was not included in the authorization request" });
+    }
+    const audience = parseResourceParameter(body.resource || grantData.resource);
+    if ((body.resource || grantData.resource) && !audience) return this.createErrorResponse("invalid_target", { description: "The resource parameter must be a valid absolute URI without a fragment" });
+    const accessTokenData = {
+      id: accessTokenId,
+      grantId,
+      userId,
+      createdAt: now,
+      expiresAt: accessTokenExpiresAt,
+      audience,
+      scope: tokenScopes,
+      wrappedEncryptionKey: accessTokenWrappedKey,
+      grant: {
+        clientId: grantData.clientId,
+        scope: grantData.scope,
+        encryptedProps: encryptedAccessTokenProps
+      }
+    };
+    try {
+      await env2.OAUTH_KV.put(`token:${userId}:${grantId}:${accessTokenId}`, JSON.stringify(accessTokenData), { expirationTtl: accessTokenTTL });
+    } catch (error51) {
+      this.throwRetryableTokenStorageErrorIfKvRateLimited(error51);
+      throw error51;
+    }
+    const tokenResponse = {
+      access_token: newAccessToken,
+      token_type: "bearer",
+      expires_in: accessTokenTTL,
+      refresh_token: newRefreshToken,
+      scope: tokenScopes.join(" ")
+    };
+    if (audience) tokenResponse.resource = audience;
+    return new Response(JSON.stringify(tokenResponse), { headers: {
+      "Content-Type": "application/json",
+      ...NO_CACHE_HEADERS
+    } });
+  }
+  /**
+  * Core token exchange logic (RFC 8693)
+  * Performs the actual token exchange operation
+  * This method is not private because `OAuthHelpers` needs to call it. Note that since
+  * `OAuthProviderImpl` is not exposed outside this module, this is still effectively
+  * module-private.
+  * @param subjectToken - The subject token to exchange
+  * @param requestedScopes - Optional narrowed scopes (must be subset of original)
+  * @param requestedResource - Optional resource/audience (must be subset of original if original had resource)
+  * @param expiresIn - Optional TTL override in seconds
+  * @param clientInfo - The client making the exchange request
+  * @param env - Cloudflare Worker environment variables
+  * @returns Promise resolving to token response
+  * @throws OAuthError with OAuth error code and description
+  */
+  async exchangeToken(subjectToken, requestedScopes, requestedResource, expiresIn, clientInfo, env2) {
+    const tokenSummary = await this.unwrapToken(subjectToken, env2);
+    if (!tokenSummary) throw new OAuthError("invalid_grant", { description: "Invalid or expired subject token" });
+    const grantKey = `grant:${tokenSummary.userId}:${tokenSummary.grantId}`;
+    const grantData = await env2.OAUTH_KV.get(grantKey, { type: "json" });
+    if (!grantData) throw new OAuthError("invalid_grant", { description: "Grant not found" });
+    let tokenScopes = this.downscope(requestedScopes, grantData.scope);
+    const originOnly = !!this.options.resourceMatchOriginOnly;
+    let newAudience = tokenSummary.audience;
+    if (requestedResource) {
+      if (grantData.resource) {
+        const requestedResources = Array.isArray(requestedResource) ? requestedResource : [requestedResource];
+        const grantedResources = Array.isArray(grantData.resource) ? grantData.resource : [grantData.resource];
+        for (const requested of requestedResources) if (!grantedResources.some((granted) => resourceMatches(requested, granted, originOnly))) throw new OAuthError("invalid_target", { description: "Requested resource was not included in the authorization request" });
+      }
+      const parsedResource = parseResourceParameter(requestedResource);
+      if (!parsedResource) throw new OAuthError("invalid_target", { description: "The resource parameter must be a valid absolute URI without a fragment" });
+      newAudience = parsedResource;
+    }
+    const now = Math.floor(Date.now() / 1e3);
+    const subjectTokenRemainingLifetime = tokenSummary.expiresAt - now;
+    let accessTokenTTL = this.options.accessTokenTTL ?? DEFAULT_ACCESS_TOKEN_TTL;
+    if (expiresIn !== void 0) {
+      if (expiresIn <= 0) throw new OAuthError("invalid_request", { description: "Invalid expires_in parameter" });
+      accessTokenTTL = Math.min(expiresIn, subjectTokenRemainingLifetime);
+    } else accessTokenTTL = Math.min(accessTokenTTL, subjectTokenRemainingLifetime);
+    const subjectTokenData = await env2.OAUTH_KV.get(`token:${tokenSummary.userId}:${tokenSummary.grantId}:${tokenSummary.id}`, { type: "json" });
+    if (!subjectTokenData) throw new OAuthError("invalid_grant", { description: "Subject token data not found" });
+    const encryptionKey = await unwrapKeyWithToken(subjectToken, subjectTokenData.wrappedEncryptionKey);
+    let accessTokenEncryptionKey = encryptionKey;
+    let encryptedAccessTokenProps = subjectTokenData.grant.encryptedProps;
+    if (this.options.tokenExchangeCallback) {
+      const decryptedProps = await decryptProps(encryptionKey, subjectTokenData.grant.encryptedProps);
+      const callbackOptions = {
+        grantType: GrantType.TOKEN_EXCHANGE,
+        clientId: clientInfo.clientId,
+        userId: tokenSummary.userId,
+        grantId: tokenSummary.grantId,
+        scope: tokenSummary.grant.scope,
+        requestedScope: tokenScopes,
+        props: decryptedProps
+      };
+      const callbackResult = await Promise.resolve(this.options.tokenExchangeCallback(callbackOptions));
+      if (callbackResult) {
+        let accessTokenProps = decryptedProps;
+        if (callbackResult.newProps) {
+          if (!callbackResult.accessTokenProps) accessTokenProps = callbackResult.newProps;
+        }
+        if (callbackResult.accessTokenProps) accessTokenProps = callbackResult.accessTokenProps;
+        if (callbackResult.accessTokenTTL !== void 0) accessTokenTTL = Math.min(callbackResult.accessTokenTTL, subjectTokenRemainingLifetime);
+        if (accessTokenProps !== decryptedProps) {
+          const tokenResult = await encryptProps(accessTokenProps);
+          encryptedAccessTokenProps = tokenResult.encryptedData;
+          accessTokenEncryptionKey = tokenResult.key;
+        }
+        if (callbackResult.accessTokenScope) tokenScopes = this.downscope(callbackResult.accessTokenScope, grantData.scope);
+      }
+    }
+    const tokenResponse = {
+      access_token: await this.createAccessToken({
+        userId: tokenSummary.userId,
+        grantId: tokenSummary.grantId,
+        clientId: tokenSummary.grant.clientId,
+        scope: tokenScopes,
+        encryptedProps: encryptedAccessTokenProps,
+        encryptionKey: accessTokenEncryptionKey,
+        expiresIn: accessTokenTTL,
+        audience: newAudience,
+        env: env2
+      }),
+      issued_token_type: "urn:ietf:params:oauth:token-type:access_token",
+      token_type: "bearer",
+      expires_in: accessTokenTTL,
+      scope: tokenScopes.join(" ")
+    };
+    if (newAudience) tokenResponse.resource = newAudience;
+    return tokenResponse;
+  }
+  /**
+  * Handles OAuth 2.0 token exchange requests (RFC 8693)
+  * Exchanges an existing access token for a new one with modified characteristics
+  * @param body - The parsed request body
+  * @param clientInfo - The authenticated client information
+  * @param env - Cloudflare Worker environment variables
+  * @returns Response with new token data or error
+  */
+  async handleTokenExchangeGrant(body, clientInfo, env2) {
+    const subjectToken = body.subject_token;
+    const subjectTokenType = body.subject_token_type;
+    const requestedTokenType = body.requested_token_type || "urn:ietf:params:oauth:token-type:access_token";
+    const requestedScope = body.scope;
+    const requestedResource = body.resource;
+    if (!subjectToken) return this.createErrorResponse("invalid_request", { description: "subject_token is required" });
+    if (!subjectTokenType) return this.createErrorResponse("invalid_request", { description: "subject_token_type is required" });
+    if (subjectTokenType !== "urn:ietf:params:oauth:token-type:access_token") return this.createErrorResponse("invalid_request", { description: "Only access_token subject_token_type is supported" });
+    if (requestedTokenType !== "urn:ietf:params:oauth:token-type:access_token") return this.createErrorResponse("invalid_request", { description: "Only access_token requested_token_type is supported" });
+    let requestedScopes;
+    if (requestedScope) if (typeof requestedScope === "string") requestedScopes = requestedScope.split(" ").filter(Boolean);
+    else if (Array.isArray(requestedScope)) requestedScopes = requestedScope;
+    else return this.createErrorResponse("invalid_request", { description: "Invalid scope parameter format" });
+    let expiresIn;
+    if (body.expires_in !== void 0) {
+      const requestedTTL = parseInt(body.expires_in, 10);
+      if (isNaN(requestedTTL) || requestedTTL <= 0) return this.createErrorResponse("invalid_request", { description: "Invalid expires_in parameter" });
+      expiresIn = requestedTTL;
+    }
+    try {
+      const tokenResponse = await this.exchangeToken(subjectToken, requestedScopes, requestedResource, expiresIn, clientInfo, env2);
+      return new Response(JSON.stringify(tokenResponse), { headers: {
+        "Content-Type": "application/json",
+        ...NO_CACHE_HEADERS
+      } });
+    } catch (error51) {
+      const response = this.createOAuthErrorResponse(error51);
+      if (response) return response;
+      throw error51;
+    }
+  }
+  /**
+  * Handles the MCP Enterprise-Managed Authorization JWT-bearer grant.
+  *
+  * Acts as a thin shell around `runEmaPipeline`: gate non-EMA traffic, run
+  * the pipeline, translate the typed `EmaValidationError` Result back to a
+  * standard OAuth wire response. All validation logic lives in pure
+  * functions in `src/ema/`.
+  */
+  async handleJwtBearerGrant(body, clientInfo, env2, requestUrl, request) {
+    const enterpriseOptions = this.options.enterpriseManagedAuthorization;
+    if (!enterpriseOptions) return this.createErrorResponse("unsupported_grant_type", { description: "Grant type not supported" });
+    if (clientInfo.tokenEndpointAuthMethod === "none" && !enterpriseOptions.allowPublicClients) return this.createErrorResponse("invalid_client", {
+      description: "Enterprise-managed authorization requires client authentication",
+      statusCode: 401
+    });
+    const result = await this.runEmaPipeline({
+      body,
+      clientInfo,
+      env: env2,
+      requestUrl,
+      request,
+      enterpriseOptions
+    });
+    if (!result.ok) {
+      const wire = emaErrorToWire(result.error);
+      return this.createErrorResponse(wire.code, { description: wire.message }, {
+        category: "enterprise-managed-authorization",
+        reason: result.error.reason,
+        detail: result.error
+      });
+    }
+    return new Response(JSON.stringify(result.value), { headers: {
+      "Content-Type": "application/json",
+      ...NO_CACHE_HEADERS
+    } });
+  }
+  /**
+  * Runs the full EMA token-request pipeline as a chain of pure validators
+  * and adapter calls. Each step short-circuits on the first failure.
+  *
+  * Sequence:
+  *   parse → validate header → trust issuer → fetch JWKS → select key →
+  *   verify signature → validate claims → record jti → parse scope →
+  *   run mapper → validate mapper result → compute TTL → mint token.
+  */
+  async runEmaPipeline(args) {
+    const { body, clientInfo, env: env2, requestUrl, request, enterpriseOptions } = args;
+    const { jwksProvider, jtiStore } = this;
+    const configuredResource = this.options.resourceMetadata?.resource;
+    if (!jwksProvider || !jtiStore || !configuredResource) throw new Error("EMA pipeline invoked without configured adapters");
+    const now = Math.floor(Date.now() / 1e3);
+    const parsed = parseIdJag(body.assertion, EMA_MAX_JWT_BYTES);
+    if (!parsed.ok) return parsed;
+    const header = validateIdJagHeader(parsed.value.header, EMA_ID_JAG_JWT_TYPE, EMA_SUPPORTED_JWT_ALGORITHMS);
+    if (!header.ok) return header;
+    const alg = header.value.alg;
+    const trustedIssuer = await resolveTrustedIssuer({
+      iss: parsed.value.rawClaims.iss,
+      alg,
+      resolver: enterpriseOptions.trustedIssuers,
+      env: env2,
+      request,
+      clientInfo
+    });
+    if (!trustedIssuer.ok) return trustedIssuer;
+    const verified = await this.verifyAssertionSignature({
+      parsed: parsed.value,
+      header: header.value,
+      trustedIssuer: trustedIssuer.value,
+      jwksProvider,
+      now
+    });
+    if (!verified.ok) return verified;
+    const claims = validateIdJagClaims({
+      rawClaims: parsed.value.rawClaims,
+      trustedIssuer: trustedIssuer.value,
+      expectedAudience: trustedIssuer.value.audience ?? this.getAuthorizationServerIssuer(requestUrl),
+      clientId: clientInfo.clientId,
+      configuredResource,
+      matchOriginOnly: !!this.options.resourceMatchOriginOnly,
+      now,
+      clockSkewSeconds: enterpriseOptions.clockSkewSeconds ?? EMA_DEFAULT_CLOCK_SKEW_SECONDS,
+      maxAssertionLifetimeSeconds: enterpriseOptions.maxAssertionLifetimeSeconds ?? EMA_DEFAULT_MAX_ASSERTION_LIFETIME_SECONDS
+    });
+    if (!claims.ok) return claims;
+    const markNow = Math.floor(Date.now() / 1e3);
+    const replay = await jtiStore.markUsed({
+      issuer: claims.value.claims.iss,
+      jti: claims.value.claims.jti,
+      exp: claims.value.claims.exp,
+      now: markNow,
+      env: env2
+    });
+    if (!replay.ok) return replay;
+    const requestedScope = parseEmaScopeParam(body.scope, claims.value.assertionScopes);
+    if (!requestedScope.ok) return requestedScope;
+    let mapperOutput;
+    try {
+      mapperOutput = await enterpriseOptions.mapClaims({
+        claims: claims.value.claims,
+        clientInfo,
+        resource: claims.value.resource,
+        requestedScope: requestedScope.value,
+        request: args.request,
+        env: env2
+      });
+    } catch {
+      return err({ reason: "mapper_threw" });
+    }
+    const mapped = validateEmaMapperResult(mapperOutput);
+    if (!mapped.ok) return mapped;
+    const issueNow = Math.floor(Date.now() / 1e3);
+    const ttl = computeEmaAccessTokenTTL({
+      configuredDefaultSeconds: this.options.accessTokenTTL ?? DEFAULT_ACCESS_TOKEN_TTL,
+      assertionExp: claims.value.claims.exp,
+      mapperTtl: mapped.value.accessTokenTTL,
+      now: issueNow
+    });
+    if (!ttl.ok) return ttl;
+    return ok(await this.issueEmaAccessToken({
+      clientId: clientInfo.clientId,
+      userId: mapped.value.userId,
+      mapperScope: mapped.value.scope,
+      mapperProps: mapped.value.props,
+      mapperMetadata: mapped.value.metadata,
+      assertionScopes: claims.value.assertionScopes,
+      resource: claims.value.resource,
+      accessTokenTTLSeconds: ttl.value,
+      env: env2,
+      now: issueNow
+    }));
+  }
+  /**
+  * Verifies the ID-JAG signature against the trusted issuer's JWKS,
+  * force-refreshing once on a `kid` miss to accommodate IdP key rotation.
+  * Uses the in-memory cached JWKS fetcher with anti-DoS cool-down.
+  */
+  async verifyAssertionSignature(args) {
+    const alg = args.header.alg;
+    const { jwksProvider } = args;
+    const initialJwks = await jwksProvider.fetch(args.trustedIssuer, {
+      forceRefresh: false,
+      now: args.now
+    });
+    if (!initialJwks.ok) return initialJwks;
+    let jwk = selectJwk(initialJwks.value, alg, args.header.kid);
+    if (!jwk.ok && args.header.kid) {
+      const refreshed = await jwksProvider.fetch(args.trustedIssuer, {
+        forceRefresh: true,
+        now: args.now
+      });
+      if (!refreshed.ok) return refreshed;
+      jwk = selectJwk(refreshed.value, alg, args.header.kid);
+    }
+    if (!jwk.ok) return jwk;
+    if (!await verifyIdJagSignature({
+      alg,
+      jwk: jwk.value,
+      signingInput: args.parsed.signingInput,
+      signature: args.parsed.signature
+    })) return err({ reason: "signature_failed" });
+    return ok(void 0);
+  }
+  /**
+  * Mints the access token for an authorized EMA request.
+  *
+  * Uses the same grant + access-token machinery as the authorization-code
+  * grant: encrypt the props, persist the grant under `grant:userId:grantId`,
+  * and create an opaque access token bound to the resource as audience.
+  */
+  async issueEmaAccessToken(args) {
+    const tokenScopes = args.assertionScopes.length > 0 ? this.downscope(args.mapperScope, args.assertionScopes) : args.mapperScope;
+    const grantId = generateRandomString(16);
+    const { encryptedData, key: encryptionKey } = await encryptProps(args.mapperProps);
+    const grant = {
+      id: grantId,
+      clientId: args.clientId,
+      userId: args.userId,
+      scope: tokenScopes,
+      metadata: args.mapperMetadata ?? null,
+      encryptedProps: encryptedData,
+      createdAt: args.now,
+      expiresAt: args.now + args.accessTokenTTLSeconds,
+      resource: args.resource
+    };
+    await this.saveGrantWithTTL(args.env, `grant:${args.userId}:${grantId}`, grant, args.now);
+    return {
+      access_token: await this.createAccessToken({
+        userId: args.userId,
+        grantId,
+        clientId: args.clientId,
+        scope: tokenScopes,
+        encryptedProps: encryptedData,
+        encryptionKey,
+        expiresIn: args.accessTokenTTLSeconds,
+        audience: args.resource,
+        env: args.env
+      }),
+      token_type: "bearer",
+      expires_in: args.accessTokenTTLSeconds,
+      scope: tokenScopes.join(" "),
+      resource: args.resource
+    };
+  }
+  /**
+  * Handles OAuth 2.0 token revocation requests (RFC 7009)
+  * @param body - The parsed request body containing revocation parameters
+  * @param env - Cloudflare Worker environment variables
+  * @returns Response confirming revocation or error
+  */
+  async handleRevocationRequest(body, clientInfo, env2) {
+    return this.revokeToken(body, clientInfo, env2);
+  }
+  /**
+  * - Access tokens: Revokes only the specific token
+  * - Refresh tokens: Revokes the entire grant (access + refresh tokens)
+  * Per RFC 7009 §2.1, the server MUST verify the token was issued to the client making the request.
+  * @param body - The parsed request body containing token parameter
+  * @param clientInfo - The authenticated client information
+  * @param env - Cloudflare Worker environment variables
+  * @returns Response confirming revocation or error
+  */
+  async revokeToken(body, clientInfo, env2) {
+    const token = body.token;
+    const tokenTypeHint = body.token_type_hint;
+    if (!token) return this.createErrorResponse("invalid_request", { description: "Token parameter is required" });
+    const tokenParts = token.split(":");
+    if (tokenParts.length !== 3) return new Response("", { status: 200 });
+    const [userId, grantId, _2] = tokenParts;
+    const tokenId = await generateTokenId(token);
+    if (tokenTypeHint === "refresh_token") {
+      if (await this.revokeRefreshIfOwned(tokenId, userId, grantId, clientInfo, env2)) return new Response("", { status: 200 });
+      if (await this.revokeAccessIfOwned(tokenId, userId, grantId, clientInfo, env2)) return new Response("", { status: 200 });
+    } else {
+      if (await this.revokeAccessIfOwned(tokenId, userId, grantId, clientInfo, env2)) return new Response("", { status: 200 });
+      if (await this.revokeRefreshIfOwned(tokenId, userId, grantId, clientInfo, env2)) return new Response("", { status: 200 });
+    }
+    return new Response("", { status: 200 });
+  }
+  /** Revoke an access token if it exists and belongs to the requesting client. */
+  async revokeAccessIfOwned(tokenId, userId, grantId, clientInfo, env2) {
+    const tokenData = await env2.OAUTH_KV.get(`token:${userId}:${grantId}:${tokenId}`, { type: "json" });
+    if (!tokenData) return false;
+    const tokenClientId = tokenData.grant?.clientId;
+    if (tokenClientId !== void 0) {
+      if (tokenClientId !== clientInfo.clientId) return false;
+    } else if ((await env2.OAUTH_KV.get(`grant:${userId}:${grantId}`, { type: "json" }))?.clientId !== clientInfo.clientId) return false;
+    await this.revokeSpecificAccessToken(tokenId, userId, grantId, env2);
+    return true;
+  }
+  /** Revoke a refresh token (and its grant) if it exists and belongs to the requesting client. */
+  async revokeRefreshIfOwned(tokenId, userId, grantId, clientInfo, env2) {
+    const grantData = await env2.OAUTH_KV.get(`grant:${userId}:${grantId}`, { type: "json" });
+    if (!grantData) return false;
+    if (!(grantData.refreshTokenId === tokenId || grantData.previousRefreshTokenId === tokenId)) return false;
+    if (grantData.clientId !== clientInfo.clientId) return false;
+    await this.createOAuthHelpers(env2).revokeGrant(grantId, userId);
+    return true;
+  }
+  /**
+  * Revokes a specific access token without affecting the refresh token
+  * @param tokenId - The hashed token ID
+  * @param userId - The user ID extracted from the token
+  * @param grantId - The grant ID extracted from the token
+  * @param env - Cloudflare Worker environment variables
+  */
+  async revokeSpecificAccessToken(tokenId, userId, grantId, env2) {
+    const tokenKey = `token:${userId}:${grantId}:${tokenId}`;
+    await env2.OAUTH_KV.delete(tokenKey);
+  }
+  /**
+  * Handles the dynamic client registration endpoint (RFC 7591)
+  * @param request - The HTTP request
+  * @param env - Cloudflare Worker environment variables
+  * @returns Response with client registration data or error
+  */
+  async handleClientRegistration(request, env2) {
+    if (!this.options.clientRegistrationEndpoint) return this.createErrorResponse("not_implemented", {
+      description: "Client registration is not enabled",
+      statusCode: 501
+    });
+    if (request.method !== "POST") return this.createErrorResponse("invalid_request", {
+      description: "Method not allowed",
+      statusCode: 405
+    });
+    if (parseInt(request.headers.get("Content-Length") || "0", 10) > 1048576) return this.createErrorResponse("invalid_request", {
+      description: "Request payload too large, must be under 1 MiB",
+      statusCode: 413
+    });
+    const callbackRequest = request.clone();
+    let clientMetadata;
+    try {
+      const text = await request.text();
+      if (text.length > 1048576) return this.createErrorResponse("invalid_request", {
+        description: "Request payload too large, must be under 1 MiB",
+        statusCode: 413
+      });
+      clientMetadata = JSON.parse(text);
+    } catch (error51) {
+      return this.createErrorResponse("invalid_request", {
+        description: "Invalid JSON payload",
+        statusCode: 400
+      });
+    }
+    const authMethod = OAuthProviderImpl2.validateStringField(clientMetadata.token_endpoint_auth_method) || "client_secret_basic";
+    const isPublicClient = authMethod === "none";
+    if (isPublicClient && this.options.disallowPublicClientRegistration) return this.createErrorResponse("invalid_client_metadata", { description: "Public client registration is not allowed" });
+    const clientId = generateRandomString(16);
+    let clientSecret;
+    let hashedSecret;
+    if (!isPublicClient) {
+      clientSecret = generateRandomString(32);
+      hashedSecret = await hashSecret(clientSecret);
+    }
+    let clientInfo;
+    try {
+      const redirectUris = OAuthProviderImpl2.validateStringArray(clientMetadata.redirect_uris);
+      if (!redirectUris || redirectUris.length === 0) throw new Error("At least one redirect URI is required");
+      for (const uri of redirectUris) validateRedirectUriScheme(uri);
+      clientInfo = {
+        clientId,
+        redirectUris,
+        clientName: OAuthProviderImpl2.validateStringField(clientMetadata.client_name, "client_name"),
+        logoUri: OAuthProviderImpl2.validateOptionalUriField(clientMetadata.logo_uri, "logo_uri"),
+        clientUri: OAuthProviderImpl2.validateOptionalUriField(clientMetadata.client_uri, "client_uri"),
+        policyUri: OAuthProviderImpl2.validateOptionalUriField(clientMetadata.policy_uri, "policy_uri"),
+        tosUri: OAuthProviderImpl2.validateOptionalUriField(clientMetadata.tos_uri, "tos_uri"),
+        jwksUri: OAuthProviderImpl2.validateOptionalUriField(clientMetadata.jwks_uri, "jwks_uri"),
+        i18n: OAuthProviderImpl2.extractI18nFields(clientMetadata),
+        contacts: OAuthProviderImpl2.validateStringArray(clientMetadata.contacts),
+        grantTypes: OAuthProviderImpl2.validateStringArray(clientMetadata.grant_types) || [
+          GrantType.AUTHORIZATION_CODE,
+          GrantType.REFRESH_TOKEN,
+          ...this.options.allowTokenExchangeGrant ? [GrantType.TOKEN_EXCHANGE] : []
+        ],
+        responseTypes: OAuthProviderImpl2.validateStringArray(clientMetadata.response_types) || ["code"],
+        registrationDate: Math.floor(Date.now() / 1e3),
+        tokenEndpointAuthMethod: authMethod
+      };
+      if (!isPublicClient && hashedSecret) clientInfo.clientSecret = hashedSecret;
+    } catch (error51) {
+      return this.createErrorResponse("invalid_client_metadata", { description: error51 instanceof Error ? error51.message : "Invalid client metadata" });
+    }
+    if (this.options.clientRegistrationCallback) {
+      let callbackResult;
+      try {
+        callbackResult = await Promise.resolve(this.options.clientRegistrationCallback({
+          clientMetadata,
+          request: callbackRequest
+        }));
+      } catch (error51) {
+        return this.createErrorResponse("server_error", {
+          description: error51 instanceof Error ? error51.message : "Client registration callback failed",
+          statusCode: 500
+        });
+      }
+      if (callbackResult !== void 0) return this.createErrorResponse(callbackResult.code || "invalid_client_metadata", {
+        description: callbackResult.description || "Client registration denied",
+        statusCode: callbackResult.status ?? 400
+      });
+    }
+    const clientKvOptions = {};
+    if (this.options.clientRegistrationTTL !== void 0) clientKvOptions.expirationTtl = this.options.clientRegistrationTTL;
+    await env2.OAUTH_KV.put(`client:${clientId}`, JSON.stringify(clientInfo), clientKvOptions);
+    const response = {
+      client_id: clientInfo.clientId,
+      redirect_uris: clientInfo.redirectUris,
+      client_name: clientInfo.clientName,
+      logo_uri: clientInfo.logoUri,
+      client_uri: clientInfo.clientUri,
+      policy_uri: clientInfo.policyUri,
+      tos_uri: clientInfo.tosUri,
+      jwks_uri: clientInfo.jwksUri,
+      contacts: clientInfo.contacts,
+      grant_types: clientInfo.grantTypes,
+      response_types: clientInfo.responseTypes,
+      token_endpoint_auth_method: clientInfo.tokenEndpointAuthMethod,
+      registration_client_uri: `${this.options.clientRegistrationEndpoint}/${clientId}`,
+      client_id_issued_at: clientInfo.registrationDate
+    };
+    if (clientInfo.i18n) {
+      for (const [key, value] of Object.entries(clientInfo.i18n)) if (!(key in response)) response[key] = value;
+    }
+    if (clientSecret) {
+      response.client_secret = clientSecret;
+      response.client_secret_expires_at = this.options.clientRegistrationTTL && clientInfo.registrationDate ? clientInfo.registrationDate + this.options.clientRegistrationTTL : 0;
+      response.client_secret_issued_at = clientInfo.registrationDate;
+    }
+    return new Response(JSON.stringify(response), {
+      status: 201,
+      headers: {
+        "Content-Type": "application/json",
+        ...NO_CACHE_HEADERS
+      }
+    });
+  }
+  /**
+  * Handles API requests by validating the access token and calling the API handler
+  * @param request - The HTTP request
+  * @param env - Cloudflare Worker environment variables
+  * @param ctx - Cloudflare Worker execution context
+  * @returns Response from the API handler or error
+  */
+  async handleApiRequest(request, env2, ctx) {
+    const url2 = new URL(request.url);
+    const resourceMetadataUrl = `${url2.origin}/.well-known/oauth-protected-resource${url2.pathname}`;
+    const authHeader = request.headers.get("Authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) return this.createErrorResponse("invalid_token", {
+      description: "Missing or invalid access token",
+      statusCode: 401,
+      headers: { "WWW-Authenticate": this.buildWwwAuthenticateHeader(resourceMetadataUrl, "invalid_token", "Missing or invalid access token") }
+    });
+    const accessToken = authHeader.substring(7);
+    const parts = accessToken.split(":");
+    const isPossiblyInternalFormat = parts.length === 3;
+    let tokenData = null;
+    let userId = "";
+    let grantId = "";
+    if (isPossiblyInternalFormat) {
+      [userId, grantId] = parts;
+      const id = await generateTokenId(accessToken);
+      tokenData = await env2.OAUTH_KV.get(`token:${userId}:${grantId}:${id}`, { type: "json" });
+    }
+    if (!tokenData && !this.options.resolveExternalToken) return this.createErrorResponse("invalid_token", {
+      description: "Invalid access token",
+      statusCode: 401,
+      headers: { "WWW-Authenticate": this.buildWwwAuthenticateHeader(resourceMetadataUrl, "invalid_token") }
+    });
+    if (tokenData) {
+      const now = Math.floor(Date.now() / 1e3);
+      if (tokenData.expiresAt < now) return this.createErrorResponse("invalid_token", {
+        description: "Access token expired",
+        statusCode: 401,
+        headers: { "WWW-Authenticate": this.buildWwwAuthenticateHeader(resourceMetadataUrl, "invalid_token") }
+      });
+      if (tokenData.audience) {
+        const requestUrl = new URL(request.url);
+        const resourceServer = `${requestUrl.protocol}//${requestUrl.host}${requestUrl.pathname}`;
+        if (!(Array.isArray(tokenData.audience) ? tokenData.audience : [tokenData.audience]).some((aud) => audienceMatches(resourceServer, aud))) return this.createErrorResponse("invalid_token", {
+          description: "Token audience does not match resource server",
+          statusCode: 401,
+          headers: { "WWW-Authenticate": this.buildWwwAuthenticateHeader(resourceMetadataUrl, "invalid_token", "Invalid audience") }
+        });
+      }
+      ctx.props = await decryptProps(await unwrapKeyWithToken(accessToken, tokenData.wrappedEncryptionKey), tokenData.grant.encryptedProps);
+    } else if (this.options.resolveExternalToken) {
+      const ext = await this.options.resolveExternalToken({
+        token: accessToken,
+        request,
+        env: env2
+      });
+      if (!ext) return this.createErrorResponse("invalid_token", {
+        description: "Invalid access token",
+        statusCode: 401,
+        headers: { "WWW-Authenticate": this.buildWwwAuthenticateHeader(resourceMetadataUrl, "invalid_token") }
+      });
+      if (ext.audience) {
+        const requestUrl = new URL(request.url);
+        const resourceServer = `${requestUrl.protocol}//${requestUrl.host}${requestUrl.pathname}`;
+        if (!(Array.isArray(ext.audience) ? ext.audience : [ext.audience]).some((aud) => audienceMatches(resourceServer, aud))) return this.createErrorResponse("invalid_token", {
+          description: "Token audience does not match resource server",
+          statusCode: 401,
+          headers: { "WWW-Authenticate": this.buildWwwAuthenticateHeader(resourceMetadataUrl, "invalid_token", "Invalid audience") }
+        });
+      }
+      ctx.props = ext.props;
+    }
+    if (!env2.OAUTH_PROVIDER) env2.OAUTH_PROVIDER = this.createOAuthHelpers(env2);
+    const apiHandler = this.findApiHandlerForUrl(url2);
+    if (!apiHandler) return this.createErrorResponse("invalid_request", {
+      description: "No handler found for API route",
+      statusCode: 404
+    });
+    if (apiHandler.type === HandlerType.EXPORTED_HANDLER) return apiHandler.handler.fetch(request, env2, ctx);
+    else return new apiHandler.handler(ctx, env2).fetch(request);
+  }
+  /**
+  * Creates the helper methods object for OAuth operations
+  * This is passed to the handler functions to allow them to interact with the OAuth system
+  * @param env - Cloudflare Worker environment variables
+  * @returns An instance of OAuthHelpers
+  */
+  createOAuthHelpers(env2) {
+    return new OAuthHelpersImpl(env2, this);
+  }
+  /**
+  * Saves a grant to KV with appropriate TTL based on expiration
+  * @param env - The environment bindings
+  * @param grantKey - The KV key for the grant
+  * @param grantData - The grant data to save
+  * @param now - Current timestamp in seconds
+  */
+  async saveGrantWithTTL(env2, grantKey, grantData, now) {
+    const kvOptions = grantData.expiresAt !== void 0 ? { expiration: grantData.expiresAt } : {};
+    try {
+      await env2.OAUTH_KV.put(grantKey, JSON.stringify(grantData), kvOptions);
+    } catch (error51) {
+      this.throwRetryableTokenStorageErrorIfKvRateLimited(error51);
+      throw error51;
+    }
+  }
+  throwRetryableTokenStorageErrorIfKvRateLimited(error51) {
+    if (!this.isKvRateLimitError(error51)) return;
+    throw new OAuthError("temporarily_unavailable", {
+      description: "Token issuance is temporarily unavailable; retry shortly",
+      statusCode: 429,
+      headers: { "Retry-After": "30" }
+    });
+  }
+  isKvRateLimitError(error51) {
+    if (!(error51 instanceof Error)) return false;
+    return /KV .*failed: 429 Too Many Requests/i.test(error51.message) || /429 Too Many Requests/i.test(error51.message);
+  }
+  /**
+  * Fetches client information from KV storage or via CIMD (Client ID Metadata Document)
+  * This method is not private because `OAuthHelpers` needs to call it. Note that since
+  * `OAuthProviderImpl` is not exposed outside this module, this is still effectively
+  * module-private.
+  *
+  * Supports CIMD: If clientId is an HTTPS URL with a non-root path, the metadata
+  * document will be fetched from that URL instead of looking up in KV storage.
+  *
+  * @param env - Cloudflare Worker environment variables
+  * @param clientId - The client ID to look up (can be a regular ID or an HTTPS URL for CIMD)
+  * @returns The client information, or null if not found
+  */
+  async getClient(env2, clientId) {
+    if (this.isClientMetadataUrl(clientId)) {
+      if (!this.options.clientIdMetadataDocumentEnabled) {
+        const clientKey$1 = `client:${clientId}`;
+        return env2.OAUTH_KV.get(clientKey$1, { type: "json" });
+      }
+      if (!this.hasGlobalFetchStrictlyPublic()) throw new Error(`CIMD is enabled but 'global_fetch_strictly_public' compatibility flag is not set.`);
+      try {
+        return await this.fetchClientMetadataDocument(clientId);
+      } catch (error51) {
+        console.warn(`CIMD fetch failed for ${clientId}:`, error51 instanceof Error ? error51.message : error51);
+        return null;
+      }
+    }
+    const clientKey = `client:${clientId}`;
+    return env2.OAUTH_KV.get(clientKey, { type: "json" });
+  }
+  /**
+  * Creates and stores an access token
+  * @param params - Options for creating the access token
+  * @returns The access token string
+  */
+  async createAccessToken(params) {
+    const { userId, grantId, clientId, scope, encryptedProps, encryptionKey, expiresIn, audience, env: env2 } = params;
+    const accessToken = `${userId}:${grantId}:${generateRandomString(TOKEN_LENGTH)}`;
+    const now = Math.floor(Date.now() / 1e3);
+    const accessTokenId = await generateTokenId(accessToken);
+    const accessTokenData = {
+      id: accessTokenId,
+      grantId,
+      userId,
+      createdAt: now,
+      expiresAt: now + expiresIn,
+      audience,
+      scope,
+      wrappedEncryptionKey: await wrapKeyWithToken(accessToken, encryptionKey),
+      grant: {
+        clientId,
+        scope,
+        encryptedProps
+      }
+    };
+    try {
+      await env2.OAUTH_KV.put(`token:${userId}:${grantId}:${accessTokenId}`, JSON.stringify(accessTokenData), { expirationTtl: expiresIn });
+    } catch (error51) {
+      this.throwRetryableTokenStorageErrorIfKvRateLimited(error51);
+      throw error51;
+    }
+    return accessToken;
+  }
+  /**
+  * Downscopes requested scopes to only include those that are in the grant
+  * Filters out any requested scopes that are not in the granted scopes
+  * @param requestedScope - The scope parameter from the request (string or array)
+  * @param grantedScopes - The scopes that were granted in the authorization
+  * @returns The filtered scopes that are a subset of the granted scopes
+  */
+  downscope(requestedScope, grantedScopes) {
+    if (!requestedScope) return grantedScopes;
+    return (typeof requestedScope === "string" ? requestedScope.split(" ").filter(Boolean) : requestedScope).filter((scope) => grantedScopes.includes(scope));
+  }
+  /**
+  * Checks if the global_fetch_strictly_public compatibility flag is enabled.
+  * This flag is required for CIMD to prevent SSRF attacks.
+  * See: https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public
+  */
+  hasGlobalFetchStrictlyPublic() {
+    return !!(typeof Cloudflare !== "undefined" && Cloudflare.compatibilityFlags ? Cloudflare.compatibilityFlags : null)?.global_fetch_strictly_public;
+  }
+  /**
+  * Checks if a client_id is a CIMD URL (HTTPS with non-root path).
+  * Not private because OAuthHelpersImpl needs access for purgeExpiredData.
+  */
+  isClientMetadataUrl(clientId) {
+    try {
+      const url2 = new URL(clientId);
+      return url2.protocol === "https:" && url2.pathname !== "/";
+    } catch {
+      return false;
+    }
+  }
+  static {
+    this.CIMD_MAX_SIZE_BYTES = 5 * 1024;
+  }
+  static {
+    this.CIMD_FETCH_TIMEOUT_MS = 1e4;
+  }
+  static {
+    this.CIMD_ALLOWED_AUTH_METHODS = ["none", "private_key_jwt"];
+  }
+  /**
+  * Validates that a field is a string or undefined
+  * @param field - The field value to validate
+  * @param fieldName - Name of the field for error messages
+  * @returns The validated string or undefined
+  * @throws Error if field is not a string or undefined
+  */
+  static validateStringField(field, fieldName) {
+    if (field === void 0) return void 0;
+    if (typeof field !== "string") throw new Error(fieldName ? `Invalid ${fieldName}: expected string, got ${typeof field}` : "Field must be a string");
+    return field;
+  }
+  /**
+  * Validates that a field is an optional URI string using a safe scheme.
+  *
+  * Client metadata URI fields (e.g. logo_uri, client_uri, policy_uri, tos_uri,
+  * jwks_uri) are frequently rendered into HTML attributes such as `<a href>` or
+  * `<img src>` on consent screens. Permitting non-http(s) schemes such as
+  * `javascript:` or `data:` would allow script execution in that context, so we
+  * require an absolute http: or https: URL here, matching how redirect URIs are
+  * already restricted.
+  *
+  * @param field - The field to validate
+  * @param fieldName - Name of the field for error messages
+  * @returns The validated URI string or undefined
+  * @throws Error if the field is not a string or is not an absolute http(s) URL
+  */
+  static validateOptionalUriField(field, fieldName) {
+    const value = OAuthProviderImpl2.validateStringField(field, fieldName);
+    if (value === void 0) return void 0;
+    let parsed;
+    try {
+      parsed = new URL(value);
+    } catch {
+      throw new Error(`Invalid ${fieldName}: must be an absolute http: or https: URL`);
+    }
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") throw new Error(`Invalid ${fieldName}: must be an absolute http: or https: URL`);
+    return value;
+  }
+  static {
+    this.I18N_FIELDS = {
+      client_name: "string",
+      client_uri: "uri",
+      logo_uri: "uri",
+      tos_uri: "uri",
+      policy_uri: "uri"
+    };
+  }
+  /**
+  * Extracts RFC 7591 §2.2 internationalized metadata variants from a raw
+  * registration payload.
+  *
+  * Localized variants are expressed by appending a `#<BCP 47 language tag>`
+  * suffix to a metadata member name (e.g. `client_name#ja`, `tos_uri#fr`).
+  * Only the human-readable fields the RFC names are considered; each value is
+  * validated with the same rules as its canonical field (URI fields must be
+  * absolute http(s) URLs). The raw `field#tag` keys are preserved verbatim so
+  * that consumers can do their own locale matching.
+  *
+  * @param raw - The parsed client metadata object
+  * @returns A map of `field#tag` to validated value, or undefined if none present
+  * @throws Error if a localized value fails its field's validation
+  */
+  static extractI18nFields(raw2) {
+    const result = {};
+    for (const key of Object.keys(raw2)) {
+      const hashIndex = key.indexOf("#");
+      if (hashIndex <= 0 || hashIndex === key.length - 1) continue;
+      const baseField = key.slice(0, hashIndex);
+      const kind = OAuthProviderImpl2.I18N_FIELDS[baseField];
+      if (!kind) continue;
+      const validated = kind === "uri" ? OAuthProviderImpl2.validateOptionalUriField(raw2[key], key) : OAuthProviderImpl2.validateStringField(raw2[key], key);
+      if (validated !== void 0) result[key] = validated;
+    }
+    return Object.keys(result).length > 0 ? result : void 0;
+  }
+  /**
+  * Validates that a field is a string array or undefined
+  * @param arr - The array to validate
+  * @param fieldName - Name of the field for error messages
+  * @returns The validated string array or undefined
+  * @throws Error if field is not a string array or undefined
+  */
+  static validateStringArray(arr, fieldName) {
+    if (arr === void 0) return void 0;
+    if (!Array.isArray(arr)) throw new Error(fieldName ? `Invalid ${fieldName}: expected array, got ${typeof arr}` : "Field must be an array");
+    if (!arr.every((item) => typeof item === "string")) throw new Error(fieldName ? `Invalid ${fieldName}: array must contain only strings` : "All array elements must be strings");
+    return arr;
+  }
+  /**
+  * Fetches and validates a Client ID Metadata Document from the given URL
+  * Per the MCP spec, the client_id in the document must match the URL exactly
+  *
+  * Uses Cloudflare HTTP cache for caching (via cacheEverything option).
+  * Response size is limited to 5KB per IETF spec.
+  *
+  * @param metadataUrl - The HTTPS URL to fetch metadata from
+  * @returns The client information
+  * @throws Error if fetch fails or validation fails
+  */
+  async fetchClientMetadataDocument(metadataUrl) {
+    const abortController = new AbortController();
+    const timeoutId = setTimeout(() => abortController.abort(), OAuthProviderImpl2.CIMD_FETCH_TIMEOUT_MS);
+    try {
+      const response = await fetch(metadataUrl, {
+        headers: { Accept: "application/json" },
+        signal: abortController.signal,
+        cf: { cacheEverything: true }
+      });
+      clearTimeout(timeoutId);
+      if (!response.ok) throw new Error(`Failed to fetch client metadata: HTTP ${response.status}`);
+      const contentLength = response.headers.get("content-length");
+      if (contentLength && parseInt(contentLength, 10) > OAuthProviderImpl2.CIMD_MAX_SIZE_BYTES) throw new Error(`Client metadata exceeds size limit: ${contentLength} bytes (max ${OAuthProviderImpl2.CIMD_MAX_SIZE_BYTES})`);
+      const rawMetadata = await this.readJsonWithSizeLimit(response, OAuthProviderImpl2.CIMD_MAX_SIZE_BYTES);
+      const clientId = OAuthProviderImpl2.validateStringField(rawMetadata.client_id, "client_id");
+      const redirectUris = OAuthProviderImpl2.validateStringArray(rawMetadata.redirect_uris, "redirect_uris");
+      const tokenEndpointAuthMethod = OAuthProviderImpl2.validateStringField(rawMetadata.token_endpoint_auth_method, "token_endpoint_auth_method");
+      if (clientId !== metadataUrl) throw new Error(`client_id "${clientId}" does not match metadata URL "${metadataUrl}"`);
+      if (!redirectUris || redirectUris.length === 0) throw new Error("redirect_uris is required and must not be empty");
+      if (tokenEndpointAuthMethod && !OAuthProviderImpl2.CIMD_ALLOWED_AUTH_METHODS.includes(tokenEndpointAuthMethod)) throw new Error(`token_endpoint_auth_method "${tokenEndpointAuthMethod}" is not allowed for CIMD clients. Allowed methods: ${OAuthProviderImpl2.CIMD_ALLOWED_AUTH_METHODS.join(", ")}`);
+      return {
+        clientId,
+        redirectUris,
+        clientName: OAuthProviderImpl2.validateStringField(rawMetadata.client_name, "client_name"),
+        clientUri: OAuthProviderImpl2.validateOptionalUriField(rawMetadata.client_uri, "client_uri"),
+        logoUri: OAuthProviderImpl2.validateOptionalUriField(rawMetadata.logo_uri, "logo_uri"),
+        policyUri: OAuthProviderImpl2.validateOptionalUriField(rawMetadata.policy_uri, "policy_uri"),
+        tosUri: OAuthProviderImpl2.validateOptionalUriField(rawMetadata.tos_uri, "tos_uri"),
+        jwksUri: OAuthProviderImpl2.validateOptionalUriField(rawMetadata.jwks_uri, "jwks_uri"),
+        i18n: OAuthProviderImpl2.extractI18nFields(rawMetadata),
+        contacts: OAuthProviderImpl2.validateStringArray(rawMetadata.contacts, "contacts"),
+        grantTypes: OAuthProviderImpl2.validateStringArray(rawMetadata.grant_types, "grant_types") || ["authorization_code"],
+        responseTypes: OAuthProviderImpl2.validateStringArray(rawMetadata.response_types, "response_types") || ["code"],
+        tokenEndpointAuthMethod: tokenEndpointAuthMethod || "none"
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+  /**
+  * Reads JSON from a response with a size limit to prevent DoS attacks.
+  * Streams the response body and aborts if it exceeds the limit.
+  *
+  * @param response - The fetch response
+  * @param maxBytes - Maximum allowed size in bytes
+  * @returns Parsed JSON object
+  * @throws Error if response body is null, size exceeded, or JSON parse failed
+  */
+  async readJsonWithSizeLimit(response, maxBytes) {
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("Response body is null");
+    const chunks = [];
+    let totalSize = 0;
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) {
+        totalSize += value.length;
+        if (totalSize > maxBytes) {
+          await reader.cancel();
+          throw new Error(`Response exceeded size limit of ${maxBytes} bytes`);
+        }
+        chunks.push(value);
+      }
+    }
+    const allChunks = new Uint8Array(totalSize);
+    let position = 0;
+    for (const chunk of chunks) {
+      allChunks.set(chunk, position);
+      position += chunk.length;
+    }
+    const text = new TextDecoder().decode(allChunks);
+    return JSON.parse(text);
+  }
+  /**
+  * Builds a WWW-Authenticate header value with resource_metadata per RFC 9728 §5.1
+  */
+  buildWwwAuthenticateHeader(resourceMetadataUrl, error51, errorDescription) {
+    let header = `Bearer realm="OAuth", resource_metadata="${resourceMetadataUrl}", error="${error51}"`;
+    if (errorDescription) header += `, error_description="${errorDescription}"`;
+    return header;
+  }
+  /**
+  * Helper function to create OAuth error responses.
+  *
+  * `internal` (optional) carries a tagged, server-side-only reason. It is
+  * forwarded to the deployer's `onError` hook but never placed on the wire,
+  * so the public response stays RFC-compliant and free of information leak
+  * while the deployer can still observe which check failed.
+  */
+  createErrorResponse(code, options2, internal) {
+    const { description } = options2;
+    const responseStatus = options2.statusCode ?? 400;
+    const responseHeaders = {
+      ...NO_CACHE_HEADERS,
+      ...options2.headers ?? {}
+    };
+    const customErrorResponse = this.options.onError?.({
+      code,
+      description,
+      status: responseStatus,
+      headers: responseHeaders,
+      ...internal ? { internal } : {}
+    });
+    if (customErrorResponse) return customErrorResponse;
+    const body = JSON.stringify({
+      error: code,
+      error_description: description
+    });
+    return new Response(body, {
+      status: responseStatus,
+      headers: {
+        "Content-Type": "application/json",
+        ...responseHeaders
+      }
+    });
+  }
+};
+var OAuthError = class extends Error {
+  static {
+    __name(this, "OAuthError");
+  }
+  constructor(code, options2) {
+    super(options2.description);
+    this.name = "OAuthError";
+    this.code = code;
+    this.options = {
+      ...options2,
+      statusCode: options2.statusCode ?? 400
+    };
+    this.description = this.options.description;
+    this.statusCode = this.options.statusCode;
+    this.headers = this.options.headers;
+  }
+};
+var DEFAULT_ACCESS_TOKEN_TTL = 3600;
+var DEFAULT_REFRESH_TOKEN_TTL = 720 * 60 * 60;
+var DEFAULT_CLIENT_REGISTRATION_TTL = 2160 * 60 * 60;
+var DEFAULT_PURGE_BATCH_SIZE = 50;
+var MAX_KV_LIST_LIMIT = 1e3;
+var DEFAULT_REVOKE_EXISTING_GRANTS_BATCH_SIZE = 50;
+function getRevokeExistingGrantsBatchSize(batchSize) {
+  if (batchSize === void 0) return DEFAULT_REVOKE_EXISTING_GRANTS_BATCH_SIZE;
+  if (!Number.isFinite(batchSize) || !Number.isInteger(batchSize) || batchSize < 1) throw new Error("revokeExistingGrantsBatchSize must be a positive integer.");
+  return Math.min(batchSize, MAX_KV_LIST_LIMIT);
+}
+__name(getRevokeExistingGrantsBatchSize, "getRevokeExistingGrantsBatchSize");
+var TOKEN_LENGTH = 32;
+var OAUTH_SCOPE_TOKEN_PATTERN = /^[\x21\x23-\x5B\x5D-\x7E]+$/;
+function validateResourceUri(uri) {
+  if (!uri || typeof uri !== "string") return false;
+  try {
+    const parsed = new URL(uri);
+    if (!parsed.protocol) return false;
+    if (parsed.hash) return false;
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+__name(validateResourceUri, "validateResourceUri");
+function audienceMatches(resourceServerUrl, audienceValue) {
+  try {
+    const resource = new URL(resourceServerUrl);
+    const audience = new URL(audienceValue);
+    if (resource.origin !== audience.origin) return false;
+    if (audience.pathname === "/" || audience.pathname === "") return true;
+    return resource.pathname === audience.pathname || resource.pathname.startsWith(audience.pathname + "/");
+  } catch {
+    return false;
+  }
+}
+__name(audienceMatches, "audienceMatches");
+function parseResourceParameter(value) {
+  if (!value) return;
+  const uris = Array.isArray(value) ? value : [value];
+  for (const uri of uris) if (typeof uri !== "string" || !validateResourceUri(uri)) return;
+  return value;
+}
+__name(parseResourceParameter, "parseResourceParameter");
+function resourceMatches(requested, granted, originOnly) {
+  if (!originOnly) return requested === granted;
+  try {
+    return new URL(requested).origin === new URL(granted).origin;
+  } catch {
+    return requested === granted;
+  }
+}
+__name(resourceMatches, "resourceMatches");
+async function hashSecret(secret) {
+  return generateTokenId(secret);
+}
+__name(hashSecret, "hashSecret");
+function decodeFormUrlEncodedComponent(value) {
+  return decodeURIComponent(value.replace(/\+/g, " "));
+}
+__name(decodeFormUrlEncodedComponent, "decodeFormUrlEncodedComponent");
+function generateRandomString(length) {
+  const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  let result = "";
+  const values = new Uint8Array(length);
+  crypto.getRandomValues(values);
+  for (let i = 0; i < length; i++) result += characters.charAt(values[i] % 64);
+  return result;
+}
+__name(generateRandomString, "generateRandomString");
+async function generateTokenId(token) {
+  const data = new TextEncoder().encode(token);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+__name(generateTokenId, "generateTokenId");
+function validateRedirectUriScheme(redirectUri) {
+  const dangerousSchemes = [
+    "javascript:",
+    "data:",
+    "vbscript:",
+    "file:",
+    "mailto:",
+    "blob:"
+  ];
+  const normalized = redirectUri.trim();
+  for (let i = 0; i < normalized.length; i++) {
+    const code = normalized.charCodeAt(i);
+    if (code >= 0 && code <= 31 || code >= 127 && code <= 159) throw new Error("Invalid redirect URI");
+  }
+  const colonIndex = normalized.indexOf(":");
+  if (colonIndex === -1) throw new Error("Invalid redirect URI");
+  const scheme = normalized.substring(0, colonIndex + 1).toLowerCase();
+  for (const dangerousScheme of dangerousSchemes) if (scheme === dangerousScheme) throw new Error("Invalid redirect URI");
+}
+__name(validateRedirectUriScheme, "validateRedirectUriScheme");
+function isLoopbackUri(uri) {
+  try {
+    const host = new URL(uri).hostname;
+    if (host.match(/^127\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) return true;
+    if (host === "::1" || host === "[::1]") return true;
+    if (host.toLowerCase() === "localhost") return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+__name(isLoopbackUri, "isLoopbackUri");
+function isValidRedirectUri(requestUri, registeredUris) {
+  return registeredUris.some((registered) => {
+    if (isLoopbackUri(requestUri) && isLoopbackUri(registered)) try {
+      const reqUrl = new URL(requestUri);
+      const regUrl = new URL(registered);
+      return reqUrl.protocol === regUrl.protocol && reqUrl.hostname === regUrl.hostname && reqUrl.pathname === regUrl.pathname && reqUrl.search === regUrl.search;
+    } catch {
+      return false;
+    }
+    return requestUri === registered;
+  });
+}
+__name(isValidRedirectUri, "isValidRedirectUri");
+function base64UrlEncode(str) {
+  return btoa(str).replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "");
+}
+__name(base64UrlEncode, "base64UrlEncode");
+function base64UrlToBytes(base64Url) {
+  const base643 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base643.padEnd(base643.length + (4 - base643.length % 4) % 4, "=");
+  const binaryString = atob(padded);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+  return bytes;
+}
+__name(base64UrlToBytes, "base64UrlToBytes");
+function parseJwtJsonPart(encoded) {
+  try {
+    const json3 = new TextDecoder().decode(base64UrlToBytes(encoded));
+    const parsed = JSON.parse(json3);
+    if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("JWT part must be an object");
+    return parsed;
+  } catch {
+    throw new Error("Malformed JWT part");
+  }
+}
+__name(parseJwtJsonPart, "parseJwtJsonPart");
+function isValidOAuthScopeToken(scopeToken) {
+  return OAUTH_SCOPE_TOKEN_PATTERN.test(scopeToken);
+}
+__name(isValidOAuthScopeToken, "isValidOAuthScopeToken");
+function getJwtCryptoAlgorithms(alg) {
+  if (alg === "RS256") {
+    const algorithm = {
+      name: "RSASSA-PKCS1-v1_5",
+      hash: "SHA-256"
+    };
+    return {
+      importAlgorithm: algorithm,
+      verifyAlgorithm: algorithm
+    };
+  }
+  if (alg === "ES256") return {
+    importAlgorithm: {
+      name: "ECDSA",
+      namedCurve: "P-256"
+    },
+    verifyAlgorithm: {
+      name: "ECDSA",
+      hash: "SHA-256"
+    }
+  };
+  throw new Error(`Unsupported JWT alg: ${alg}`);
+}
+__name(getJwtCryptoAlgorithms, "getJwtCryptoAlgorithms");
+function arrayBufferToBase64(buffer) {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)));
+}
+__name(arrayBufferToBase64, "arrayBufferToBase64");
+function base64ToArrayBuffer(base643) {
+  const binaryString = atob(base643);
+  const bytes = new Uint8Array(binaryString.length);
+  for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+  return bytes.buffer;
+}
+__name(base64ToArrayBuffer, "base64ToArrayBuffer");
+async function encryptProps(data) {
+  const key = await crypto.subtle.generateKey({
+    name: "AES-GCM",
+    length: 256
+  }, true, ["encrypt", "decrypt"]);
+  const iv = new Uint8Array(12);
+  const jsonData = JSON.stringify(data);
+  const encodedData = new TextEncoder().encode(jsonData);
+  return {
+    encryptedData: arrayBufferToBase64(await crypto.subtle.encrypt({
+      name: "AES-GCM",
+      iv
+    }, key, encodedData)),
+    key
+  };
+}
+__name(encryptProps, "encryptProps");
+async function decryptProps(key, encryptedData) {
+  const encryptedBuffer = base64ToArrayBuffer(encryptedData);
+  const iv = new Uint8Array(12);
+  const decryptedBuffer = await crypto.subtle.decrypt({
+    name: "AES-GCM",
+    iv
+  }, key, encryptedBuffer);
+  const jsonData = new TextDecoder().decode(decryptedBuffer);
+  return JSON.parse(jsonData);
+}
+__name(decryptProps, "decryptProps");
+var WRAPPING_KEY_HMAC_KEY = new Uint8Array([
+  34,
+  126,
+  38,
+  134,
+  141,
+  241,
+  225,
+  109,
+  128,
+  112,
+  234,
+  23,
+  151,
+  91,
+  71,
+  166,
+  130,
+  24,
+  250,
+  135,
+  40,
+  174,
+  222,
+  133,
+  181,
+  29,
+  74,
+  217,
+  150,
+  202,
+  202,
+  67
+]);
+async function deriveKeyFromToken(tokenStr) {
+  const encoder = new TextEncoder();
+  const hmacKey = await crypto.subtle.importKey("raw", WRAPPING_KEY_HMAC_KEY, {
+    name: "HMAC",
+    hash: "SHA-256"
+  }, false, ["sign"]);
+  const hmacResult = await crypto.subtle.sign("HMAC", hmacKey, encoder.encode(tokenStr));
+  return await crypto.subtle.importKey("raw", hmacResult, { name: "AES-KW" }, false, ["wrapKey", "unwrapKey"]);
+}
+__name(deriveKeyFromToken, "deriveKeyFromToken");
+async function wrapKeyWithToken(tokenStr, keyToWrap) {
+  const wrappingKey = await deriveKeyFromToken(tokenStr);
+  return arrayBufferToBase64(await crypto.subtle.wrapKey("raw", keyToWrap, wrappingKey, { name: "AES-KW" }));
+}
+__name(wrapKeyWithToken, "wrapKeyWithToken");
+async function unwrapKeyWithToken(tokenStr, wrappedKeyBase64) {
+  const wrappingKey = await deriveKeyFromToken(tokenStr);
+  const wrappedKeyBuffer = base64ToArrayBuffer(wrappedKeyBase64);
+  return await crypto.subtle.unwrapKey("raw", wrappedKeyBuffer, wrappingKey, { name: "AES-KW" }, { name: "AES-GCM" }, true, ["encrypt", "decrypt"]);
+}
+__name(unwrapKeyWithToken, "unwrapKeyWithToken");
+var OAuthHelpersImpl = class {
+  static {
+    __name(this, "OAuthHelpersImpl");
+  }
+  /**
+  * Creates a new OAuthHelpers instance
+  * @param env - Cloudflare Worker environment variables
+  * @param provider - Reference to the parent provider instance
+  */
+  constructor(env2, provider) {
+    this.env = env2;
+    this.provider = provider;
+  }
+  /**
+  * Parses an OAuth authorization request from the HTTP request
+  * @param request - The HTTP request containing OAuth parameters
+  * @returns The parsed authorization request parameters
+  */
+  async parseAuthRequest(request) {
+    const url2 = new URL(request.url);
+    const responseType = url2.searchParams.get("response_type") || "";
+    const clientId = url2.searchParams.get("client_id") || "";
+    const redirectUri = url2.searchParams.get("redirect_uri") || "";
+    const scope = (url2.searchParams.get("scope") || "").split(" ").filter(Boolean);
+    const state = url2.searchParams.get("state") || "";
+    const codeChallenge = url2.searchParams.get("code_challenge") || void 0;
+    const codeChallengeMethod = url2.searchParams.get("code_challenge_method") || "plain";
+    const resourceParams = url2.searchParams.getAll("resource");
+    const resourceParam = resourceParams.length > 0 ? resourceParams.length === 1 ? resourceParams[0] : resourceParams : void 0;
+    validateRedirectUriScheme(redirectUri);
+    const resource = parseResourceParameter(resourceParam);
+    if (resourceParam && !resource) throw new Error("The resource parameter must be a valid absolute URI without a fragment");
+    if (responseType === "token" && !this.provider.options.allowImplicitFlow) throw new Error("The implicit grant flow is not enabled for this provider");
+    if (codeChallengeMethod === "plain" && this.provider.options.allowPlainPKCE === false) throw new Error("The plain PKCE method is not allowed. Use S256 instead.");
+    if (clientId) {
+      const clientInfo = await this.lookupClient(clientId);
+      if (!clientInfo) throw new Error(`Invalid client. The clientId provided does not match to this client.`);
+      if (clientInfo && redirectUri) {
+        if (!isValidRedirectUri(redirectUri, clientInfo.redirectUris)) throw new Error(`Invalid redirect URI. The redirect URI provided does not match any registered URI for this client.`);
+      }
+    }
+    return {
+      responseType,
+      clientId,
+      redirectUri,
+      scope,
+      state,
+      codeChallenge,
+      codeChallengeMethod,
+      resource
+    };
+  }
+  /**
+  * Looks up a client by its client ID
+  * @param clientId - The client ID to look up
+  * @returns A Promise resolving to the client info, or null if not found
+  */
+  async lookupClient(clientId) {
+    return await this.provider.getClient(this.env, clientId);
+  }
+  /**
+  * Completes an authorization request by creating a grant and either:
+  * - For authorization code flow: generating an authorization code
+  * - For implicit flow: generating an access token directly
+  * @param options - Options specifying the grant details
+  * @returns A Promise resolving to an object containing the redirect URL
+  */
+  async completeAuthorization(options2) {
+    const { clientId, redirectUri } = options2.request;
+    if (!clientId || !redirectUri) throw new Error("Client ID and Redirect URI are required in the authorization request.");
+    const clientInfo = await this.lookupClient(clientId);
+    if (!clientInfo || !isValidRedirectUri(redirectUri, clientInfo.redirectUris)) throw new Error("Invalid redirect URI. The redirect URI provided does not match any registered URI for this client.");
+    let grantsToRevoke = [];
+    if (options2.revokeExistingGrants !== false) {
+      const batchSize = getRevokeExistingGrantsBatchSize(options2.revokeExistingGrantsBatchSize);
+      let cursor;
+      do {
+        const page2 = await this.listUserGrants(options2.userId, {
+          cursor,
+          limit: batchSize
+        });
+        for (const grant of page2.items) if (grant.clientId === clientId) grantsToRevoke.push(grant.id);
+        cursor = page2.cursor;
+      } while (cursor);
+    }
+    const grantId = generateRandomString(16);
+    const { encryptedData, key: encryptionKey } = await encryptProps(options2.props);
+    const now = Math.floor(Date.now() / 1e3);
+    if (options2.request.responseType === "token") {
+      const accessTokenSecret = generateRandomString(TOKEN_LENGTH);
+      const accessToken = `${options2.userId}:${grantId}:${accessTokenSecret}`;
+      const accessTokenId = await generateTokenId(accessToken);
+      const accessTokenTTL = this.provider.options.accessTokenTTL || DEFAULT_ACCESS_TOKEN_TTL;
+      const accessTokenExpiresAt = now + accessTokenTTL;
+      const accessTokenWrappedKey = await wrapKeyWithToken(accessToken, encryptionKey);
+      const audience = parseResourceParameter(options2.request.resource);
+      if (options2.request.resource && !audience) throw new Error("The resource parameter must be a valid absolute URI without a fragment");
+      const grant = {
+        id: grantId,
+        clientId: options2.request.clientId,
+        userId: options2.userId,
+        scope: options2.scope,
+        metadata: options2.metadata,
+        encryptedProps: encryptedData,
+        createdAt: now,
+        resource: options2.request.resource
+      };
+      const grantKey = `grant:${options2.userId}:${grantId}`;
+      await this.env.OAUTH_KV.put(grantKey, JSON.stringify(grant));
+      const accessTokenData = {
+        id: accessTokenId,
+        grantId,
+        userId: options2.userId,
+        createdAt: now,
+        expiresAt: accessTokenExpiresAt,
+        audience,
+        scope: options2.scope,
+        wrappedEncryptionKey: accessTokenWrappedKey,
+        grant: {
+          clientId: options2.request.clientId,
+          scope: options2.scope,
+          encryptedProps: encryptedData
+        }
+      };
+      await this.env.OAUTH_KV.put(`token:${options2.userId}:${grantId}:${accessTokenId}`, JSON.stringify(accessTokenData), { expirationTtl: accessTokenTTL });
+      const redirectUrl = new URL(options2.request.redirectUri);
+      const fragment = new URLSearchParams();
+      fragment.set("access_token", accessToken);
+      fragment.set("token_type", "bearer");
+      fragment.set("expires_in", accessTokenTTL.toString());
+      fragment.set("scope", options2.scope.join(" "));
+      if (options2.request.state) fragment.set("state", options2.request.state);
+      redirectUrl.hash = fragment.toString();
+      try {
+        await Promise.allSettled(grantsToRevoke.map((oldGrantId) => this.revokeGrant(oldGrantId, options2.userId)));
+      } catch {
+      }
+      return { redirectTo: redirectUrl.toString() };
+    } else {
+      const authCodeSecret = generateRandomString(32);
+      const authCode = `${options2.userId}:${grantId}:${authCodeSecret}`;
+      const authCodeId = await hashSecret(authCode);
+      const authCodeWrappedKey = await wrapKeyWithToken(authCode, encryptionKey);
+      const grant = {
+        id: grantId,
+        clientId: options2.request.clientId,
+        userId: options2.userId,
+        scope: options2.scope,
+        metadata: options2.metadata,
+        encryptedProps: encryptedData,
+        createdAt: now,
+        authCodeId,
+        authCodeWrappedKey,
+        codeChallenge: options2.request.codeChallenge,
+        codeChallengeMethod: options2.request.codeChallengeMethod,
+        resource: options2.request.resource
+      };
+      const grantKey = `grant:${options2.userId}:${grantId}`;
+      await this.env.OAUTH_KV.put(grantKey, JSON.stringify(grant), { expirationTtl: 600 });
+      const redirectUrl = new URL(options2.request.redirectUri);
+      redirectUrl.searchParams.set("code", authCode);
+      if (options2.request.state) redirectUrl.searchParams.set("state", options2.request.state);
+      try {
+        await Promise.allSettled(grantsToRevoke.map((oldGrantId) => this.revokeGrant(oldGrantId, options2.userId)));
+      } catch {
+      }
+      return { redirectTo: redirectUrl.toString() };
+    }
+  }
+  /**
+  * Creates a new OAuth client
+  * @param clientInfo - Partial client information to create the client with
+  * @returns A Promise resolving to the created client info
+  */
+  async createClient(clientInfo) {
+    const clientId = generateRandomString(16);
+    const tokenEndpointAuthMethod = clientInfo.tokenEndpointAuthMethod || "client_secret_basic";
+    const isPublicClient = tokenEndpointAuthMethod === "none";
+    const newClient = {
+      clientId,
+      redirectUris: clientInfo.redirectUris || [],
+      clientName: clientInfo.clientName,
+      logoUri: clientInfo.logoUri,
+      clientUri: clientInfo.clientUri,
+      policyUri: clientInfo.policyUri,
+      tosUri: clientInfo.tosUri,
+      jwksUri: clientInfo.jwksUri,
+      i18n: clientInfo.i18n,
+      contacts: clientInfo.contacts,
+      grantTypes: clientInfo.grantTypes || [
+        GrantType.AUTHORIZATION_CODE,
+        GrantType.REFRESH_TOKEN,
+        ...this.provider.options.allowTokenExchangeGrant ? [GrantType.TOKEN_EXCHANGE] : []
+      ],
+      responseTypes: clientInfo.responseTypes || ["code"],
+      registrationDate: Math.floor(Date.now() / 1e3),
+      tokenEndpointAuthMethod
+    };
+    for (const uri of newClient.redirectUris) validateRedirectUriScheme(uri);
+    let clientSecret;
+    if (!isPublicClient) {
+      clientSecret = generateRandomString(32);
+      newClient.clientSecret = await hashSecret(clientSecret);
+    }
+    await this.env.OAUTH_KV.put(`client:${clientId}`, JSON.stringify(newClient));
+    const clientResponse = { ...newClient };
+    if (!isPublicClient && clientSecret) clientResponse.clientSecret = clientSecret;
+    return clientResponse;
+  }
+  /**
+  * Lists all registered OAuth clients with pagination support
+  * @param options - Optional pagination parameters (limit and cursor)
+  * @returns A Promise resolving to the list result with items and optional cursor
+  */
+  async listClients(options2) {
+    const listOptions = { prefix: "client:" };
+    if (options2?.limit !== void 0) listOptions.limit = options2.limit;
+    if (options2?.cursor !== void 0) listOptions.cursor = options2.cursor;
+    const response = await this.env.OAUTH_KV.list(listOptions);
+    const clients = [];
+    const promises = response.keys.map(async (key) => {
+      const clientId = key.name.substring(7);
+      const client = await this.provider.getClient(this.env, clientId);
+      if (client) clients.push(client);
+    });
+    await Promise.all(promises);
+    return {
+      items: clients,
+      cursor: response.list_complete ? void 0 : response.cursor
+    };
+  }
+  /**
+  * Updates an existing OAuth client
+  * @param clientId - The ID of the client to update
+  * @param updates - Partial client information with fields to update
+  * @returns A Promise resolving to the updated client info, or null if not found
+  */
+  async updateClient(clientId, updates) {
+    const client = await this.provider.getClient(this.env, clientId);
+    if (!client) return null;
+    let authMethod = updates.tokenEndpointAuthMethod || client.tokenEndpointAuthMethod || "client_secret_basic";
+    const isPublicClient = authMethod === "none";
+    let secretToStore = client.clientSecret;
+    let originalSecret = void 0;
+    if (isPublicClient) secretToStore = void 0;
+    else if (updates.clientSecret) {
+      originalSecret = updates.clientSecret;
+      secretToStore = await hashSecret(updates.clientSecret);
+    }
+    const updatedClient = {
+      ...client,
+      ...updates,
+      clientId: client.clientId,
+      tokenEndpointAuthMethod: authMethod
+    };
+    if (!isPublicClient && secretToStore) updatedClient.clientSecret = secretToStore;
+    else delete updatedClient.clientSecret;
+    const clientKvOptions = {};
+    if (this.provider.options.clientRegistrationTTL !== void 0) clientKvOptions.expirationTtl = this.provider.options.clientRegistrationTTL;
+    await this.env.OAUTH_KV.put(`client:${clientId}`, JSON.stringify(updatedClient), clientKvOptions);
+    const response = { ...updatedClient };
+    if (!isPublicClient && originalSecret) response.clientSecret = originalSecret;
+    return response;
+  }
+  /**
+  * Deletes an OAuth client and revokes all associated grants across all users.
+  * @param clientId - The ID of the client to delete
+  * @returns A Promise resolving when the deletion is confirmed.
+  */
+  async deleteClient(clientId) {
+    let cursor;
+    let allProcessed = false;
+    while (!allProcessed) {
+      const listOptions = { prefix: "grant:" };
+      if (cursor) listOptions.cursor = cursor;
+      const result = await this.env.OAUTH_KV.list(listOptions);
+      for (const key of result.keys) {
+        const grantData = await this.env.OAUTH_KV.get(key.name, { type: "json" });
+        if (grantData && grantData.clientId === clientId) await this.revokeGrant(grantData.id, grantData.userId);
+      }
+      if (result.list_complete) allProcessed = true;
+      else cursor = result.cursor;
+    }
+    await this.env.OAUTH_KV.delete(`client:${clientId}`);
+  }
+  /**
+  * Lists all authorization grants for a specific user with pagination support
+  * Returns a summary of each grant without sensitive information
+  * @param userId - The ID of the user whose grants to list
+  * @param options - Optional pagination parameters (limit and cursor)
+  * @returns A Promise resolving to the list result with grant summaries and optional cursor
+  */
+  async listUserGrants(userId, options2) {
+    const listOptions = { prefix: `grant:${userId}:` };
+    if (options2?.limit !== void 0) listOptions.limit = options2.limit;
+    if (options2?.cursor !== void 0) listOptions.cursor = options2.cursor;
+    const response = await this.env.OAUTH_KV.list(listOptions);
+    const grantSummaries = [];
+    const promises = response.keys.map(async (key) => {
+      const grantData = await this.env.OAUTH_KV.get(key.name, { type: "json" });
+      if (grantData) {
+        const summary = {
+          id: grantData.id,
+          clientId: grantData.clientId,
+          userId: grantData.userId,
+          scope: grantData.scope,
+          metadata: grantData.metadata,
+          createdAt: grantData.createdAt,
+          expiresAt: grantData.expiresAt
+        };
+        grantSummaries.push(summary);
+      }
+    });
+    await Promise.all(promises);
+    return {
+      items: grantSummaries,
+      cursor: response.list_complete ? void 0 : response.cursor
+    };
+  }
+  /**
+  * Revokes an authorization grant and all its associated access tokens
+  * @param grantId - The ID of the grant to revoke
+  * @param userId - The ID of the user who owns the grant
+  * @returns A Promise resolving when the revocation is confirmed.
+  */
+  async revokeGrant(grantId, userId) {
+    const grantKey = `grant:${userId}:${grantId}`;
+    const tokenPrefix = `token:${userId}:${grantId}:`;
+    let cursor;
+    let allTokensDeleted = false;
+    while (!allTokensDeleted) {
+      const listOptions = { prefix: tokenPrefix };
+      if (cursor) listOptions.cursor = cursor;
+      const result = await this.env.OAUTH_KV.list(listOptions);
+      if (result.keys.length > 0) await Promise.all(result.keys.map((key) => {
+        return this.env.OAUTH_KV.delete(key.name);
+      }));
+      if (result.list_complete) allTokensDeleted = true;
+      else cursor = result.cursor;
+    }
+    await this.env.OAUTH_KV.delete(grantKey);
+  }
+  /**
+  * Decodes a token and returns token data with decrypted props
+  * @param token - The token
+  * @returns Promise resolving to token data with decrypted props, or null if token is invalid
+  */
+  async unwrapToken(token) {
+    return await this.provider.unwrapToken(token, this.env);
+  }
+  /**
+  * Exchanges an existing access token for a new one with modified characteristics
+  * Implements OAuth 2.0 Token Exchange (RFC 8693)
+  * @param options - Options for token exchange including subject token and optional modifications
+  * @returns Promise resolving to token response with new access token
+  */
+  async exchangeToken(options2) {
+    const tokenSummary = await this.unwrapToken(options2.subjectToken);
+    if (!tokenSummary) throw new Error("Invalid or expired subject token");
+    const clientInfo = await this.lookupClient(tokenSummary.grant.clientId);
+    if (!clientInfo) throw new Error("Client not found");
+    return await this.provider.exchangeToken(options2.subjectToken, options2.scope, options2.aud, options2.expiresIn, clientInfo, this.env);
+  }
+  async purgeExpiredData(options2) {
+    const batchSize = options2?.batchSize ?? DEFAULT_PURGE_BATCH_SIZE;
+    const purgeOrphanedGrants = options2?.purgeOrphanedGrants !== false;
+    const purgeExpiredGrants = options2?.purgeExpiredGrants !== false;
+    const purgeOrphanedTokens = options2?.purgeOrphanedTokens !== false;
+    const now = Math.floor(Date.now() / 1e3);
+    const result = {
+      grantsChecked: 0,
+      grantsPurged: 0,
+      tokensChecked: 0,
+      tokensPurged: 0,
+      done: false
+    };
+    if (purgeOrphanedGrants || purgeExpiredGrants) {
+      const knownGoodClients = /* @__PURE__ */ new Set();
+      const knownMissingClients = /* @__PURE__ */ new Set();
+      let grantCursor;
+      let grantsDone = false;
+      while (!grantsDone && result.grantsChecked < batchSize) {
+        const listOptions = {
+          prefix: "grant:",
+          limit: Math.min(1e3, batchSize - result.grantsChecked)
+        };
+        if (grantCursor) listOptions.cursor = grantCursor;
+        const page2 = await this.env.OAUTH_KV.list(listOptions);
+        for (const key of page2.keys) {
+          if (result.grantsChecked >= batchSize) break;
+          result.grantsChecked++;
+          const grantData = await this.env.OAUTH_KV.get(key.name, { type: "json" });
+          if (!grantData) continue;
+          let shouldPurge = false;
+          if (purgeExpiredGrants && grantData.expiresAt !== void 0 && now >= grantData.expiresAt) shouldPurge = true;
+          if (!shouldPurge && purgeOrphanedGrants && !this.provider.isClientMetadataUrl(grantData.clientId)) {
+            if (knownMissingClients.has(grantData.clientId)) shouldPurge = true;
+            else if (!knownGoodClients.has(grantData.clientId)) if (await this.env.OAUTH_KV.get(`client:${grantData.clientId}`, { type: "json" })) knownGoodClients.add(grantData.clientId);
+            else {
+              knownMissingClients.add(grantData.clientId);
+              shouldPurge = true;
+            }
+          }
+          if (shouldPurge) {
+            await this.revokeGrant(grantData.id, grantData.userId);
+            result.grantsPurged++;
+          }
+        }
+        if (page2.list_complete) grantsDone = true;
+        else grantCursor = page2.cursor;
+      }
+      if (!grantsDone) return result;
+    }
+    if (purgeOrphanedTokens) {
+      const knownGoodGrants = /* @__PURE__ */ new Set();
+      const knownMissingGrants = /* @__PURE__ */ new Set();
+      let tokenCursor;
+      let tokensDone = false;
+      while (!tokensDone && result.tokensChecked < batchSize) {
+        const listOptions = {
+          prefix: "token:",
+          limit: Math.min(1e3, batchSize - result.tokensChecked)
+        };
+        if (tokenCursor) listOptions.cursor = tokenCursor;
+        const page2 = await this.env.OAUTH_KV.list(listOptions);
+        for (const key of page2.keys) {
+          if (result.tokensChecked >= batchSize) break;
+          result.tokensChecked++;
+          const tokenData = await this.env.OAUTH_KV.get(key.name, { type: "json" });
+          if (!tokenData) continue;
+          const grantKey = `grant:${tokenData.userId}:${tokenData.grantId}`;
+          if (knownMissingGrants.has(grantKey)) {
+            await this.env.OAUTH_KV.delete(key.name);
+            result.tokensPurged++;
+          } else if (!knownGoodGrants.has(grantKey)) if (await this.env.OAUTH_KV.get(grantKey)) knownGoodGrants.add(grantKey);
+          else {
+            knownMissingGrants.add(grantKey);
+            await this.env.OAUTH_KV.delete(key.name);
+            result.tokensPurged++;
+          }
+        }
+        if (page2.list_complete) tokensDone = true;
+        else tokenCursor = page2.cursor;
+      }
+      if (!tokensDone) return result;
+    }
+    result.done = true;
+    return result;
+  }
+};
 
 // src/auth/apikey.ts
 var API_KEY_PREFIX = "kb_";
@@ -2345,11 +5358,11 @@ function isValidDecodedPublishableKey(decoded) {
   return withoutTrailing.includes(".");
 }
 __name(isValidDecodedPublishableKey, "isValidDecodedPublishableKey");
-function parsePublishableKey(key, options = {}) {
+function parsePublishableKey(key, options2 = {}) {
   key = key || "";
   if (!key || !isPublishableKey(key)) {
-    if (options.fatal && !key) throw new Error("Publishable key is missing. Ensure that your publishable key is correctly configured. Double-check your environment configuration for your keys, or access them here: https://dashboard.clerk.com/last-active?path=api-keys");
-    if (options.fatal && !isPublishableKey(key)) throw new Error("Publishable key not valid.");
+    if (options2.fatal && !key) throw new Error("Publishable key is missing. Ensure that your publishable key is correctly configured. Double-check your environment configuration for your keys, or access them here: https://dashboard.clerk.com/last-active?path=api-keys");
+    if (options2.fatal && !isPublishableKey(key)) throw new Error("Publishable key not valid.");
     return null;
   }
   const instanceType = key.startsWith(PUBLISHABLE_KEY_LIVE_PREFIX) ? "production" : "development";
@@ -2357,16 +5370,16 @@ function parsePublishableKey(key, options = {}) {
   try {
     decodedFrontendApi = isomorphicAtob(key.split("_")[2]);
   } catch {
-    if (options.fatal) throw new Error("Publishable key not valid: Failed to decode key.");
+    if (options2.fatal) throw new Error("Publishable key not valid: Failed to decode key.");
     return null;
   }
   if (!isValidDecodedPublishableKey(decodedFrontendApi)) {
-    if (options.fatal) throw new Error("Publishable key not valid: Decoded key has invalid format.");
+    if (options2.fatal) throw new Error("Publishable key not valid: Decoded key has invalid format.");
     return null;
   }
   let frontendApi = decodedFrontendApi.slice(0, -1);
-  if (options.proxyUrl) frontendApi = options.proxyUrl;
-  else if (instanceType !== "development" && options.domain && options.isSatellite) frontendApi = `clerk.${options.domain}`;
+  if (options2.proxyUrl) frontendApi = options2.proxyUrl;
+  else if (instanceType !== "development" && options2.domain && options2.isSatellite) frontendApi = `clerk.${options2.domain}`;
   return {
     instanceType,
     frontendApi
@@ -2442,11 +5455,11 @@ var createExponentialDelayAsyncFn = /* @__PURE__ */ __name((opts) => {
     timesCalled++;
   };
 }, "createExponentialDelayAsyncFn");
-var retry = /* @__PURE__ */ __name(async (callback, options = {}) => {
+var retry = /* @__PURE__ */ __name(async (callback, options2 = {}) => {
   let iterations = 0;
   const { shouldRetry, initialDelay, maxDelayBetweenRetries, factor, retryImmediately, jitter, onBeforeRetry } = {
     ...defaultOptions,
-    ...options
+    ...options2
   };
   const delay = createExponentialDelayAsyncFn({
     initialDelay,
@@ -2502,19 +5515,19 @@ var ClerkAPIError = class {
   message;
   longMessage;
   meta;
-  constructor(json2) {
+  constructor(json3) {
     const parsedError = {
-      code: json2.code,
-      message: json2.message,
-      longMessage: json2.long_message,
+      code: json3.code,
+      message: json3.message,
+      longMessage: json3.long_message,
       meta: {
-        paramName: json2.meta?.param_name,
-        sessionId: json2.meta?.session_id,
-        emailAddresses: json2.meta?.email_addresses,
-        identifiers: json2.meta?.identifiers,
-        zxcvbn: json2.meta?.zxcvbn,
-        plan: json2.meta?.plan,
-        isPlanUpgradePossible: json2.meta?.is_plan_upgrade_possible
+        paramName: json3.meta?.param_name,
+        sessionId: json3.meta?.session_id,
+        emailAddresses: json3.meta?.email_addresses,
+        identifiers: json3.meta?.identifiers,
+        zxcvbn: json3.meta?.zxcvbn,
+        plan: json3.meta?.plan,
+        isPlanUpgradePossible: json3.meta?.is_plan_upgrade_possible
       }
     };
     this.code = parsedError.code;
@@ -2577,10 +5590,10 @@ var ClerkAPIResponseError = class ClerkAPIResponseError2 extends ClerkError {
   clerkTraceId;
   retryAfter;
   errors;
-  constructor(message, options) {
-    const { data: errorsJson, status, clerkTraceId, retryAfter } = options;
+  constructor(message, options2) {
+    const { data: errorsJson, status, clerkTraceId, retryAfter } = options2;
     super({
-      ...options,
+      ...options2,
       message,
       code: "api_response_error"
     });
@@ -2667,9 +5680,9 @@ var ClerkRuntimeError = class ClerkRuntimeError2 extends ClerkError {
   * @deprecated Use `clerkError` property instead. This property is maintained for backward compatibility.
   */
   clerkRuntimeError = true;
-  constructor(message, options) {
+  constructor(message, options2) {
     super({
-      ...options,
+      ...options2,
       message
     });
     Object.setPrototypeOf(this, ClerkRuntimeError2.prototype);
@@ -3087,8 +6100,8 @@ function decodeJwt(token) {
   return { data };
 }
 __name(decodeJwt, "decodeJwt");
-async function verifyJwt(token, options) {
-  const { audience, authorizedParties, clockSkewInMs, key, headerType } = options;
+async function verifyJwt(token, options2) {
+  const { audience, authorizedParties, clockSkewInMs, key, headerType } = options2;
   const clockSkew = clockSkewInMs || DEFAULT_CLOCK_SKEW_IN_MS;
   const { data: decoded, errors } = decodeJwt(token);
   if (errors) {
@@ -3106,8 +6119,8 @@ async function verifyJwt(token, options) {
     assertExpirationClaim(exp, clockSkew);
     assertActivationClaim(nbf, clockSkew);
     assertIssuedAtClaim(iat, clockSkew);
-  } catch (err) {
-    return { errors: [err] };
+  } catch (err3) {
+    return { errors: [err3] };
   }
   const { data: signatureValid, errors: signatureErrors } = await hasValidSignature(decoded, key);
   if (signatureErrors) {
@@ -3212,8 +6225,8 @@ var isValidLevel = /* @__PURE__ */ __name((level) => ALLOWED_LEVELS.has(level), 
 var isValidVerificationType = /* @__PURE__ */ __name((type) => ALLOWED_TYPES.has(type), "isValidVerificationType");
 var isValidFactorAge = /* @__PURE__ */ __name((x) => typeof x === "number" && Number.isFinite(x) && (x === -1 || x >= 0), "isValidFactorAge");
 var prefixWithOrg = /* @__PURE__ */ __name((value) => value.replace(/^(org:)*/, "org:"), "prefixWithOrg");
-var checkOrgAuthorization = /* @__PURE__ */ __name((params, options) => {
-  const { orgId, orgRole, orgPermissions } = options;
+var checkOrgAuthorization = /* @__PURE__ */ __name((params, options2) => {
+  const { orgId, orgRole, orgPermissions } = options2;
   const roleAsked = params.role !== void 0;
   const permissionAsked = params.permission !== void 0;
   if (!roleAsked && !permissionAsked) return "skip";
@@ -3238,8 +6251,8 @@ var checkForFeatureOrPlan = /* @__PURE__ */ __name((claim, featureOrPlan) => {
   else if (scope === "user") return userFeatures.includes(id);
   else return [...orgFeatures, ...userFeatures].includes(id);
 }, "checkForFeatureOrPlan");
-var checkBillingAuthorization = /* @__PURE__ */ __name((params, options) => {
-  const { features, plans } = options;
+var checkBillingAuthorization = /* @__PURE__ */ __name((params, options2) => {
+  const { features, plans } = options2;
   const featureAsked = params.feature !== void 0;
   const planAsked = params.plan !== void 0;
   if (!featureAsked && !planAsked) return "skip";
@@ -3306,13 +6319,13 @@ var checkReverificationAuthorization = /* @__PURE__ */ __name((params, { factorV
   }
 }, "checkReverificationAuthorization");
 var combine = /* @__PURE__ */ __name((results) => results.some((r) => r === "pass") && results.every((r) => r === "pass" || r === "skip"), "combine");
-var createCheckAuthorization = /* @__PURE__ */ __name((options) => {
+var createCheckAuthorization = /* @__PURE__ */ __name((options2) => {
   return (params) => {
-    if (!options.userId) return false;
+    if (!options2.userId) return false;
     return combine([
-      checkOrgAuthorization(params, options),
-      checkBillingAuthorization(params, options),
-      checkReverificationAuthorization(params, options)
+      checkOrgAuthorization(params, options2),
+      checkBillingAuthorization(params, options2),
+      checkReverificationAuthorization(params, options2)
     ]);
   };
 }, "createCheckAuthorization");
@@ -3627,9 +6640,9 @@ function P(r, n, e) {
   return r instanceof RegExp ? $(r, n) : Array.isArray(r) ? W(r, n, e) : L(r, n, e);
 }
 __name(P, "P");
-function match2(str, options) {
+function match2(str, options2) {
   try {
-    return H(str, options);
+    return H(str, options2);
   } catch (e) {
     throw new Error(`Invalid path and options: Consult the documentation of path-to-regexp here: https://github.com/pillarjs/path-to-regexp/tree/6.x
 ${e.message}`);
@@ -3655,12 +6668,12 @@ var require_dist = __commonJS({
       C.prototype = /* @__PURE__ */ Object.create(null);
       return C;
     })();
-    function parse22(str, options) {
+    function parse22(str, options2) {
       const obj = new NullObject();
       const len = str.length;
       if (len < 2)
         return obj;
-      const dec = options?.decode || decode3;
+      const dec = options2?.decode || decode3;
       let index = 0;
       do {
         const eqIdx = str.indexOf("=", index);
@@ -3704,8 +6717,8 @@ var require_dist = __commonJS({
       return min;
     }
     __name(endIndex, "endIndex");
-    function serialize2(name, val, options) {
-      const enc = options?.encode || encodeURIComponent;
+    function serialize2(name, val, options2) {
+      const enc = options2?.encode || encodeURIComponent;
       if (!cookieNameRegExp.test(name)) {
         throw new TypeError(`argument name is invalid: ${name}`);
       }
@@ -3714,43 +6727,43 @@ var require_dist = __commonJS({
         throw new TypeError(`argument val is invalid: ${val}`);
       }
       let str = name + "=" + value;
-      if (!options)
+      if (!options2)
         return str;
-      if (options.maxAge !== void 0) {
-        if (!Number.isInteger(options.maxAge)) {
-          throw new TypeError(`option maxAge is invalid: ${options.maxAge}`);
+      if (options2.maxAge !== void 0) {
+        if (!Number.isInteger(options2.maxAge)) {
+          throw new TypeError(`option maxAge is invalid: ${options2.maxAge}`);
         }
-        str += "; Max-Age=" + options.maxAge;
+        str += "; Max-Age=" + options2.maxAge;
       }
-      if (options.domain) {
-        if (!domainValueRegExp.test(options.domain)) {
-          throw new TypeError(`option domain is invalid: ${options.domain}`);
+      if (options2.domain) {
+        if (!domainValueRegExp.test(options2.domain)) {
+          throw new TypeError(`option domain is invalid: ${options2.domain}`);
         }
-        str += "; Domain=" + options.domain;
+        str += "; Domain=" + options2.domain;
       }
-      if (options.path) {
-        if (!pathValueRegExp.test(options.path)) {
-          throw new TypeError(`option path is invalid: ${options.path}`);
+      if (options2.path) {
+        if (!pathValueRegExp.test(options2.path)) {
+          throw new TypeError(`option path is invalid: ${options2.path}`);
         }
-        str += "; Path=" + options.path;
+        str += "; Path=" + options2.path;
       }
-      if (options.expires) {
-        if (!isDate(options.expires) || !Number.isFinite(options.expires.valueOf())) {
-          throw new TypeError(`option expires is invalid: ${options.expires}`);
+      if (options2.expires) {
+        if (!isDate(options2.expires) || !Number.isFinite(options2.expires.valueOf())) {
+          throw new TypeError(`option expires is invalid: ${options2.expires}`);
         }
-        str += "; Expires=" + options.expires.toUTCString();
+        str += "; Expires=" + options2.expires.toUTCString();
       }
-      if (options.httpOnly) {
+      if (options2.httpOnly) {
         str += "; HttpOnly";
       }
-      if (options.secure) {
+      if (options2.secure) {
         str += "; Secure";
       }
-      if (options.partitioned) {
+      if (options2.partitioned) {
         str += "; Partitioned";
       }
-      if (options.priority) {
-        const priority = typeof options.priority === "string" ? options.priority.toLowerCase() : void 0;
+      if (options2.priority) {
+        const priority = typeof options2.priority === "string" ? options2.priority.toLowerCase() : void 0;
         switch (priority) {
           case "low":
             str += "; Priority=Low";
@@ -3762,11 +6775,11 @@ var require_dist = __commonJS({
             str += "; Priority=High";
             break;
           default:
-            throw new TypeError(`option priority is invalid: ${options.priority}`);
+            throw new TypeError(`option priority is invalid: ${options2.priority}`);
         }
       }
-      if (options.sameSite) {
-        const sameSite = typeof options.sameSite === "string" ? options.sameSite.toLowerCase() : options.sameSite;
+      if (options2.sameSite) {
+        const sameSite = typeof options2.sameSite === "string" ? options2.sameSite.toLowerCase() : options2.sameSite;
         switch (sameSite) {
           case true:
           case "strict":
@@ -3779,7 +6792,7 @@ var require_dist = __commonJS({
             str += "; SameSite=None";
             break;
           default:
-            throw new TypeError(`option sameSite is invalid: ${options.sameSite}`);
+            throw new TypeError(`option sameSite is invalid: ${options2.sameSite}`);
         }
       }
       return str;
@@ -3877,10 +6890,10 @@ var constants = {
   ContentTypes,
   QueryParameters
 };
-function mergePreDefinedOptions(preDefinedOptions, options) {
+function mergePreDefinedOptions(preDefinedOptions, options2) {
   return Object.keys(preDefinedOptions).reduce(
     (obj, key) => {
-      return { ...obj, [key]: options[key] || obj[key] };
+      return { ...obj, [key]: options2[key] || obj[key] };
     },
     { ...preDefinedOptions }
   );
@@ -3906,19 +6919,19 @@ var AuthenticateContext = class {
   static {
     __name(this, "AuthenticateContext");
   }
-  constructor(cookieSuffix, clerkRequest, options) {
+  constructor(cookieSuffix, clerkRequest, options2) {
     this.cookieSuffix = cookieSuffix;
     this.clerkRequest = clerkRequest;
     this.originalFrontendApi = "";
-    if (options.acceptsToken === TokenType.M2MToken || options.acceptsToken === TokenType.ApiKey) {
+    if (options2.acceptsToken === TokenType.M2MToken || options2.acceptsToken === TokenType.ApiKey) {
       this.initHeaderValues();
     } else {
-      this.initPublishableKeyValues(options);
+      this.initPublishableKeyValues(options2);
       this.initHeaderValues();
       this.initCookieValues();
       this.initHandshakeValues();
     }
-    Object.assign(this, options);
+    Object.assign(this, options2);
     this.clerkUrl = this.clerkRequest.clerkUrl;
   }
   /**
@@ -4019,20 +7032,20 @@ var AuthenticateContext = class {
       return false;
     }
   }
-  initPublishableKeyValues(options) {
-    assertValidPublishableKey(options.publishableKey);
-    this.publishableKey = options.publishableKey;
+  initPublishableKeyValues(options2) {
+    assertValidPublishableKey(options2.publishableKey);
+    this.publishableKey = options2.publishableKey;
     const originalPk = parsePublishableKey(this.publishableKey, {
       fatal: true,
-      domain: options.domain,
-      isSatellite: options.isSatellite
+      domain: options2.domain,
+      isSatellite: options2.isSatellite
     });
     this.originalFrontendApi = originalPk.frontendApi;
     const pk = parsePublishableKey(this.publishableKey, {
       fatal: true,
-      proxyUrl: options.proxyUrl,
-      domain: options.domain,
-      isSatellite: options.isSatellite
+      proxyUrl: options2.proxyUrl,
+      domain: options2.domain,
+      isSatellite: options2.isSatellite
     });
     this.instanceType = pk.instanceType;
     this.frontendApi = pk.frontendApi;
@@ -4112,9 +7125,9 @@ var AuthenticateContext = class {
     return !!jwt2 && jwt2?.payload.exp <= Date.now() / 1e3 >> 0;
   }
 };
-var createAuthenticateContext = /* @__PURE__ */ __name(async (clerkRequest, options) => {
-  const cookieSuffix = options.publishableKey ? await getCookieSuffix(options.publishableKey, runtime.crypto.subtle) : "";
-  return new AuthenticateContext(cookieSuffix, clerkRequest, options);
+var createAuthenticateContext = /* @__PURE__ */ __name(async (clerkRequest, options2) => {
+  const cookieSuffix = options2.publishableKey ? await getCookieSuffix(options2.publishableKey, runtime.crypto.subtle) : "";
+  return new AuthenticateContext(cookieSuffix, clerkRequest, options2);
 }, "createAuthenticateContext");
 var SEPARATOR = "/";
 var MULTIPLE_SEPARATOR_REGEX = new RegExp("(?<!:)" + SEPARATOR + "{1,}", "g");
@@ -4840,8 +7853,8 @@ async function fetchJWKSFromBAPI(apiUrl, key, apiVersion) {
     }
   });
   if (!response.ok) {
-    const json2 = await response.json();
-    const invalidSecretKeyError = getErrorObjectByCode(json2?.errors, TokenVerificationErrorCode.InvalidSecretKey);
+    const json3 = await response.json();
+    const invalidSecretKeyError = getErrorObjectByCode(json3?.errors, TokenVerificationErrorCode.InvalidSecretKey);
     if (invalidSecretKeyError) {
       const reason = TokenVerificationErrorReason.InvalidSecretKey;
       throw new TokenVerificationError({
@@ -4874,7 +7887,7 @@ var getErrorObjectByCode = /* @__PURE__ */ __name((errors, code) => {
   if (!errors) {
     return null;
   }
-  return errors.find((err) => err.code === code);
+  return errors.find((err3) => err3.code === code);
 }, "getErrorObjectByCode");
 var M2M_TOKEN_PREFIX = "mt_";
 var M2M_SUBJECT_PREFIX = "mch_";
@@ -4951,13 +7964,13 @@ function isMachineTokenType(type) {
   return MACHINE_TOKEN_TYPES.has(type);
 }
 __name(isMachineTokenType, "isMachineTokenType");
-async function resolveKeyAndVerifyJwt(token, kid, options, headerType) {
+async function resolveKeyAndVerifyJwt(token, kid, options2, headerType) {
   try {
     let key;
-    if (options.jwtKey) {
-      key = loadClerkJwkFromPem({ kid, pem: options.jwtKey });
-    } else if (options.secretKey) {
-      key = await loadClerkJWKFromRemote({ ...options, kid });
+    if (options2.jwtKey) {
+      key = loadClerkJwkFromPem({ kid, pem: options2.jwtKey });
+    } else if (options2.secretKey) {
+      key = await loadClerkJWKFromRemote({ ...options2, kid });
     } else {
       return {
         error: new MachineTokenVerificationError({
@@ -4968,7 +7981,7 @@ async function resolveKeyAndVerifyJwt(token, kid, options, headerType) {
       };
     }
     const { data: payload, errors: verifyErrors } = await verifyJwt(token, {
-      ...options,
+      ...options2,
       key,
       ...headerType ? { headerType } : {}
     });
@@ -4991,25 +8004,25 @@ async function resolveKeyAndVerifyJwt(token, kid, options, headerType) {
   }
 }
 __name(resolveKeyAndVerifyJwt, "resolveKeyAndVerifyJwt");
-async function verifyM2MJwt(token, decoded, options) {
-  const result = await resolveKeyAndVerifyJwt(token, decoded.header.kid, options);
+async function verifyM2MJwt(token, decoded, options2) {
+  const result = await resolveKeyAndVerifyJwt(token, decoded.header.kid, options2);
   if ("error" in result) {
     return { data: void 0, tokenType: TokenType.M2MToken, errors: [result.error] };
   }
   return {
-    data: M2MToken.fromJwtPayload(result.payload, options.clockSkewInMs),
+    data: M2MToken.fromJwtPayload(result.payload, options2.clockSkewInMs),
     tokenType: TokenType.M2MToken,
     errors: void 0
   };
 }
 __name(verifyM2MJwt, "verifyM2MJwt");
-async function verifyOAuthJwt(token, decoded, options) {
-  const result = await resolveKeyAndVerifyJwt(token, decoded.header.kid, options, OAUTH_ACCESS_TOKEN_TYPES);
+async function verifyOAuthJwt(token, decoded, options2) {
+  const result = await resolveKeyAndVerifyJwt(token, decoded.header.kid, options2, OAUTH_ACCESS_TOKEN_TYPES);
   if ("error" in result) {
     return { data: void 0, tokenType: TokenType.OAuthToken, errors: [result.error] };
   }
   return {
-    data: IdPOAuthAccessToken.fromJwtPayload(result.payload, options.clockSkewInMs),
+    data: IdPOAuthAccessToken.fromJwtPayload(result.payload, options2.clockSkewInMs),
     tokenType: TokenType.OAuthToken,
     errors: void 0
   };
@@ -5089,17 +8102,17 @@ var M2MTokenApi = class extends AbstractAPI {
 };
 _verifyOptions = /* @__PURE__ */ new WeakMap();
 _M2MTokenApi_instances = /* @__PURE__ */ new WeakSet();
-createRequestOptions_fn = /* @__PURE__ */ __name(function(options, machineSecretKey) {
+createRequestOptions_fn = /* @__PURE__ */ __name(function(options2, machineSecretKey) {
   if (machineSecretKey) {
     return {
-      ...options,
+      ...options2,
       headerParams: {
-        ...options.headerParams,
+        ...options2.headerParams,
         Authorization: `Bearer ${machineSecretKey}`
       }
     };
   }
-  return options;
+  return options2;
 }, "createRequestOptions_fn");
 verifyJwtFormat_fn = /* @__PURE__ */ __name(async function(token) {
   let decoded;
@@ -6075,19 +9088,19 @@ var BillingAPI = class extends AbstractAPI {
 var isObject = /* @__PURE__ */ __name((value) => typeof value === "object" && value !== null, "isObject");
 var isObjectCustom = /* @__PURE__ */ __name((value) => isObject(value) && !(value instanceof RegExp) && !(value instanceof Error) && !(value instanceof Date) && !(globalThis.Blob && value instanceof globalThis.Blob), "isObjectCustom");
 var mapObjectSkip = /* @__PURE__ */ Symbol("mapObjectSkip");
-var _mapObject = /* @__PURE__ */ __name((object2, mapper, options, isSeen = /* @__PURE__ */ new WeakMap()) => {
-  options = {
+var _mapObject = /* @__PURE__ */ __name((object2, mapper, options2, isSeen = /* @__PURE__ */ new WeakMap()) => {
+  options2 = {
     deep: false,
     target: {},
-    ...options
+    ...options2
   };
   if (isSeen.has(object2)) {
     return isSeen.get(object2);
   }
-  isSeen.set(object2, options.target);
-  const { target } = options;
-  delete options.target;
-  const mapArray = /* @__PURE__ */ __name((array2) => array2.map((element) => isObjectCustom(element) ? _mapObject(element, mapper, options, isSeen) : element), "mapArray");
+  isSeen.set(object2, options2.target);
+  const { target } = options2;
+  delete options2.target;
+  const mapArray = /* @__PURE__ */ __name((array2) => array2.map((element) => isObjectCustom(element) ? _mapObject(element, mapper, options2, isSeen) : element), "mapArray");
   if (Array.isArray(object2)) {
     return mapArray(object2);
   }
@@ -6100,21 +9113,21 @@ var _mapObject = /* @__PURE__ */ __name((object2, mapper, options, isSeen = /* @
     if (newKey === "__proto__") {
       continue;
     }
-    if (options.deep && shouldRecurse && isObjectCustom(newValue)) {
-      newValue = Array.isArray(newValue) ? mapArray(newValue) : _mapObject(newValue, mapper, options, isSeen);
+    if (options2.deep && shouldRecurse && isObjectCustom(newValue)) {
+      newValue = Array.isArray(newValue) ? mapArray(newValue) : _mapObject(newValue, mapper, options2, isSeen);
     }
     target[newKey] = newValue;
   }
   return target;
 }, "_mapObject");
-function mapObject(object2, mapper, options) {
+function mapObject(object2, mapper, options2) {
   if (!isObject(object2)) {
     throw new TypeError(`Expected an object, got \`${object2}\` (${typeof object2})`);
   }
   if (Array.isArray(object2)) {
     throw new TypeError("Expected an object, got an array");
   }
-  return _mapObject(object2, mapper, options);
+  return _mapObject(object2, mapper, options2);
 }
 __name(mapObject, "mapObject");
 var SPLIT_LOWER_UPPER_RE = /([\p{Ll}\d])(\p{Lu})/gu;
@@ -6151,23 +9164,23 @@ function splitSeparateNumbers(value) {
   return words;
 }
 __name(splitSeparateNumbers, "splitSeparateNumbers");
-function noCase(input, options) {
-  const [prefix, words, suffix] = splitPrefixSuffix(input, options);
-  return prefix + words.map(lowerFactory(options?.locale)).join(options?.delimiter ?? " ") + suffix;
+function noCase(input, options2) {
+  const [prefix, words, suffix] = splitPrefixSuffix(input, options2);
+  return prefix + words.map(lowerFactory(options2?.locale)).join(options2?.delimiter ?? " ") + suffix;
 }
 __name(noCase, "noCase");
-function snakeCase(input, options) {
-  return noCase(input, { delimiter: "_", ...options });
+function snakeCase(input, options2) {
+  return noCase(input, { delimiter: "_", ...options2 });
 }
 __name(snakeCase, "snakeCase");
 function lowerFactory(locale) {
   return locale === false ? (input) => input.toLowerCase() : (input) => input.toLocaleLowerCase(locale);
 }
 __name(lowerFactory, "lowerFactory");
-function splitPrefixSuffix(input, options = {}) {
-  const splitFn = options.split ?? (options.separateNumbers ? splitSeparateNumbers : split);
-  const prefixCharacters = options.prefixCharacters ?? DEFAULT_PREFIX_SUFFIX_CHARACTERS;
-  const suffixCharacters = options.suffixCharacters ?? DEFAULT_PREFIX_SUFFIX_CHARACTERS;
+function splitPrefixSuffix(input, options2 = {}) {
+  const splitFn = options2.split ?? (options2.separateNumbers ? splitSeparateNumbers : split);
+  const prefixCharacters = options2.prefixCharacters ?? DEFAULT_PREFIX_SUFFIX_CHARACTERS;
+  const suffixCharacters = options2.suffixCharacters ?? DEFAULT_PREFIX_SUFFIX_CHARACTERS;
   let prefixIndex = 0;
   let suffixIndex = input.length;
   while (prefixIndex < input.length) {
@@ -6191,36 +9204,36 @@ function splitPrefixSuffix(input, options = {}) {
 }
 __name(splitPrefixSuffix, "splitPrefixSuffix");
 var PlainObjectConstructor = {}.constructor;
-function snakecaseKeys(obj, options) {
+function snakecaseKeys(obj, options2) {
   if (Array.isArray(obj)) {
     if (obj.some((item) => item.constructor !== PlainObjectConstructor)) {
       throw new Error("obj must be array of plain objects");
     }
-    options = { deep: true, exclude: [], parsingOptions: {}, ...options };
-    const convertCase2 = options.snakeCase || ((key) => snakeCase(key, options.parsingOptions));
+    options2 = { deep: true, exclude: [], parsingOptions: {}, ...options2 };
+    const convertCase2 = options2.snakeCase || ((key) => snakeCase(key, options2.parsingOptions));
     return obj.map((item) => {
       return mapObject(item, (key, val) => {
         return [
-          matches(options.exclude, key) ? key : convertCase2(key),
+          matches(options2.exclude, key) ? key : convertCase2(key),
           val,
-          mapperOptions(key, val, options)
+          mapperOptions(key, val, options2)
         ];
-      }, options);
+      }, options2);
     });
   } else {
     if (obj.constructor !== PlainObjectConstructor) {
       throw new Error("obj must be an plain object");
     }
   }
-  options = { deep: true, exclude: [], parsingOptions: {}, ...options };
-  const convertCase = options.snakeCase || ((key) => snakeCase(key, options.parsingOptions));
+  options2 = { deep: true, exclude: [], parsingOptions: {}, ...options2 };
+  const convertCase = options2.snakeCase || ((key) => snakeCase(key, options2.parsingOptions));
   return mapObject(obj, (key, val) => {
     return [
-      matches(options.exclude, key) ? key : convertCase(key),
+      matches(options2.exclude, key) ? key : convertCase(key),
       val,
-      mapperOptions(key, val, options)
+      mapperOptions(key, val, options2)
     ];
-  }, options);
+  }, options2);
 }
 __name(snakecaseKeys, "snakecaseKeys");
 function matches(patterns, value) {
@@ -6229,8 +9242,8 @@ function matches(patterns, value) {
   });
 }
 __name(matches, "matches");
-function mapperOptions(key, val, options) {
-  return options.shouldRecurse ? { shouldRecurse: options.shouldRecurse(key, val) } : void 0;
+function mapperOptions(key, val, options2) {
+  return options2.shouldRecurse ? { shouldRecurse: options2.shouldRecurse(key, val) } : void 0;
 }
 __name(mapperOptions, "mapperOptions");
 var snakecase_keys_default = snakecaseKeys;
@@ -6625,7 +9638,7 @@ var EmailAddress = class _EmailAddress {
       data.id,
       data.email_address,
       data.verification && Verification.fromJSON(data.verification),
-      data.linked_to.map((link) => IdentificationLink.fromJSON(link))
+      data.linked_to.map((link2) => IdentificationLink.fromJSON(link2))
     );
   }
 };
@@ -7181,7 +10194,7 @@ var PhoneNumber = class _PhoneNumber {
       data.reserved_for_second_factor,
       data.default_second_factor,
       data.verification && Verification.fromJSON(data.verification),
-      data.linked_to.map((link) => IdentificationLink.fromJSON(link))
+      data.linked_to.map((link2) => IdentificationLink.fromJSON(link2))
     );
   }
 };
@@ -7928,7 +10941,7 @@ function jsonToObject(item) {
   }
 }
 __name(jsonToObject, "jsonToObject");
-function buildRequest(options) {
+function buildRequest(options2) {
   const requestFn = /* @__PURE__ */ __name(async (requestOptions) => {
     const {
       secretKey,
@@ -7939,7 +10952,7 @@ function buildRequest(options) {
       apiVersion = API_VERSION,
       userAgent = USER_AGENT,
       skipApiVersionInUrl = false
-    } = options;
+    } = options2;
     const { path, method, queryParams, headerParams, bodyParams, formData, options: opts } = requestOptions;
     const { deepSnakecaseBodyParamKeys = false } = opts || {};
     if (requireSecretKey) {
@@ -8010,25 +11023,25 @@ function buildRequest(options) {
         ...deserialize(responseBody),
         errors: null
       };
-    } catch (err) {
-      if (err instanceof Error) {
+    } catch (err3) {
+      if (err3 instanceof Error) {
         return {
           data: null,
           errors: [
             {
               code: "unexpected_error",
-              message: err.message || "Unexpected error"
+              message: err3.message || "Unexpected error"
             }
           ],
-          clerkTraceId: getTraceId(err, res?.headers)
+          clerkTraceId: getTraceId(err3, res?.headers)
         };
       }
       return {
         data: null,
-        errors: parseErrors2(err),
+        errors: parseErrors2(err3),
         status: res?.status,
         statusText: res?.statusText,
-        clerkTraceId: getTraceId(err, res?.headers),
+        clerkTraceId: getTraceId(err3, res?.headers),
         retryAfter: getRetryAfter(res?.headers)
       };
     }
@@ -8084,11 +11097,11 @@ function withLegacyRequestReturn(cb) {
   };
 }
 __name(withLegacyRequestReturn, "withLegacyRequestReturn");
-function createBackendApiClient(options) {
-  const request = buildRequest(options);
+function createBackendApiClient(options2) {
+  const request = buildRequest(options2);
   return {
     __experimental_accountlessApplications: new AccountlessApplicationAPI(
-      buildRequest({ ...options, requireSecretKey: false })
+      buildRequest({ ...options2, requireSecretKey: false })
     ),
     actorTokens: new ActorTokenAPI(request),
     /**
@@ -8098,7 +11111,7 @@ function createBackendApiClient(options) {
     allowlistIdentifiers: new AllowlistIdentifierAPI(request),
     apiKeys: new APIKeysAPI(
       buildRequest({
-        ...options,
+        ...options2,
         skipApiVersionInUrl: true
       })
     ),
@@ -8113,7 +11126,7 @@ function createBackendApiClient(options) {
     emailAddresses: new EmailAddressAPI(request),
     idPOAuthAccessToken: new IdPOAuthAccessTokenApi(
       buildRequest({
-        ...options,
+        ...options2,
         skipApiVersionInUrl: true
       })
     ),
@@ -8124,15 +11137,15 @@ function createBackendApiClient(options) {
     machines: new MachineApi(request),
     m2m: new M2MTokenApi(
       buildRequest({
-        ...options,
+        ...options2,
         skipApiVersionInUrl: true,
         requireSecretKey: false,
         useMachineSecretKey: true
       }),
       {
-        secretKey: options.secretKey,
-        apiUrl: options.apiUrl,
-        jwtKey: options.jwtKey
+        secretKey: options2.secretKey,
+        apiUrl: options2.apiUrl,
+        jwtKey: options2.jwtKey
       }
     ),
     oauthApplications: new OAuthApplicationsApi(request),
@@ -8318,12 +11331,12 @@ function invalidTokenAuthObject() {
 __name(invalidTokenAuthObject, "invalidTokenAuthObject");
 var createGetToken = /* @__PURE__ */ __name((params) => {
   const { fetcher, sessionToken, sessionId } = params || {};
-  return async (options = {}) => {
+  return async (options2 = {}) => {
     if (!sessionId) {
       return null;
     }
-    if (options.template || options.expiresInSeconds !== void 0) {
-      return fetcher(sessionId, options.template, options.expiresInSeconds);
+    if (options2.template || options2.expiresInSeconds !== void 0) {
+      return fetcher(sessionId, options2.template, options2.expiresInSeconds);
     }
     return sessionToken;
   };
@@ -8574,7 +11587,7 @@ var getCookieName = /* @__PURE__ */ __name((cookieDirective) => {
 var getCookieValue = /* @__PURE__ */ __name((cookieDirective) => {
   return cookieDirective.split(";")[0]?.split("=")[1];
 }, "getCookieValue");
-async function verifyToken(token, options) {
+async function verifyToken(token, options2) {
   const { data: decodedResult, errors } = decodeJwt(token);
   if (errors) {
     return { errors };
@@ -8583,10 +11596,10 @@ async function verifyToken(token, options) {
   const { kid } = header;
   try {
     let key;
-    if (options.jwtKey) {
-      key = loadClerkJwkFromPem({ kid, pem: options.jwtKey });
-    } else if (options.secretKey) {
-      key = await loadClerkJWKFromRemote({ ...options, kid });
+    if (options2.jwtKey) {
+      key = loadClerkJwkFromPem({ kid, pem: options2.jwtKey });
+    } else if (options2.secretKey) {
+      key = await loadClerkJWKFromRemote({ ...options2, kid });
     } else {
       return {
         errors: [
@@ -8598,20 +11611,20 @@ async function verifyToken(token, options) {
         ]
       };
     }
-    return await verifyJwt(token, { ...options, key });
+    return await verifyJwt(token, { ...options2, key });
   } catch (error51) {
     return { errors: [error51] };
   }
 }
 __name(verifyToken, "verifyToken");
-function handleClerkAPIError(tokenType, err, notFoundMessage) {
-  if (isClerkAPIResponseError(err)) {
+function handleClerkAPIError(tokenType, err3, notFoundMessage) {
+  if (isClerkAPIResponseError(err3)) {
     let code;
     let message;
-    switch (err.status) {
+    switch (err3.status) {
       case 401:
         code = MachineTokenVerificationErrorCode.InvalidSecretKey;
-        message = err.errors[0]?.message || "Invalid secret key";
+        message = err3.errors[0]?.message || "Invalid secret key";
         break;
       case 404:
         code = MachineTokenVerificationErrorCode.TokenInvalid;
@@ -8628,7 +11641,7 @@ function handleClerkAPIError(tokenType, err, notFoundMessage) {
         new MachineTokenVerificationError({
           message,
           code,
-          status: err.status
+          status: err3.status
         })
       ]
     };
@@ -8640,43 +11653,43 @@ function handleClerkAPIError(tokenType, err, notFoundMessage) {
       new MachineTokenVerificationError({
         message: "Unexpected error",
         code: MachineTokenVerificationErrorCode.UnexpectedError,
-        status: err.status
+        status: err3.status
       })
     ]
   };
 }
 __name(handleClerkAPIError, "handleClerkAPIError");
-async function verifyM2MToken(token, options) {
+async function verifyM2MToken(token, options2) {
   try {
-    const client = createBackendApiClient(options);
+    const client = createBackendApiClient(options2);
     const verifiedToken = await client.m2m.verify({ token });
     return { data: verifiedToken, tokenType: TokenType.M2MToken, errors: void 0 };
-  } catch (err) {
-    return handleClerkAPIError(TokenType.M2MToken, err, "Machine token not found");
+  } catch (err3) {
+    return handleClerkAPIError(TokenType.M2MToken, err3, "Machine token not found");
   }
 }
 __name(verifyM2MToken, "verifyM2MToken");
-async function verifyOAuthToken(accessToken, options) {
+async function verifyOAuthToken(accessToken, options2) {
   try {
-    const client = createBackendApiClient(options);
+    const client = createBackendApiClient(options2);
     const verifiedToken = await client.idPOAuthAccessToken.verify(accessToken);
     return { data: verifiedToken, tokenType: TokenType.OAuthToken, errors: void 0 };
-  } catch (err) {
-    return handleClerkAPIError(TokenType.OAuthToken, err, "OAuth token not found");
+  } catch (err3) {
+    return handleClerkAPIError(TokenType.OAuthToken, err3, "OAuth token not found");
   }
 }
 __name(verifyOAuthToken, "verifyOAuthToken");
-async function verifyAPIKey(secret, options) {
+async function verifyAPIKey(secret, options2) {
   try {
-    const client = createBackendApiClient(options);
+    const client = createBackendApiClient(options2);
     const verifiedToken = await client.apiKeys.verify(secret);
     return { data: verifiedToken, tokenType: TokenType.ApiKey, errors: void 0 };
-  } catch (err) {
-    return handleClerkAPIError(TokenType.ApiKey, err, "API key not found");
+  } catch (err3) {
+    return handleClerkAPIError(TokenType.ApiKey, err3, "API key not found");
   }
 }
 __name(verifyAPIKey, "verifyAPIKey");
-async function verifyMachineAuthToken(token, options) {
+async function verifyMachineAuthToken(token, options2) {
   if (isJwtFormat(token)) {
     let decodedResult;
     try {
@@ -8698,10 +11711,10 @@ async function verifyMachineAuthToken(token, options) {
       };
     }
     if (decodedResult.payload.sub.startsWith(M2M_SUBJECT_PREFIX)) {
-      return verifyM2MJwt(token, decodedResult, options);
+      return verifyM2MJwt(token, decodedResult, options2);
     }
     if (OAUTH_ACCESS_TOKEN_TYPES.includes(decodedResult.header.typ)) {
-      return verifyOAuthJwt(token, decodedResult, options);
+      return verifyOAuthJwt(token, decodedResult, options2);
     }
     return {
       data: void 0,
@@ -8715,13 +11728,13 @@ async function verifyMachineAuthToken(token, options) {
     };
   }
   if (token.startsWith(M2M_TOKEN_PREFIX)) {
-    return verifyM2MToken(token, options);
+    return verifyM2MToken(token, options2);
   }
   if (token.startsWith(OAUTH_TOKEN_PREFIX)) {
-    return verifyOAuthToken(token, options);
+    return verifyOAuthToken(token, options2);
   }
   if (token.startsWith(API_KEY_PREFIX2)) {
-    return verifyAPIKey(token, options);
+    return verifyAPIKey(token, options2);
   }
   throw new Error("Unknown machine token type");
 }
@@ -8751,8 +11764,8 @@ async function verifyHandshakeJwt(token, { key }) {
   return payload;
 }
 __name(verifyHandshakeJwt, "verifyHandshakeJwt");
-async function verifyHandshakeToken(token, options) {
-  const { secretKey, apiUrl, apiVersion, jwksCacheTtlInMs, jwtKey, skipJwksCache } = options;
+async function verifyHandshakeToken(token, options2) {
+  const { secretKey, apiUrl, apiVersion, jwksCacheTtlInMs, jwtKey, skipJwksCache } = options2;
   const { data, errors } = decodeJwt(token);
   if (errors) {
     throw errors[0];
@@ -8777,9 +11790,9 @@ var HandshakeService = class {
   static {
     __name(this, "HandshakeService");
   }
-  constructor(authenticateContext, options, organizationMatcher) {
+  constructor(authenticateContext, options2, organizationMatcher) {
     this.authenticateContext = authenticateContext;
-    this.options = options;
+    this.options = options2;
     this.organizationMatcher = organizationMatcher;
   }
   /**
@@ -8999,9 +12012,9 @@ var OrganizationMatcher = class {
   static {
     __name(this, "OrganizationMatcher");
   }
-  constructor(options) {
-    this.organizationPattern = this.createMatcher(options?.organizationPatterns);
-    this.personalAccountPattern = this.createMatcher(options?.personalAccountPatterns);
+  constructor(options2) {
+    this.organizationPattern = this.createMatcher(options2?.organizationPatterns);
+    this.personalAccountPattern = this.createMatcher(options2?.personalAccountPatterns);
   }
   createMatcher(pattern) {
     if (!pattern) {
@@ -9100,8 +12113,8 @@ function assertMachineSecretOrSecretKey(authenticateContext) {
   }
 }
 __name(assertMachineSecretOrSecretKey, "assertMachineSecretOrSecretKey");
-function isRequestEligibleForRefresh(err, authenticateContext, request) {
-  return err.reason === TokenVerificationErrorReason.TokenExpired && !!authenticateContext.refreshTokenInCookie && request.method === "GET";
+function isRequestEligibleForRefresh(err3, authenticateContext, request) {
+  return err3.reason === TokenVerificationErrorReason.TokenExpired && !!authenticateContext.refreshTokenInCookie && request.method === "GET";
 }
 __name(isRequestEligibleForRefresh, "isRequestEligibleForRefresh");
 function checkTokenTypeMismatch(parsedTokenType, acceptsToken, authenticateContext) {
@@ -9131,9 +12144,9 @@ function isTokenTypeInAcceptedArray(acceptsToken, authenticateContext) {
   return isTokenTypeAccepted(typeToCheck, acceptsToken);
 }
 __name(isTokenTypeInAcceptedArray, "isTokenTypeInAcceptedArray");
-var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
-  const authenticateContext = await createAuthenticateContext(createClerkRequest(request), options);
-  const acceptsToken = options.acceptsToken ?? TokenType.SessionToken;
+var authenticateRequest = /* @__PURE__ */ __name((async (request, options2) => {
+  const authenticateContext = await createAuthenticateContext(createClerkRequest(request), options2);
+  const acceptsToken = options2.acceptsToken ?? TokenType.SessionToken;
   if (acceptsToken !== TokenType.M2MToken) {
     assertValidSecretKey(authenticateContext.secretKey);
     if (authenticateContext.isSatellite) {
@@ -9147,14 +12160,14 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
   if (acceptsToken === TokenType.M2MToken) {
     assertMachineSecretOrSecretKey(authenticateContext);
   }
-  const organizationMatcher = new OrganizationMatcher(options.organizationSyncOptions);
+  const organizationMatcher = new OrganizationMatcher(options2.organizationSyncOptions);
   const handshakeService = new HandshakeService(
     authenticateContext,
-    { organizationSyncOptions: options.organizationSyncOptions },
+    { organizationSyncOptions: options2.organizationSyncOptions },
     organizationMatcher
   );
   async function refreshToken(authenticateContext2) {
-    if (!options.apiClient) {
+    if (!options2.apiClient) {
       return {
         data: null,
         error: {
@@ -9202,7 +12215,7 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
       };
     }
     try {
-      const response = await options.apiClient.sessions.refreshSession(decodeResult.payload.sid, {
+      const response = await options2.apiClient.sessions.refreshSession(decodeResult.payload.sid, {
         format: "cookie",
         suffixed_cookies: authenticateContext2.usesSuffixedCookies(),
         expired_token: expiredSessionToken || "",
@@ -9212,22 +12225,22 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
         request_headers: Object.fromEntries(Array.from(request.headers.entries()).map(([k, v]) => [k, [v]]))
       });
       return { data: response.cookies, error: null };
-    } catch (err) {
-      if (err?.errors?.length) {
-        if (err.errors[0].code === "unexpected_error") {
+    } catch (err3) {
+      if (err3?.errors?.length) {
+        if (err3.errors[0].code === "unexpected_error") {
           return {
             data: null,
             error: {
               message: `Fetch unexpected error`,
-              cause: { reason: RefreshTokenErrorReason.FetchError, errors: err.errors }
+              cause: { reason: RefreshTokenErrorReason.FetchError, errors: err3.errors }
             }
           };
         }
         return {
           data: null,
           error: {
-            message: err.errors[0].code,
-            cause: { reason: err.errors[0].code, errors: err.errors }
+            message: err3.errors[0].code,
+            cause: { reason: err3.errors[0].code, errors: err3.errors }
           }
         };
       } else {
@@ -9235,7 +12248,7 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
           data: null,
           error: {
             message: `Unexpected Server/BAPI error`,
-            cause: { reason: RefreshTokenErrorReason.UnexpectedBAPIError, errors: [err] }
+            cause: { reason: RefreshTokenErrorReason.UnexpectedBAPIError, errors: [err3] }
           }
         };
       }
@@ -9355,8 +12368,8 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         token: tokenInHeader
       });
-    } catch (err) {
-      return handleSessionTokenError(err, "header");
+    } catch (err3) {
+      return handleSessionTokenError(err3, "header");
     }
   }
   __name(authenticateRequestWithTokenInHeader, "authenticateRequestWithTokenInHeader");
@@ -9462,8 +12475,8 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
         }
       }
       return signedInRequestState;
-    } catch (err) {
-      return handleSessionTokenError(err, "cookie");
+    } catch (err3) {
+      return handleSessionTokenError(err3, "cookie");
     }
     return signedOut({
       tokenType: TokenType.SessionToken,
@@ -9472,8 +12485,8 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
     });
   }
   __name(authenticateRequestWithTokenInCookie, "authenticateRequestWithTokenInCookie");
-  async function handleSessionTokenError(err, tokenCarrier) {
-    if (!(err instanceof TokenVerificationError)) {
+  async function handleSessionTokenError(err3, tokenCarrier) {
+    if (!(err3 instanceof TokenVerificationError)) {
       return signedOut({
         tokenType: TokenType.SessionToken,
         authenticateContext,
@@ -9481,7 +12494,7 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
       });
     }
     let refreshError;
-    if (isRequestEligibleForRefresh(err, authenticateContext, request)) {
+    if (isRequestEligibleForRefresh(err3, authenticateContext, request)) {
       const { data, error: error51 } = await attemptRefresh(authenticateContext);
       if (data) {
         return signedIn({
@@ -9506,29 +12519,29 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
         refreshError = null;
       }
     }
-    err.tokenCarrier = tokenCarrier;
+    err3.tokenCarrier = tokenCarrier;
     const reasonToHandshake = [
       TokenVerificationErrorReason.TokenExpired,
       TokenVerificationErrorReason.TokenNotActiveYet,
       TokenVerificationErrorReason.TokenIatInTheFuture
-    ].includes(err.reason);
+    ].includes(err3.reason);
     if (reasonToHandshake) {
       return handleMaybeHandshakeStatus(
         authenticateContext,
-        convertTokenVerificationErrorReasonToAuthErrorReason({ tokenError: err.reason, refreshError }),
-        err.getFullMessage()
+        convertTokenVerificationErrorReasonToAuthErrorReason({ tokenError: err3.reason, refreshError }),
+        err3.getFullMessage()
       );
     }
     return signedOut({
       tokenType: TokenType.SessionToken,
       authenticateContext,
-      reason: err.reason,
-      message: err.getFullMessage()
+      reason: err3.reason,
+      message: err3.getFullMessage()
     });
   }
   __name(handleSessionTokenError, "handleSessionTokenError");
-  function handleMachineError(tokenType, err) {
-    if (!(err instanceof MachineTokenVerificationError)) {
+  function handleMachineError(tokenType, err3) {
+    if (!(err3 instanceof MachineTokenVerificationError)) {
       return signedOut({
         tokenType,
         authenticateContext,
@@ -9538,8 +12551,8 @@ var authenticateRequest = /* @__PURE__ */ __name((async (request, options) => {
     return signedOut({
       tokenType,
       authenticateContext,
-      reason: err.code,
-      message: err.getFullMessage()
+      reason: err3.code,
+      message: err3.getFullMessage()
     });
   }
   __name(handleMachineError, "handleMachineError");
@@ -9664,11 +12677,11 @@ var defaultOptions2 = {
 function createAuthenticateRequest(params) {
   const buildTimeOptions = mergePreDefinedOptions(defaultOptions2, params.options);
   const apiClient = params.apiClient;
-  const authenticateRequest2 = /* @__PURE__ */ __name((request, options = {}) => {
+  const authenticateRequest2 = /* @__PURE__ */ __name((request, options2 = {}) => {
     const { apiUrl, apiVersion } = buildTimeOptions;
-    const runTimeOptions = mergePreDefinedOptions(buildTimeOptions, options);
+    const runTimeOptions = mergePreDefinedOptions(buildTimeOptions, options2);
     return authenticateRequest(request, {
-      ...options,
+      ...options2,
       ...runTimeOptions,
       // We should add all the omitted props from options here (eg apiUrl / apiVersion)
       // to avoid runtime options override them.
@@ -9796,8 +12809,8 @@ var LocalStorageThrottlerCache = class {
       const cache2 = this.#getCache();
       cache2[key] = value;
       localStorage.setItem(this.#storageKey, JSON.stringify(cache2));
-    } catch (err) {
-      if (err instanceof DOMException && (err.name === "QuotaExceededError" || err.name === "NS_ERROR_DOM_QUOTA_REACHED") && localStorage.length > 0) localStorage.removeItem(this.#storageKey);
+    } catch (err3) {
+      if (err3 instanceof DOMException && (err3.name === "QuotaExceededError" || err3.name === "NS_ERROR_DOM_QUOTA_REACHED") && localStorage.length > 0) localStorage.removeItem(this.#storageKey);
     }
   }
   removeItem(key) {
@@ -9866,23 +12879,23 @@ var TelemetryCollector = class {
   #metadata = {};
   #buffer = [];
   #pendingFlush = null;
-  constructor(options) {
+  constructor(options2) {
     this.#config = {
-      maxBufferSize: options.maxBufferSize ?? DEFAULT_CONFIG.maxBufferSize,
-      samplingRate: options.samplingRate ?? DEFAULT_CONFIG.samplingRate,
-      perEventSampling: options.perEventSampling ?? true,
-      disabled: options.disabled ?? false,
-      debug: options.debug ?? false,
+      maxBufferSize: options2.maxBufferSize ?? DEFAULT_CONFIG.maxBufferSize,
+      samplingRate: options2.samplingRate ?? DEFAULT_CONFIG.samplingRate,
+      perEventSampling: options2.perEventSampling ?? true,
+      disabled: options2.disabled ?? false,
+      debug: options2.debug ?? false,
       endpoint: DEFAULT_CONFIG.endpoint
     };
-    if (!options.clerkVersion && typeof window === "undefined") this.#metadata.clerkVersion = "";
-    else this.#metadata.clerkVersion = options.clerkVersion ?? "";
-    this.#metadata.sdk = options.sdk;
-    this.#metadata.sdkVersion = options.sdkVersion;
-    this.#metadata.publishableKey = options.publishableKey ?? "";
-    const parsedKey = parsePublishableKey(options.publishableKey);
+    if (!options2.clerkVersion && typeof window === "undefined") this.#metadata.clerkVersion = "";
+    else this.#metadata.clerkVersion = options2.clerkVersion ?? "";
+    this.#metadata.sdk = options2.sdk;
+    this.#metadata.sdkVersion = options2.sdkVersion;
+    this.#metadata.publishableKey = options2.publishableKey ?? "";
+    const parsedKey = parsePublishableKey(options2.publishableKey);
     if (parsedKey) this.#metadata.instanceType = parsedKey.instanceType;
-    if (options.secretKey) this.#metadata.secretKey = options.secretKey.substring(0, 16);
+    if (options2.secretKey) this.#metadata.secretKey = options2.secretKey.substring(0, 16);
     this.#eventThrottler = new TelemetryEventThrottler(LocalStorageThrottlerCache.isSupported() ? new LocalStorageThrottlerCache() : new InMemoryThrottlerCache());
   }
   get isEnabled() {
@@ -10079,8 +13092,8 @@ var TelemetryCollector = class {
 
 // node_modules/@hono/clerk-auth/node_modules/@clerk/backend/dist/index.mjs
 var verifyToken2 = withLegacyReturn(verifyToken);
-function createClerkClient(options) {
-  const opts = { ...options };
+function createClerkClient(options2) {
+  const opts = { ...options2 };
   const apiClient = createBackendApiClient(opts);
   const requestState = createAuthenticateRequest({ options: opts, apiClient });
   const telemetry = new TelemetryCollector({
@@ -10150,15 +13163,15 @@ var checkUserAgentEquals = /* @__PURE__ */ __name((platform) => {
 }, "checkUserAgentEquals");
 
 // node_modules/@hono/clerk-auth/dist/index.js
-var getAuth = /* @__PURE__ */ __name(((c, options) => {
+var getAuth = /* @__PURE__ */ __name(((c, options2) => {
   deprecated("@hono/clerk-auth", 'Use `@clerk/hono` instead.\n\n- import { clerkMiddleware, getAuth } from "@hono/clerk-auth"\n+ import { clerkMiddleware, getAuth } from "@clerk/hono"');
-  return c.get("clerkAuth")(options);
+  return c.get("clerkAuth")(options2);
 }), "getAuth");
-var clerkMiddleware = /* @__PURE__ */ __name((options) => {
+var clerkMiddleware = /* @__PURE__ */ __name((options2) => {
   deprecated("@hono/clerk-auth", 'Use `@clerk/hono` instead.\n\n- import { clerkMiddleware, getAuth } from "@hono/clerk-auth"\n+ import { clerkMiddleware, getAuth } from "@clerk/hono"');
   return async (c, next) => {
     const clerkEnv = env(c);
-    const { secretKey, publishableKey, apiUrl, apiVersion, ...rest } = options || {
+    const { secretKey, publishableKey, apiUrl, apiVersion, ...rest } = options2 || {
       secretKey: clerkEnv.CLERK_SECRET_KEY || "",
       publishableKey: clerkEnv.CLERK_PUBLISHABLE_KEY || "",
       apiUrl: clerkEnv.CLERK_API_URL,
@@ -10221,9 +13234,10 @@ var ensureUser = /* @__PURE__ */ __name(async (c, userId) => {
 
 // src/auth/middleware.ts
 var isPublic = /* @__PURE__ */ __name((method, path) => {
-  if (path === "/health" || path === "/" || path === "/config") return true;
-  if (path.startsWith("/auth/")) return true;
-  if (method === "POST" && /^\/inbox\/[^/]+$/.test(path)) return true;
+  if (path === "/health" || path === "/" || path === "/config" || path === "/favicon.svg") return true;
+  if (path.startsWith("/auth/") || path.startsWith("/public/")) return true;
+  if (path.startsWith("/oauth/")) return true;
+  if (method === "POST" && /^\/inbox\/[^/]+$/.test(path) && path !== "/inbox/tokens") return true;
   return false;
 }, "isPublic");
 var unauthorized = /* @__PURE__ */ __name((c, message) => c.json({ error: { code: "UNAUTHORIZED", message } }, 401), "unauthorized");
@@ -10265,6 +13279,39 @@ var humanAuth = /* @__PURE__ */ __name(async (c, next) => {
   });
   return result ?? clerkResponse ?? void 0;
 }, "humanAuth");
+
+// src/auth/rate-limit.ts
+var WINDOW_MS = 6e4;
+var LIMITS = [
+  { name: "inbox-submit", max: 20, test: /* @__PURE__ */ __name((m, p) => m === "POST" && /^\/inbox\/[^/]+$/.test(p), "test") },
+  { name: "auth", max: 30, test: /* @__PURE__ */ __name((_m, p) => p.startsWith("/auth/"), "test") },
+  { name: "authed", max: 600, test: /* @__PURE__ */ __name(() => true, "test") }
+  // everything else (key/session required anyway)
+];
+var buckets = /* @__PURE__ */ new Map();
+var clientIp = /* @__PURE__ */ __name((c) => c.req.header("CF-Connecting-IP") || c.req.header("X-Forwarded-For") || "unknown", "clientIp");
+var rateLimit = /* @__PURE__ */ __name(async (c, next) => {
+  const method = c.req.method;
+  const path = c.req.path;
+  const rule = LIMITS.find((r) => r.test(method, path));
+  const now = Date.now();
+  const key = `${rule.name}:${clientIp(c)}`;
+  const bucket = buckets.get(key);
+  if (!bucket || bucket.resetAt <= now) {
+    if (buckets.size > 5e3) {
+      for (const [k, b] of buckets) if (b.resetAt <= now) buckets.delete(k);
+    }
+    buckets.set(key, { count: 1, resetAt: now + WINDOW_MS });
+    return next();
+  }
+  if (bucket.count >= rule.max) {
+    const retry2 = Math.ceil((bucket.resetAt - now) / 1e3);
+    c.header("Retry-After", String(retry2));
+    return c.json({ error: { code: "RATE_LIMITED", message: "Too many requests" } }, 429);
+  }
+  bucket.count++;
+  return next();
+}, "rateLimit");
 
 // src/routes/health.ts
 var healthRoute = new Hono2();
@@ -10473,6 +13520,13 @@ var deleteCookie = /* @__PURE__ */ __name((c, name, opt) => {
 
 // src/routes/auth.ts
 var authRoute = new Hono2();
+authRoute.get("/config", (c) => {
+  return c.json({
+    publishable_key: c.env.CLERK_PUBLISHABLE_KEY,
+    frontend_api: c.env.CLERK_FRONTEND_API,
+    sign_in_url: c.env.CLERK_SIGN_IN_URL
+  });
+});
 authRoute.get("/login", (c) => {
   const signInUrl = c.env.CLERK_SIGN_IN_URL;
   if (!signInUrl) {
@@ -11139,11 +14193,11 @@ var NEVER = /* @__PURE__ */ Object.freeze({
 });
 // @__NO_SIDE_EFFECTS__
 function $constructor(name, initializer3, params) {
-  function init(inst, def) {
+  function init(inst, def2) {
     if (!inst._zod) {
       Object.defineProperty(inst, "_zod", {
         value: {
-          def,
+          def: def2,
           constr: _2,
           traits: /* @__PURE__ */ new Set()
         },
@@ -11154,7 +14208,7 @@ function $constructor(name, initializer3, params) {
       return;
     }
     inst._zod.traits.add(name);
-    initializer3(inst, def);
+    initializer3(inst, def2);
     const proto = _2.prototype;
     const keys = Object.keys(proto);
     for (let i = 0; i < keys.length; i++) {
@@ -11172,10 +14226,10 @@ function $constructor(name, initializer3, params) {
     }
   }
   Object.defineProperty(Definition, "name", { value: name });
-  function _2(def) {
+  function _2(def2) {
     var _a3;
     const inst = params?.Parent ? new Definition() : this;
-    init(inst, def);
+    init(inst, def2);
     (_a3 = inst._zod).deferred ?? (_a3.deferred = []);
     for (const fn of inst._zod.deferred) {
       fn();
@@ -11395,8 +14449,8 @@ function assignProp(target, prop, value) {
 __name(assignProp, "assignProp");
 function mergeDefs(...defs) {
   const mergedDescriptors = {};
-  for (const def of defs) {
-    const descriptors = Object.getOwnPropertyDescriptors(def);
+  for (const def2 of defs) {
+    const descriptors = Object.getOwnPropertyDescriptors(def2);
     Object.assign(mergedDescriptors, descriptors);
   }
   return Object.defineProperties({}, mergedDescriptors);
@@ -11558,9 +14612,9 @@ function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 __name(escapeRegex, "escapeRegex");
-function clone(inst, def, params) {
-  const cl = new inst._zod.constr(def ?? inst._zod.def);
-  if (!def || params?.parent)
+function clone(inst, def2, params) {
+  const cl = new inst._zod.constr(def2 ?? inst._zod.def);
+  if (!def2 || params?.parent)
     cl._zod.parent = inst;
   return cl;
 }
@@ -11648,7 +14702,7 @@ function pick(schema, mask) {
   if (hasChecks) {
     throw new Error(".pick() cannot be used on object schemas containing refinements");
   }
-  const def = mergeDefs(schema._zod.def, {
+  const def2 = mergeDefs(schema._zod.def, {
     get shape() {
       const newShape = {};
       for (const key in mask) {
@@ -11664,7 +14718,7 @@ function pick(schema, mask) {
     },
     checks: []
   });
-  return clone(schema, def);
+  return clone(schema, def2);
 }
 __name(pick, "pick");
 function omit(schema, mask) {
@@ -11674,7 +14728,7 @@ function omit(schema, mask) {
   if (hasChecks) {
     throw new Error(".omit() cannot be used on object schemas containing refinements");
   }
-  const def = mergeDefs(schema._zod.def, {
+  const def2 = mergeDefs(schema._zod.def, {
     get shape() {
       const newShape = { ...schema._zod.def.shape };
       for (const key in mask) {
@@ -11690,7 +14744,7 @@ function omit(schema, mask) {
     },
     checks: []
   });
-  return clone(schema, def);
+  return clone(schema, def2);
 }
 __name(omit, "omit");
 function extend(schema, shape) {
@@ -11707,35 +14761,35 @@ function extend(schema, shape) {
       }
     }
   }
-  const def = mergeDefs(schema._zod.def, {
+  const def2 = mergeDefs(schema._zod.def, {
     get shape() {
       const _shape = { ...schema._zod.def.shape, ...shape };
       assignProp(this, "shape", _shape);
       return _shape;
     }
   });
-  return clone(schema, def);
+  return clone(schema, def2);
 }
 __name(extend, "extend");
 function safeExtend(schema, shape) {
   if (!isPlainObject(shape)) {
     throw new Error("Invalid input to safeExtend: expected a plain object");
   }
-  const def = mergeDefs(schema._zod.def, {
+  const def2 = mergeDefs(schema._zod.def, {
     get shape() {
       const _shape = { ...schema._zod.def.shape, ...shape };
       assignProp(this, "shape", _shape);
       return _shape;
     }
   });
-  return clone(schema, def);
+  return clone(schema, def2);
 }
 __name(safeExtend, "safeExtend");
 function merge(a, b) {
   if (a._zod.def.checks?.length) {
     throw new Error(".merge() cannot be used on object schemas containing refinements. Use .safeExtend() instead.");
   }
-  const def = mergeDefs(a._zod.def, {
+  const def2 = mergeDefs(a._zod.def, {
     get shape() {
       const _shape = { ...a._zod.def.shape, ...b._zod.def.shape };
       assignProp(this, "shape", _shape);
@@ -11746,7 +14800,7 @@ function merge(a, b) {
     },
     checks: b._zod.def.checks ?? []
   });
-  return clone(a, def);
+  return clone(a, def2);
 }
 __name(merge, "merge");
 function partial(Class2, schema, mask) {
@@ -11756,7 +14810,7 @@ function partial(Class2, schema, mask) {
   if (hasChecks) {
     throw new Error(".partial() cannot be used on object schemas containing refinements");
   }
-  const def = mergeDefs(schema._zod.def, {
+  const def2 = mergeDefs(schema._zod.def, {
     get shape() {
       const oldShape = schema._zod.def.shape;
       const shape = { ...oldShape };
@@ -11785,11 +14839,11 @@ function partial(Class2, schema, mask) {
     },
     checks: []
   });
-  return clone(schema, def);
+  return clone(schema, def2);
 }
 __name(partial, "partial");
 function required(Class2, schema, mask) {
-  const def = mergeDefs(schema._zod.def, {
+  const def2 = mergeDefs(schema._zod.def, {
     get shape() {
       const oldShape = schema._zod.def.shape;
       const shape = { ...oldShape };
@@ -11817,7 +14871,7 @@ function required(Class2, schema, mask) {
       return shape;
     }
   });
-  return clone(schema, def);
+  return clone(schema, def2);
 }
 __name(required, "required");
 function aborted(x, startIndex = 0) {
@@ -11977,17 +15031,17 @@ var Class = class {
 };
 
 // node_modules/zod/v4/core/errors.js
-var initializer = /* @__PURE__ */ __name((inst, def) => {
+var initializer = /* @__PURE__ */ __name((inst, def2) => {
   inst.name = "$ZodError";
   Object.defineProperty(inst, "_zod", {
     value: inst._zod,
     enumerable: false
   });
   Object.defineProperty(inst, "issues", {
-    value: def,
+    value: def2,
     enumerable: false
   });
-  inst.message = JSON.stringify(def, jsonStringifyReplacer, 2);
+  inst.message = JSON.stringify(def2, jsonStringifyReplacer, 2);
   Object.defineProperty(inst, "toString", {
     value: /* @__PURE__ */ __name(() => inst.message, "value"),
     enumerable: false
@@ -12374,10 +15428,10 @@ var sha512_base64 = /* @__PURE__ */ fixedBase64(86, "==");
 var sha512_base64url = /* @__PURE__ */ fixedBase64url(86);
 
 // node_modules/zod/v4/core/checks.js
-var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def) => {
+var $ZodCheck = /* @__PURE__ */ $constructor("$ZodCheck", (inst, def2) => {
   var _a3;
   inst._zod ?? (inst._zod = {});
-  inst._zod.def = def;
+  inst._zod.def = def2;
   (_a3 = inst._zod).onattach ?? (_a3.onattach = []);
 });
 var numericOriginMap = {
@@ -12385,93 +15439,93 @@ var numericOriginMap = {
   bigint: "bigint",
   object: "date"
 };
-var $ZodCheckLessThan = /* @__PURE__ */ $constructor("$ZodCheckLessThan", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const origin = numericOriginMap[typeof def.value];
+var $ZodCheckLessThan = /* @__PURE__ */ $constructor("$ZodCheckLessThan", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  const origin = numericOriginMap[typeof def2.value];
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    const curr = (def.inclusive ? bag.maximum : bag.exclusiveMaximum) ?? Number.POSITIVE_INFINITY;
-    if (def.value < curr) {
-      if (def.inclusive)
-        bag.maximum = def.value;
+    const curr = (def2.inclusive ? bag.maximum : bag.exclusiveMaximum) ?? Number.POSITIVE_INFINITY;
+    if (def2.value < curr) {
+      if (def2.inclusive)
+        bag.maximum = def2.value;
       else
-        bag.exclusiveMaximum = def.value;
+        bag.exclusiveMaximum = def2.value;
     }
   });
   inst._zod.check = (payload) => {
-    if (def.inclusive ? payload.value <= def.value : payload.value < def.value) {
+    if (def2.inclusive ? payload.value <= def2.value : payload.value < def2.value) {
       return;
     }
     payload.issues.push({
       origin,
       code: "too_big",
-      maximum: typeof def.value === "object" ? def.value.getTime() : def.value,
+      maximum: typeof def2.value === "object" ? def2.value.getTime() : def2.value,
       input: payload.value,
-      inclusive: def.inclusive,
+      inclusive: def2.inclusive,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckGreaterThan = /* @__PURE__ */ $constructor("$ZodCheckGreaterThan", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const origin = numericOriginMap[typeof def.value];
+var $ZodCheckGreaterThan = /* @__PURE__ */ $constructor("$ZodCheckGreaterThan", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  const origin = numericOriginMap[typeof def2.value];
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    const curr = (def.inclusive ? bag.minimum : bag.exclusiveMinimum) ?? Number.NEGATIVE_INFINITY;
-    if (def.value > curr) {
-      if (def.inclusive)
-        bag.minimum = def.value;
+    const curr = (def2.inclusive ? bag.minimum : bag.exclusiveMinimum) ?? Number.NEGATIVE_INFINITY;
+    if (def2.value > curr) {
+      if (def2.inclusive)
+        bag.minimum = def2.value;
       else
-        bag.exclusiveMinimum = def.value;
+        bag.exclusiveMinimum = def2.value;
     }
   });
   inst._zod.check = (payload) => {
-    if (def.inclusive ? payload.value >= def.value : payload.value > def.value) {
+    if (def2.inclusive ? payload.value >= def2.value : payload.value > def2.value) {
       return;
     }
     payload.issues.push({
       origin,
       code: "too_small",
-      minimum: typeof def.value === "object" ? def.value.getTime() : def.value,
+      minimum: typeof def2.value === "object" ? def2.value.getTime() : def2.value,
       input: payload.value,
-      inclusive: def.inclusive,
+      inclusive: def2.inclusive,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckMultipleOf = /* @__PURE__ */ $constructor("$ZodCheckMultipleOf", (inst, def) => {
-  $ZodCheck.init(inst, def);
+var $ZodCheckMultipleOf = /* @__PURE__ */ $constructor("$ZodCheckMultipleOf", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
   inst._zod.onattach.push((inst2) => {
     var _a3;
-    (_a3 = inst2._zod.bag).multipleOf ?? (_a3.multipleOf = def.value);
+    (_a3 = inst2._zod.bag).multipleOf ?? (_a3.multipleOf = def2.value);
   });
   inst._zod.check = (payload) => {
-    if (typeof payload.value !== typeof def.value)
+    if (typeof payload.value !== typeof def2.value)
       throw new Error("Cannot mix number and bigint in multiple_of check.");
-    const isMultiple = typeof payload.value === "bigint" ? payload.value % def.value === BigInt(0) : floatSafeRemainder(payload.value, def.value) === 0;
+    const isMultiple = typeof payload.value === "bigint" ? payload.value % def2.value === BigInt(0) : floatSafeRemainder(payload.value, def2.value) === 0;
     if (isMultiple)
       return;
     payload.issues.push({
       origin: typeof payload.value,
       code: "not_multiple_of",
-      divisor: def.value,
+      divisor: def2.value,
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  def.format = def.format || "float64";
-  const isInt = def.format?.includes("int");
+var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  def2.format = def2.format || "float64";
+  const isInt = def2.format?.includes("int");
   const origin = isInt ? "int" : "number";
-  const [minimum, maximum] = NUMBER_FORMAT_RANGES[def.format];
+  const [minimum, maximum] = NUMBER_FORMAT_RANGES[def2.format];
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    bag.format = def.format;
+    bag.format = def2.format;
     bag.minimum = minimum;
     bag.maximum = maximum;
     if (isInt)
@@ -12483,7 +15537,7 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
       if (!Number.isInteger(input)) {
         payload.issues.push({
           expected: origin,
-          format: def.format,
+          format: def2.format,
           code: "invalid_type",
           continue: false,
           input,
@@ -12501,7 +15555,7 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
             inst,
             origin,
             inclusive: true,
-            continue: !def.abort
+            continue: !def2.abort
           });
         } else {
           payload.issues.push({
@@ -12512,7 +15566,7 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
             inst,
             origin,
             inclusive: true,
-            continue: !def.abort
+            continue: !def2.abort
           });
         }
         return;
@@ -12526,7 +15580,7 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
         minimum,
         inclusive: true,
         inst,
-        continue: !def.abort
+        continue: !def2.abort
       });
     }
     if (input > maximum) {
@@ -12537,17 +15591,17 @@ var $ZodCheckNumberFormat = /* @__PURE__ */ $constructor("$ZodCheckNumberFormat"
         maximum,
         inclusive: true,
         inst,
-        continue: !def.abort
+        continue: !def2.abort
       });
     }
   };
 });
-var $ZodCheckBigIntFormat = /* @__PURE__ */ $constructor("$ZodCheckBigIntFormat", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const [minimum, maximum] = BIGINT_FORMAT_RANGES[def.format];
+var $ZodCheckBigIntFormat = /* @__PURE__ */ $constructor("$ZodCheckBigIntFormat", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  const [minimum, maximum] = BIGINT_FORMAT_RANGES[def2.format];
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    bag.format = def.format;
+    bag.format = def2.format;
     bag.minimum = minimum;
     bag.maximum = maximum;
   });
@@ -12561,7 +15615,7 @@ var $ZodCheckBigIntFormat = /* @__PURE__ */ $constructor("$ZodCheckBigIntFormat"
         minimum,
         inclusive: true,
         inst,
-        continue: !def.abort
+        continue: !def2.abort
       });
     }
     if (input > maximum) {
@@ -12572,308 +15626,308 @@ var $ZodCheckBigIntFormat = /* @__PURE__ */ $constructor("$ZodCheckBigIntFormat"
         maximum,
         inclusive: true,
         inst,
-        continue: !def.abort
+        continue: !def2.abort
       });
     }
   };
 });
-var $ZodCheckMaxSize = /* @__PURE__ */ $constructor("$ZodCheckMaxSize", (inst, def) => {
+var $ZodCheckMaxSize = /* @__PURE__ */ $constructor("$ZodCheckMaxSize", (inst, def2) => {
   var _a3;
-  $ZodCheck.init(inst, def);
+  $ZodCheck.init(inst, def2);
   (_a3 = inst._zod.def).when ?? (_a3.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.size !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const curr = inst2._zod.bag.maximum ?? Number.POSITIVE_INFINITY;
-    if (def.maximum < curr)
-      inst2._zod.bag.maximum = def.maximum;
+    if (def2.maximum < curr)
+      inst2._zod.bag.maximum = def2.maximum;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const size = input.size;
-    if (size <= def.maximum)
+    if (size <= def2.maximum)
       return;
     payload.issues.push({
       origin: getSizableOrigin(input),
       code: "too_big",
-      maximum: def.maximum,
+      maximum: def2.maximum,
       inclusive: true,
       input,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckMinSize = /* @__PURE__ */ $constructor("$ZodCheckMinSize", (inst, def) => {
+var $ZodCheckMinSize = /* @__PURE__ */ $constructor("$ZodCheckMinSize", (inst, def2) => {
   var _a3;
-  $ZodCheck.init(inst, def);
+  $ZodCheck.init(inst, def2);
   (_a3 = inst._zod.def).when ?? (_a3.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.size !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const curr = inst2._zod.bag.minimum ?? Number.NEGATIVE_INFINITY;
-    if (def.minimum > curr)
-      inst2._zod.bag.minimum = def.minimum;
+    if (def2.minimum > curr)
+      inst2._zod.bag.minimum = def2.minimum;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const size = input.size;
-    if (size >= def.minimum)
+    if (size >= def2.minimum)
       return;
     payload.issues.push({
       origin: getSizableOrigin(input),
       code: "too_small",
-      minimum: def.minimum,
+      minimum: def2.minimum,
       inclusive: true,
       input,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckSizeEquals = /* @__PURE__ */ $constructor("$ZodCheckSizeEquals", (inst, def) => {
+var $ZodCheckSizeEquals = /* @__PURE__ */ $constructor("$ZodCheckSizeEquals", (inst, def2) => {
   var _a3;
-  $ZodCheck.init(inst, def);
+  $ZodCheck.init(inst, def2);
   (_a3 = inst._zod.def).when ?? (_a3.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.size !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    bag.minimum = def.size;
-    bag.maximum = def.size;
-    bag.size = def.size;
+    bag.minimum = def2.size;
+    bag.maximum = def2.size;
+    bag.size = def2.size;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const size = input.size;
-    if (size === def.size)
+    if (size === def2.size)
       return;
-    const tooBig = size > def.size;
+    const tooBig = size > def2.size;
     payload.issues.push({
       origin: getSizableOrigin(input),
-      ...tooBig ? { code: "too_big", maximum: def.size } : { code: "too_small", minimum: def.size },
+      ...tooBig ? { code: "too_big", maximum: def2.size } : { code: "too_small", minimum: def2.size },
       inclusive: true,
       exact: true,
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckMaxLength = /* @__PURE__ */ $constructor("$ZodCheckMaxLength", (inst, def) => {
+var $ZodCheckMaxLength = /* @__PURE__ */ $constructor("$ZodCheckMaxLength", (inst, def2) => {
   var _a3;
-  $ZodCheck.init(inst, def);
+  $ZodCheck.init(inst, def2);
   (_a3 = inst._zod.def).when ?? (_a3.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.length !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const curr = inst2._zod.bag.maximum ?? Number.POSITIVE_INFINITY;
-    if (def.maximum < curr)
-      inst2._zod.bag.maximum = def.maximum;
+    if (def2.maximum < curr)
+      inst2._zod.bag.maximum = def2.maximum;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const length = input.length;
-    if (length <= def.maximum)
+    if (length <= def2.maximum)
       return;
     const origin = getLengthableOrigin(input);
     payload.issues.push({
       origin,
       code: "too_big",
-      maximum: def.maximum,
+      maximum: def2.maximum,
       inclusive: true,
       input,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckMinLength = /* @__PURE__ */ $constructor("$ZodCheckMinLength", (inst, def) => {
+var $ZodCheckMinLength = /* @__PURE__ */ $constructor("$ZodCheckMinLength", (inst, def2) => {
   var _a3;
-  $ZodCheck.init(inst, def);
+  $ZodCheck.init(inst, def2);
   (_a3 = inst._zod.def).when ?? (_a3.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.length !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const curr = inst2._zod.bag.minimum ?? Number.NEGATIVE_INFINITY;
-    if (def.minimum > curr)
-      inst2._zod.bag.minimum = def.minimum;
+    if (def2.minimum > curr)
+      inst2._zod.bag.minimum = def2.minimum;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const length = input.length;
-    if (length >= def.minimum)
+    if (length >= def2.minimum)
       return;
     const origin = getLengthableOrigin(input);
     payload.issues.push({
       origin,
       code: "too_small",
-      minimum: def.minimum,
+      minimum: def2.minimum,
       inclusive: true,
       input,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckLengthEquals = /* @__PURE__ */ $constructor("$ZodCheckLengthEquals", (inst, def) => {
+var $ZodCheckLengthEquals = /* @__PURE__ */ $constructor("$ZodCheckLengthEquals", (inst, def2) => {
   var _a3;
-  $ZodCheck.init(inst, def);
+  $ZodCheck.init(inst, def2);
   (_a3 = inst._zod.def).when ?? (_a3.when = (payload) => {
     const val = payload.value;
     return !nullish(val) && val.length !== void 0;
   });
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    bag.minimum = def.length;
-    bag.maximum = def.length;
-    bag.length = def.length;
+    bag.minimum = def2.length;
+    bag.maximum = def2.length;
+    bag.length = def2.length;
   });
   inst._zod.check = (payload) => {
     const input = payload.value;
     const length = input.length;
-    if (length === def.length)
+    if (length === def2.length)
       return;
     const origin = getLengthableOrigin(input);
-    const tooBig = length > def.length;
+    const tooBig = length > def2.length;
     payload.issues.push({
       origin,
-      ...tooBig ? { code: "too_big", maximum: def.length } : { code: "too_small", minimum: def.length },
+      ...tooBig ? { code: "too_big", maximum: def2.length } : { code: "too_small", minimum: def2.length },
       inclusive: true,
       exact: true,
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckStringFormat = /* @__PURE__ */ $constructor("$ZodCheckStringFormat", (inst, def) => {
+var $ZodCheckStringFormat = /* @__PURE__ */ $constructor("$ZodCheckStringFormat", (inst, def2) => {
   var _a3, _b;
-  $ZodCheck.init(inst, def);
+  $ZodCheck.init(inst, def2);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
-    bag.format = def.format;
-    if (def.pattern) {
+    bag.format = def2.format;
+    if (def2.pattern) {
       bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
-      bag.patterns.add(def.pattern);
+      bag.patterns.add(def2.pattern);
     }
   });
-  if (def.pattern)
+  if (def2.pattern)
     (_a3 = inst._zod).check ?? (_a3.check = (payload) => {
-      def.pattern.lastIndex = 0;
-      if (def.pattern.test(payload.value))
+      def2.pattern.lastIndex = 0;
+      if (def2.pattern.test(payload.value))
         return;
       payload.issues.push({
         origin: "string",
         code: "invalid_format",
-        format: def.format,
+        format: def2.format,
         input: payload.value,
-        ...def.pattern ? { pattern: def.pattern.toString() } : {},
+        ...def2.pattern ? { pattern: def2.pattern.toString() } : {},
         inst,
-        continue: !def.abort
+        continue: !def2.abort
       });
     });
   else
     (_b = inst._zod).check ?? (_b.check = () => {
     });
 });
-var $ZodCheckRegex = /* @__PURE__ */ $constructor("$ZodCheckRegex", (inst, def) => {
-  $ZodCheckStringFormat.init(inst, def);
+var $ZodCheckRegex = /* @__PURE__ */ $constructor("$ZodCheckRegex", (inst, def2) => {
+  $ZodCheckStringFormat.init(inst, def2);
   inst._zod.check = (payload) => {
-    def.pattern.lastIndex = 0;
-    if (def.pattern.test(payload.value))
+    def2.pattern.lastIndex = 0;
+    if (def2.pattern.test(payload.value))
       return;
     payload.issues.push({
       origin: "string",
       code: "invalid_format",
       format: "regex",
       input: payload.value,
-      pattern: def.pattern.toString(),
+      pattern: def2.pattern.toString(),
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckLowerCase = /* @__PURE__ */ $constructor("$ZodCheckLowerCase", (inst, def) => {
-  def.pattern ?? (def.pattern = lowercase);
-  $ZodCheckStringFormat.init(inst, def);
+var $ZodCheckLowerCase = /* @__PURE__ */ $constructor("$ZodCheckLowerCase", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = lowercase);
+  $ZodCheckStringFormat.init(inst, def2);
 });
-var $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (inst, def) => {
-  def.pattern ?? (def.pattern = uppercase);
-  $ZodCheckStringFormat.init(inst, def);
+var $ZodCheckUpperCase = /* @__PURE__ */ $constructor("$ZodCheckUpperCase", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = uppercase);
+  $ZodCheckStringFormat.init(inst, def2);
 });
-var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const escapedRegex = escapeRegex(def.includes);
-  const pattern = new RegExp(typeof def.position === "number" ? `^.{${def.position}}${escapedRegex}` : escapedRegex);
-  def.pattern = pattern;
+var $ZodCheckIncludes = /* @__PURE__ */ $constructor("$ZodCheckIncludes", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  const escapedRegex = escapeRegex(def2.includes);
+  const pattern = new RegExp(typeof def2.position === "number" ? `^.{${def2.position}}${escapedRegex}` : escapedRegex);
+  def2.pattern = pattern;
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
     bag.patterns.add(pattern);
   });
   inst._zod.check = (payload) => {
-    if (payload.value.includes(def.includes, def.position))
+    if (payload.value.includes(def2.includes, def2.position))
       return;
     payload.issues.push({
       origin: "string",
       code: "invalid_format",
       format: "includes",
-      includes: def.includes,
+      includes: def2.includes,
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`^${escapeRegex(def.prefix)}.*`);
-  def.pattern ?? (def.pattern = pattern);
+var $ZodCheckStartsWith = /* @__PURE__ */ $constructor("$ZodCheckStartsWith", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  const pattern = new RegExp(`^${escapeRegex(def2.prefix)}.*`);
+  def2.pattern ?? (def2.pattern = pattern);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
     bag.patterns.add(pattern);
   });
   inst._zod.check = (payload) => {
-    if (payload.value.startsWith(def.prefix))
+    if (payload.value.startsWith(def2.prefix))
       return;
     payload.issues.push({
       origin: "string",
       code: "invalid_format",
       format: "starts_with",
-      prefix: def.prefix,
+      prefix: def2.prefix,
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const pattern = new RegExp(`.*${escapeRegex(def.suffix)}$`);
-  def.pattern ?? (def.pattern = pattern);
+var $ZodCheckEndsWith = /* @__PURE__ */ $constructor("$ZodCheckEndsWith", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  const pattern = new RegExp(`.*${escapeRegex(def2.suffix)}$`);
+  def2.pattern ?? (def2.pattern = pattern);
   inst._zod.onattach.push((inst2) => {
     const bag = inst2._zod.bag;
     bag.patterns ?? (bag.patterns = /* @__PURE__ */ new Set());
     bag.patterns.add(pattern);
   });
   inst._zod.check = (payload) => {
-    if (payload.value.endsWith(def.suffix))
+    if (payload.value.endsWith(def2.suffix))
       return;
     payload.issues.push({
       origin: "string",
       code: "invalid_format",
       format: "ends_with",
-      suffix: def.suffix,
+      suffix: def2.suffix,
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
@@ -12883,42 +15937,42 @@ function handleCheckPropertyResult(result, payload, property) {
   }
 }
 __name(handleCheckPropertyResult, "handleCheckPropertyResult");
-var $ZodCheckProperty = /* @__PURE__ */ $constructor("$ZodCheckProperty", (inst, def) => {
-  $ZodCheck.init(inst, def);
+var $ZodCheckProperty = /* @__PURE__ */ $constructor("$ZodCheckProperty", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
   inst._zod.check = (payload) => {
-    const result = def.schema._zod.run({
-      value: payload.value[def.property],
+    const result = def2.schema._zod.run({
+      value: payload.value[def2.property],
       issues: []
     }, {});
     if (result instanceof Promise) {
-      return result.then((result2) => handleCheckPropertyResult(result2, payload, def.property));
+      return result.then((result2) => handleCheckPropertyResult(result2, payload, def2.property));
     }
-    handleCheckPropertyResult(result, payload, def.property);
+    handleCheckPropertyResult(result, payload, def2.property);
     return;
   };
 });
-var $ZodCheckMimeType = /* @__PURE__ */ $constructor("$ZodCheckMimeType", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  const mimeSet = new Set(def.mime);
+var $ZodCheckMimeType = /* @__PURE__ */ $constructor("$ZodCheckMimeType", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  const mimeSet = new Set(def2.mime);
   inst._zod.onattach.push((inst2) => {
-    inst2._zod.bag.mime = def.mime;
+    inst2._zod.bag.mime = def2.mime;
   });
   inst._zod.check = (payload) => {
     if (mimeSet.has(payload.value.type))
       return;
     payload.issues.push({
       code: "invalid_value",
-      values: def.mime,
+      values: def2.mime,
       input: payload.value.type,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (inst, def) => {
-  $ZodCheck.init(inst, def);
+var $ZodCheckOverwrite = /* @__PURE__ */ $constructor("$ZodCheckOverwrite", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
   inst._zod.check = (payload) => {
-    payload.value = def.tx(payload.value);
+    payload.value = def2.tx(payload.value);
   };
 });
 
@@ -12969,10 +16023,10 @@ var version = {
 };
 
 // node_modules/zod/v4/core/schemas.js
-var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
+var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def2) => {
   var _a3;
   inst ?? (inst = {});
-  inst._zod.def = def;
+  inst._zod.def = def2;
   inst._zod.bag = inst._zod.bag || {};
   inst._zod.version = version;
   const checks = [...inst._zod.def.checks ?? []];
@@ -13080,11 +16134,11 @@ var $ZodType = /* @__PURE__ */ $constructor("$ZodType", (inst, def) => {
     version: 1
   }));
 });
-var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.pattern = [...inst?._zod.bag?.patterns ?? []].pop() ?? string(inst._zod.bag);
   inst._zod.parse = (payload, _2) => {
-    if (def.coerce)
+    if (def2.coerce)
       try {
         payload.value = String(payload.value);
       } catch (_3) {
@@ -13100,16 +16154,16 @@ var $ZodString = /* @__PURE__ */ $constructor("$ZodString", (inst, def) => {
     return payload;
   };
 });
-var $ZodStringFormat = /* @__PURE__ */ $constructor("$ZodStringFormat", (inst, def) => {
-  $ZodCheckStringFormat.init(inst, def);
-  $ZodString.init(inst, def);
+var $ZodStringFormat = /* @__PURE__ */ $constructor("$ZodStringFormat", (inst, def2) => {
+  $ZodCheckStringFormat.init(inst, def2);
+  $ZodString.init(inst, def2);
 });
-var $ZodGUID = /* @__PURE__ */ $constructor("$ZodGUID", (inst, def) => {
-  def.pattern ?? (def.pattern = guid);
-  $ZodStringFormat.init(inst, def);
+var $ZodGUID = /* @__PURE__ */ $constructor("$ZodGUID", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = guid);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodUUID = /* @__PURE__ */ $constructor("$ZodUUID", (inst, def) => {
-  if (def.version) {
+var $ZodUUID = /* @__PURE__ */ $constructor("$ZodUUID", (inst, def2) => {
+  if (def2.version) {
     const versionMap = {
       v1: 1,
       v2: 2,
@@ -13120,24 +16174,24 @@ var $ZodUUID = /* @__PURE__ */ $constructor("$ZodUUID", (inst, def) => {
       v7: 7,
       v8: 8
     };
-    const v = versionMap[def.version];
+    const v = versionMap[def2.version];
     if (v === void 0)
-      throw new Error(`Invalid UUID version: "${def.version}"`);
-    def.pattern ?? (def.pattern = uuid(v));
+      throw new Error(`Invalid UUID version: "${def2.version}"`);
+    def2.pattern ?? (def2.pattern = uuid(v));
   } else
-    def.pattern ?? (def.pattern = uuid());
-  $ZodStringFormat.init(inst, def);
+    def2.pattern ?? (def2.pattern = uuid());
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodEmail = /* @__PURE__ */ $constructor("$ZodEmail", (inst, def) => {
-  def.pattern ?? (def.pattern = email);
-  $ZodStringFormat.init(inst, def);
+var $ZodEmail = /* @__PURE__ */ $constructor("$ZodEmail", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = email);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
-  $ZodStringFormat.init(inst, def);
+var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def2) => {
+  $ZodStringFormat.init(inst, def2);
   inst._zod.check = (payload) => {
     try {
       const trimmed = payload.value.trim();
-      if (!def.normalize && def.protocol?.source === httpProtocol.source) {
+      if (!def2.normalize && def2.protocol?.source === httpProtocol.source) {
         if (!/^https?:\/\//i.test(trimmed)) {
           payload.issues.push({
             code: "invalid_format",
@@ -13145,41 +16199,41 @@ var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
             note: "Invalid URL format",
             input: payload.value,
             inst,
-            continue: !def.abort
+            continue: !def2.abort
           });
           return;
         }
       }
       const url2 = new URL(trimmed);
-      if (def.hostname) {
-        def.hostname.lastIndex = 0;
-        if (!def.hostname.test(url2.hostname)) {
+      if (def2.hostname) {
+        def2.hostname.lastIndex = 0;
+        if (!def2.hostname.test(url2.hostname)) {
           payload.issues.push({
             code: "invalid_format",
             format: "url",
             note: "Invalid hostname",
-            pattern: def.hostname.source,
+            pattern: def2.hostname.source,
             input: payload.value,
             inst,
-            continue: !def.abort
+            continue: !def2.abort
           });
         }
       }
-      if (def.protocol) {
-        def.protocol.lastIndex = 0;
-        if (!def.protocol.test(url2.protocol.endsWith(":") ? url2.protocol.slice(0, -1) : url2.protocol)) {
+      if (def2.protocol) {
+        def2.protocol.lastIndex = 0;
+        if (!def2.protocol.test(url2.protocol.endsWith(":") ? url2.protocol.slice(0, -1) : url2.protocol)) {
           payload.issues.push({
             code: "invalid_format",
             format: "url",
             note: "Invalid protocol",
-            pattern: def.protocol.source,
+            pattern: def2.protocol.source,
             input: payload.value,
             inst,
-            continue: !def.abort
+            continue: !def2.abort
           });
         }
       }
-      if (def.normalize) {
+      if (def2.normalize) {
         payload.value = url2.href;
       } else {
         payload.value = trimmed;
@@ -13191,63 +16245,63 @@ var $ZodURL = /* @__PURE__ */ $constructor("$ZodURL", (inst, def) => {
         format: "url",
         input: payload.value,
         inst,
-        continue: !def.abort
+        continue: !def2.abort
       });
     }
   };
 });
-var $ZodEmoji = /* @__PURE__ */ $constructor("$ZodEmoji", (inst, def) => {
-  def.pattern ?? (def.pattern = emoji());
-  $ZodStringFormat.init(inst, def);
+var $ZodEmoji = /* @__PURE__ */ $constructor("$ZodEmoji", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = emoji());
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodNanoID = /* @__PURE__ */ $constructor("$ZodNanoID", (inst, def) => {
-  def.pattern ?? (def.pattern = nanoid);
-  $ZodStringFormat.init(inst, def);
+var $ZodNanoID = /* @__PURE__ */ $constructor("$ZodNanoID", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = nanoid);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodCUID = /* @__PURE__ */ $constructor("$ZodCUID", (inst, def) => {
-  def.pattern ?? (def.pattern = cuid);
-  $ZodStringFormat.init(inst, def);
+var $ZodCUID = /* @__PURE__ */ $constructor("$ZodCUID", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = cuid);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodCUID2 = /* @__PURE__ */ $constructor("$ZodCUID2", (inst, def) => {
-  def.pattern ?? (def.pattern = cuid2);
-  $ZodStringFormat.init(inst, def);
+var $ZodCUID2 = /* @__PURE__ */ $constructor("$ZodCUID2", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = cuid2);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodULID = /* @__PURE__ */ $constructor("$ZodULID", (inst, def) => {
-  def.pattern ?? (def.pattern = ulid);
-  $ZodStringFormat.init(inst, def);
+var $ZodULID = /* @__PURE__ */ $constructor("$ZodULID", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = ulid);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodXID = /* @__PURE__ */ $constructor("$ZodXID", (inst, def) => {
-  def.pattern ?? (def.pattern = xid);
-  $ZodStringFormat.init(inst, def);
+var $ZodXID = /* @__PURE__ */ $constructor("$ZodXID", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = xid);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodKSUID = /* @__PURE__ */ $constructor("$ZodKSUID", (inst, def) => {
-  def.pattern ?? (def.pattern = ksuid);
-  $ZodStringFormat.init(inst, def);
+var $ZodKSUID = /* @__PURE__ */ $constructor("$ZodKSUID", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = ksuid);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodISODateTime = /* @__PURE__ */ $constructor("$ZodISODateTime", (inst, def) => {
-  def.pattern ?? (def.pattern = datetime(def));
-  $ZodStringFormat.init(inst, def);
+var $ZodISODateTime = /* @__PURE__ */ $constructor("$ZodISODateTime", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = datetime(def2));
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodISODate = /* @__PURE__ */ $constructor("$ZodISODate", (inst, def) => {
-  def.pattern ?? (def.pattern = date);
-  $ZodStringFormat.init(inst, def);
+var $ZodISODate = /* @__PURE__ */ $constructor("$ZodISODate", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = date);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodISOTime = /* @__PURE__ */ $constructor("$ZodISOTime", (inst, def) => {
-  def.pattern ?? (def.pattern = time(def));
-  $ZodStringFormat.init(inst, def);
+var $ZodISOTime = /* @__PURE__ */ $constructor("$ZodISOTime", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = time(def2));
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodISODuration = /* @__PURE__ */ $constructor("$ZodISODuration", (inst, def) => {
-  def.pattern ?? (def.pattern = duration);
-  $ZodStringFormat.init(inst, def);
+var $ZodISODuration = /* @__PURE__ */ $constructor("$ZodISODuration", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = duration);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodIPv4 = /* @__PURE__ */ $constructor("$ZodIPv4", (inst, def) => {
-  def.pattern ?? (def.pattern = ipv4);
-  $ZodStringFormat.init(inst, def);
+var $ZodIPv4 = /* @__PURE__ */ $constructor("$ZodIPv4", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = ipv4);
+  $ZodStringFormat.init(inst, def2);
   inst._zod.bag.format = `ipv4`;
 });
-var $ZodIPv6 = /* @__PURE__ */ $constructor("$ZodIPv6", (inst, def) => {
-  def.pattern ?? (def.pattern = ipv6);
-  $ZodStringFormat.init(inst, def);
+var $ZodIPv6 = /* @__PURE__ */ $constructor("$ZodIPv6", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = ipv6);
+  $ZodStringFormat.init(inst, def2);
   inst._zod.bag.format = `ipv6`;
   inst._zod.check = (payload) => {
     try {
@@ -13258,23 +16312,23 @@ var $ZodIPv6 = /* @__PURE__ */ $constructor("$ZodIPv6", (inst, def) => {
         format: "ipv6",
         input: payload.value,
         inst,
-        continue: !def.abort
+        continue: !def2.abort
       });
     }
   };
 });
-var $ZodMAC = /* @__PURE__ */ $constructor("$ZodMAC", (inst, def) => {
-  def.pattern ?? (def.pattern = mac(def.delimiter));
-  $ZodStringFormat.init(inst, def);
+var $ZodMAC = /* @__PURE__ */ $constructor("$ZodMAC", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = mac(def2.delimiter));
+  $ZodStringFormat.init(inst, def2);
   inst._zod.bag.format = `mac`;
 });
-var $ZodCIDRv4 = /* @__PURE__ */ $constructor("$ZodCIDRv4", (inst, def) => {
-  def.pattern ?? (def.pattern = cidrv4);
-  $ZodStringFormat.init(inst, def);
+var $ZodCIDRv4 = /* @__PURE__ */ $constructor("$ZodCIDRv4", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = cidrv4);
+  $ZodStringFormat.init(inst, def2);
 });
-var $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def) => {
-  def.pattern ?? (def.pattern = cidrv6);
-  $ZodStringFormat.init(inst, def);
+var $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = cidrv6);
+  $ZodStringFormat.init(inst, def2);
   inst._zod.check = (payload) => {
     const parts = payload.value.split("/");
     try {
@@ -13295,7 +16349,7 @@ var $ZodCIDRv6 = /* @__PURE__ */ $constructor("$ZodCIDRv6", (inst, def) => {
         format: "cidrv6",
         input: payload.value,
         inst,
-        continue: !def.abort
+        continue: !def2.abort
       });
     }
   };
@@ -13315,9 +16369,9 @@ function isValidBase64(data) {
   }
 }
 __name(isValidBase64, "isValidBase64");
-var $ZodBase64 = /* @__PURE__ */ $constructor("$ZodBase64", (inst, def) => {
-  def.pattern ?? (def.pattern = base64);
-  $ZodStringFormat.init(inst, def);
+var $ZodBase64 = /* @__PURE__ */ $constructor("$ZodBase64", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = base64);
+  $ZodStringFormat.init(inst, def2);
   inst._zod.bag.contentEncoding = "base64";
   inst._zod.check = (payload) => {
     if (isValidBase64(payload.value))
@@ -13327,7 +16381,7 @@ var $ZodBase64 = /* @__PURE__ */ $constructor("$ZodBase64", (inst, def) => {
       format: "base64",
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
@@ -13339,9 +16393,9 @@ function isValidBase64URL(data) {
   return isValidBase64(padded);
 }
 __name(isValidBase64URL, "isValidBase64URL");
-var $ZodBase64URL = /* @__PURE__ */ $constructor("$ZodBase64URL", (inst, def) => {
-  def.pattern ?? (def.pattern = base64url2);
-  $ZodStringFormat.init(inst, def);
+var $ZodBase64URL = /* @__PURE__ */ $constructor("$ZodBase64URL", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = base64url2);
+  $ZodStringFormat.init(inst, def2);
   inst._zod.bag.contentEncoding = "base64url";
   inst._zod.check = (payload) => {
     if (isValidBase64URL(payload.value))
@@ -13351,13 +16405,13 @@ var $ZodBase64URL = /* @__PURE__ */ $constructor("$ZodBase64URL", (inst, def) =>
       format: "base64url",
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodE164 = /* @__PURE__ */ $constructor("$ZodE164", (inst, def) => {
-  def.pattern ?? (def.pattern = e164);
-  $ZodStringFormat.init(inst, def);
+var $ZodE164 = /* @__PURE__ */ $constructor("$ZodE164", (inst, def2) => {
+  def2.pattern ?? (def2.pattern = e164);
+  $ZodStringFormat.init(inst, def2);
 });
 function isValidJWT(token, algorithm = null) {
   try {
@@ -13380,39 +16434,39 @@ function isValidJWT(token, algorithm = null) {
   }
 }
 __name(isValidJWT, "isValidJWT");
-var $ZodJWT = /* @__PURE__ */ $constructor("$ZodJWT", (inst, def) => {
-  $ZodStringFormat.init(inst, def);
+var $ZodJWT = /* @__PURE__ */ $constructor("$ZodJWT", (inst, def2) => {
+  $ZodStringFormat.init(inst, def2);
   inst._zod.check = (payload) => {
-    if (isValidJWT(payload.value, def.alg))
+    if (isValidJWT(payload.value, def2.alg))
       return;
     payload.issues.push({
       code: "invalid_format",
       format: "jwt",
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodCustomStringFormat = /* @__PURE__ */ $constructor("$ZodCustomStringFormat", (inst, def) => {
-  $ZodStringFormat.init(inst, def);
+var $ZodCustomStringFormat = /* @__PURE__ */ $constructor("$ZodCustomStringFormat", (inst, def2) => {
+  $ZodStringFormat.init(inst, def2);
   inst._zod.check = (payload) => {
-    if (def.fn(payload.value))
+    if (def2.fn(payload.value))
       return;
     payload.issues.push({
       code: "invalid_format",
-      format: def.format,
+      format: def2.format,
       input: payload.value,
       inst,
-      continue: !def.abort
+      continue: !def2.abort
     });
   };
 });
-var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.pattern = inst._zod.bag.pattern ?? number;
   inst._zod.parse = (payload, _ctx) => {
-    if (def.coerce)
+    if (def2.coerce)
       try {
         payload.value = Number(payload.value);
       } catch (_2) {
@@ -13432,15 +16486,15 @@ var $ZodNumber = /* @__PURE__ */ $constructor("$ZodNumber", (inst, def) => {
     return payload;
   };
 });
-var $ZodNumberFormat = /* @__PURE__ */ $constructor("$ZodNumberFormat", (inst, def) => {
-  $ZodCheckNumberFormat.init(inst, def);
-  $ZodNumber.init(inst, def);
+var $ZodNumberFormat = /* @__PURE__ */ $constructor("$ZodNumberFormat", (inst, def2) => {
+  $ZodCheckNumberFormat.init(inst, def2);
+  $ZodNumber.init(inst, def2);
 });
-var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.pattern = boolean;
   inst._zod.parse = (payload, _ctx) => {
-    if (def.coerce)
+    if (def2.coerce)
       try {
         payload.value = Boolean(payload.value);
       } catch (_2) {
@@ -13457,11 +16511,11 @@ var $ZodBoolean = /* @__PURE__ */ $constructor("$ZodBoolean", (inst, def) => {
     return payload;
   };
 });
-var $ZodBigInt = /* @__PURE__ */ $constructor("$ZodBigInt", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodBigInt = /* @__PURE__ */ $constructor("$ZodBigInt", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.pattern = bigint;
   inst._zod.parse = (payload, _ctx) => {
-    if (def.coerce)
+    if (def2.coerce)
       try {
         payload.value = BigInt(payload.value);
       } catch (_2) {
@@ -13477,12 +16531,12 @@ var $ZodBigInt = /* @__PURE__ */ $constructor("$ZodBigInt", (inst, def) => {
     return payload;
   };
 });
-var $ZodBigIntFormat = /* @__PURE__ */ $constructor("$ZodBigIntFormat", (inst, def) => {
-  $ZodCheckBigIntFormat.init(inst, def);
-  $ZodBigInt.init(inst, def);
+var $ZodBigIntFormat = /* @__PURE__ */ $constructor("$ZodBigIntFormat", (inst, def2) => {
+  $ZodCheckBigIntFormat.init(inst, def2);
+  $ZodBigInt.init(inst, def2);
 });
-var $ZodSymbol = /* @__PURE__ */ $constructor("$ZodSymbol", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodSymbol = /* @__PURE__ */ $constructor("$ZodSymbol", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (typeof input === "symbol")
@@ -13496,8 +16550,8 @@ var $ZodSymbol = /* @__PURE__ */ $constructor("$ZodSymbol", (inst, def) => {
     return payload;
   };
 });
-var $ZodUndefined = /* @__PURE__ */ $constructor("$ZodUndefined", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodUndefined = /* @__PURE__ */ $constructor("$ZodUndefined", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.pattern = _undefined;
   inst._zod.values = /* @__PURE__ */ new Set([void 0]);
   inst._zod.parse = (payload, _ctx) => {
@@ -13513,8 +16567,8 @@ var $ZodUndefined = /* @__PURE__ */ $constructor("$ZodUndefined", (inst, def) =>
     return payload;
   };
 });
-var $ZodNull = /* @__PURE__ */ $constructor("$ZodNull", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodNull = /* @__PURE__ */ $constructor("$ZodNull", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.pattern = _null;
   inst._zod.values = /* @__PURE__ */ new Set([null]);
   inst._zod.parse = (payload, _ctx) => {
@@ -13530,16 +16584,16 @@ var $ZodNull = /* @__PURE__ */ $constructor("$ZodNull", (inst, def) => {
     return payload;
   };
 });
-var $ZodAny = /* @__PURE__ */ $constructor("$ZodAny", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodAny = /* @__PURE__ */ $constructor("$ZodAny", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload) => payload;
 });
-var $ZodUnknown = /* @__PURE__ */ $constructor("$ZodUnknown", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodUnknown = /* @__PURE__ */ $constructor("$ZodUnknown", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload) => payload;
 });
-var $ZodNever = /* @__PURE__ */ $constructor("$ZodNever", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodNever = /* @__PURE__ */ $constructor("$ZodNever", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, _ctx) => {
     payload.issues.push({
       expected: "never",
@@ -13550,8 +16604,8 @@ var $ZodNever = /* @__PURE__ */ $constructor("$ZodNever", (inst, def) => {
     return payload;
   };
 });
-var $ZodVoid = /* @__PURE__ */ $constructor("$ZodVoid", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodVoid = /* @__PURE__ */ $constructor("$ZodVoid", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (typeof input === "undefined")
@@ -13565,10 +16619,10 @@ var $ZodVoid = /* @__PURE__ */ $constructor("$ZodVoid", (inst, def) => {
     return payload;
   };
 });
-var $ZodDate = /* @__PURE__ */ $constructor("$ZodDate", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodDate = /* @__PURE__ */ $constructor("$ZodDate", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, _ctx) => {
-    if (def.coerce) {
+    if (def2.coerce) {
       try {
         payload.value = new Date(payload.value);
       } catch (_err) {
@@ -13596,8 +16650,8 @@ function handleArrayResult(result, final, index) {
   final.value[index] = result.value;
 }
 __name(handleArrayResult, "handleArrayResult");
-var $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
     if (!Array.isArray(input)) {
@@ -13613,7 +16667,7 @@ var $ZodArray = /* @__PURE__ */ $constructor("$ZodArray", (inst, def) => {
     const proms = [];
     for (let i = 0; i < input.length; i++) {
       const item = input[i];
-      const result = def.element._zod.run({
+      const result = def2.element._zod.run({
         value: item,
         issues: []
       }, ctx);
@@ -13657,16 +16711,16 @@ function handlePropertyResult(result, final, key, input, isOptionalIn, isOptiona
   }
 }
 __name(handlePropertyResult, "handlePropertyResult");
-function normalizeDef(def) {
-  const keys = Object.keys(def.shape);
+function normalizeDef(def2) {
+  const keys = Object.keys(def2.shape);
   for (const k of keys) {
-    if (!def.shape?.[k]?._zod?.traits?.has("$ZodType")) {
+    if (!def2.shape?.[k]?._zod?.traits?.has("$ZodType")) {
       throw new Error(`Invalid element at key "${k}": expected a Zod schema`);
     }
   }
-  const okeys = optionalKeys(def.shape);
+  const okeys = optionalKeys(def2.shape);
   return {
-    ...def,
+    ...def2,
     keys,
     keySet: new Set(keys),
     numKeys: keys.length,
@@ -13674,10 +16728,10 @@ function normalizeDef(def) {
   };
 }
 __name(normalizeDef, "normalizeDef");
-function handleCatchall(proms, input, payload, ctx, def, inst) {
+function handleCatchall(proms, input, payload, ctx, def2, inst) {
   const unrecognized = [];
-  const keySet = def.keySet;
-  const _catchall = def.catchall._zod;
+  const keySet = def2.keySet;
+  const _catchall = def2.catchall._zod;
   const t = _catchall.def.type;
   const isOptionalIn = _catchall.optin === "optional";
   const isOptionalOut = _catchall.optout === "optional";
@@ -13712,24 +16766,24 @@ function handleCatchall(proms, input, payload, ctx, def, inst) {
   });
 }
 __name(handleCatchall, "handleCatchall");
-var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
-  $ZodType.init(inst, def);
-  const desc = Object.getOwnPropertyDescriptor(def, "shape");
+var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  const desc = Object.getOwnPropertyDescriptor(def2, "shape");
   if (!desc?.get) {
-    const sh = def.shape;
-    Object.defineProperty(def, "shape", {
+    const sh = def2.shape;
+    Object.defineProperty(def2, "shape", {
       get: /* @__PURE__ */ __name(() => {
         const newSh = { ...sh };
-        Object.defineProperty(def, "shape", {
+        Object.defineProperty(def2, "shape", {
           value: newSh
         });
         return newSh;
       }, "get")
     });
   }
-  const _normalized = cached(() => normalizeDef(def));
+  const _normalized = cached(() => normalizeDef(def2));
   defineLazy(inst._zod, "propValues", () => {
-    const shape = def.shape;
+    const shape = def2.shape;
     const propValues = {};
     for (const key in shape) {
       const field = shape[key]._zod;
@@ -13742,7 +16796,7 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
     return propValues;
   });
   const isObject3 = isObject2;
-  const catchall = def.catchall;
+  const catchall = def2.catchall;
   let value;
   inst._zod.parse = (payload, ctx) => {
     value ?? (value = _normalized.value);
@@ -13776,10 +16830,10 @@ var $ZodObject = /* @__PURE__ */ $constructor("$ZodObject", (inst, def) => {
     return handleCatchall(proms, input, payload, ctx, _normalized.value, inst);
   };
 });
-var $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) => {
-  $ZodObject.init(inst, def);
+var $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def2) => {
+  $ZodObject.init(inst, def2);
   const superParse = inst._zod.parse;
-  const _normalized = cached(() => normalizeDef(def));
+  const _normalized = cached(() => normalizeDef(def2));
   const generateFastpass = /* @__PURE__ */ __name((shape) => {
     const doc = new Doc(["shape", "payload", "ctx"]);
     const normalized = _normalized.value;
@@ -13878,7 +16932,7 @@ var $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) =>
   const jit = !globalConfig.jitless;
   const allowsEval2 = allowsEval;
   const fastEnabled = jit && allowsEval2.value;
-  const catchall = def.catchall;
+  const catchall = def2.catchall;
   let value;
   inst._zod.parse = (payload, ctx) => {
     value ?? (value = _normalized.value);
@@ -13894,7 +16948,7 @@ var $ZodObjectJIT = /* @__PURE__ */ $constructor("$ZodObjectJIT", (inst, def) =>
     }
     if (jit && fastEnabled && ctx?.async === false && ctx.jitless !== true) {
       if (!fastpass)
-        fastpass = generateFastpass(def.shape);
+        fastpass = generateFastpass(def2.shape);
       payload = fastpass(payload, ctx);
       if (!catchall)
         return payload;
@@ -13924,31 +16978,31 @@ function handleUnionResults(results, final, inst, ctx) {
   return final;
 }
 __name(handleUnionResults, "handleUnionResults");
-var $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "optin", () => def.options.some((o) => o._zod.optin === "optional") ? "optional" : void 0);
-  defineLazy(inst._zod, "optout", () => def.options.some((o) => o._zod.optout === "optional") ? "optional" : void 0);
+var $ZodUnion = /* @__PURE__ */ $constructor("$ZodUnion", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  defineLazy(inst._zod, "optin", () => def2.options.some((o) => o._zod.optin === "optional") ? "optional" : void 0);
+  defineLazy(inst._zod, "optout", () => def2.options.some((o) => o._zod.optout === "optional") ? "optional" : void 0);
   defineLazy(inst._zod, "values", () => {
-    if (def.options.every((o) => o._zod.values)) {
-      return new Set(def.options.flatMap((option) => Array.from(option._zod.values)));
+    if (def2.options.every((o) => o._zod.values)) {
+      return new Set(def2.options.flatMap((option) => Array.from(option._zod.values)));
     }
     return void 0;
   });
   defineLazy(inst._zod, "pattern", () => {
-    if (def.options.every((o) => o._zod.pattern)) {
-      const patterns = def.options.map((o) => o._zod.pattern);
+    if (def2.options.every((o) => o._zod.pattern)) {
+      const patterns = def2.options.map((o) => o._zod.pattern);
       return new RegExp(`^(${patterns.map((p) => cleanRegex(p.source)).join("|")})$`);
     }
     return void 0;
   });
-  const first = def.options.length === 1 ? def.options[0]._zod.run : null;
+  const first = def2.options.length === 1 ? def2.options[0]._zod.run : null;
   inst._zod.parse = (payload, ctx) => {
     if (first) {
       return first(payload, ctx);
     }
     let async = false;
     const results = [];
-    for (const option of def.options) {
+    for (const option of def2.options) {
       const result = option._zod.run({
         value: payload.value,
         issues: []
@@ -13994,17 +17048,17 @@ function handleExclusiveUnionResults(results, final, inst, ctx) {
   return final;
 }
 __name(handleExclusiveUnionResults, "handleExclusiveUnionResults");
-var $ZodXor = /* @__PURE__ */ $constructor("$ZodXor", (inst, def) => {
-  $ZodUnion.init(inst, def);
-  def.inclusive = false;
-  const first = def.options.length === 1 ? def.options[0]._zod.run : null;
+var $ZodXor = /* @__PURE__ */ $constructor("$ZodXor", (inst, def2) => {
+  $ZodUnion.init(inst, def2);
+  def2.inclusive = false;
+  const first = def2.options.length === 1 ? def2.options[0]._zod.run : null;
   inst._zod.parse = (payload, ctx) => {
     if (first) {
       return first(payload, ctx);
     }
     let async = false;
     const results = [];
-    for (const option of def.options) {
+    for (const option of def2.options) {
       const result = option._zod.run({
         value: payload.value,
         issues: []
@@ -14023,16 +17077,16 @@ var $ZodXor = /* @__PURE__ */ $constructor("$ZodXor", (inst, def) => {
     });
   };
 });
-var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnion", (inst, def) => {
-  def.inclusive = false;
-  $ZodUnion.init(inst, def);
+var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnion", (inst, def2) => {
+  def2.inclusive = false;
+  $ZodUnion.init(inst, def2);
   const _super = inst._zod.parse;
   defineLazy(inst._zod, "propValues", () => {
     const propValues = {};
-    for (const option of def.options) {
+    for (const option of def2.options) {
       const pv = option._zod.propValues;
       if (!pv || Object.keys(pv).length === 0)
-        throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(option)}"`);
+        throw new Error(`Invalid discriminated union option at index "${def2.options.indexOf(option)}"`);
       for (const [k, v] of Object.entries(pv)) {
         if (!propValues[k])
           propValues[k] = /* @__PURE__ */ new Set();
@@ -14044,12 +17098,12 @@ var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnio
     return propValues;
   });
   const disc = cached(() => {
-    const opts = def.options;
+    const opts = def2.options;
     const map2 = /* @__PURE__ */ new Map();
     for (const o of opts) {
-      const values = o._zod.propValues?.[def.discriminator];
+      const values = o._zod.propValues?.[def2.discriminator];
       if (!values || values.size === 0)
-        throw new Error(`Invalid discriminated union option at index "${def.options.indexOf(o)}"`);
+        throw new Error(`Invalid discriminated union option at index "${def2.options.indexOf(o)}"`);
       for (const v of values) {
         if (map2.has(v)) {
           throw new Error(`Duplicate discriminator value "${String(v)}"`);
@@ -14070,32 +17124,32 @@ var $ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("$ZodDiscriminatedUnio
       });
       return payload;
     }
-    const opt = disc.value.get(input?.[def.discriminator]);
+    const opt = disc.value.get(input?.[def2.discriminator]);
     if (opt) {
       return opt._zod.run(payload, ctx);
     }
-    if (def.unionFallback || ctx.direction === "backward") {
+    if (def2.unionFallback || ctx.direction === "backward") {
       return _super(payload, ctx);
     }
     payload.issues.push({
       code: "invalid_union",
       errors: [],
       note: "No matching discriminator",
-      discriminator: def.discriminator,
+      discriminator: def2.discriminator,
       options: Array.from(disc.value.keys()),
       input,
-      path: [def.discriminator],
+      path: [def2.discriminator],
       inst
     });
     return payload;
   };
 });
-var $ZodIntersection = /* @__PURE__ */ $constructor("$ZodIntersection", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodIntersection = /* @__PURE__ */ $constructor("$ZodIntersection", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
-    const left = def.left._zod.run({ value: input, issues: [] }, ctx);
-    const right = def.right._zod.run({ value: input, issues: [] }, ctx);
+    const left = def2.left._zod.run({ value: input, issues: [] }, ctx);
+    const right = def2.right._zod.run({ value: input, issues: [] }, ctx);
     const async = left instanceof Promise || right instanceof Promise;
     if (async) {
       return Promise.all([left, right]).then(([left2, right2]) => {
@@ -14190,9 +17244,9 @@ function handleIntersectionResults(result, left, right) {
   return result;
 }
 __name(handleIntersectionResults, "handleIntersectionResults");
-var $ZodTuple = /* @__PURE__ */ $constructor("$ZodTuple", (inst, def) => {
-  $ZodType.init(inst, def);
-  const items = def.items;
+var $ZodTuple = /* @__PURE__ */ $constructor("$ZodTuple", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  const items = def2.items;
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
     if (!Array.isArray(input)) {
@@ -14208,7 +17262,7 @@ var $ZodTuple = /* @__PURE__ */ $constructor("$ZodTuple", (inst, def) => {
     const proms = [];
     const optinStart = getTupleOptStart(items, "optin");
     const optoutStart = getTupleOptStart(items, "optout");
-    if (!def.rest) {
+    if (!def2.rest) {
       if (input.length < optinStart) {
         payload.issues.push({
           code: "too_small",
@@ -14242,12 +17296,12 @@ var $ZodTuple = /* @__PURE__ */ $constructor("$ZodTuple", (inst, def) => {
         itemResults[i] = r;
       }
     }
-    if (def.rest) {
+    if (def2.rest) {
       let i = items.length - 1;
       const rest = input.slice(items.length);
       for (const el of rest) {
         i++;
-        const result = def.rest._zod.run({ value: el, issues: [] }, ctx);
+        const result = def2.rest._zod.run({ value: el, issues: [] }, ctx);
         if (result instanceof Promise) {
           proms.push(result.then((r) => handleTupleResult(r, payload, i)));
         } else {
@@ -14299,8 +17353,8 @@ function handleTupleResults(itemResults, final, items, input, optoutStart) {
   return final;
 }
 __name(handleTupleResults, "handleTupleResults");
-var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
     if (!isPlainObject(input)) {
@@ -14313,14 +17367,14 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
       return payload;
     }
     const proms = [];
-    const values = def.keyType._zod.values;
+    const values = def2.keyType._zod.values;
     if (values) {
       payload.value = {};
       const recordKeys = /* @__PURE__ */ new Set();
       for (const key of values) {
         if (typeof key === "string" || typeof key === "number" || typeof key === "symbol") {
           recordKeys.add(typeof key === "number" ? key.toString() : key);
-          const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+          const keyResult = def2.keyType._zod.run({ value: key, issues: [] }, ctx);
           if (keyResult instanceof Promise) {
             throw new Error("Async schemas not supported in object keys currently");
           }
@@ -14336,7 +17390,7 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
             continue;
           }
           const outKey = keyResult.value;
-          const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+          const result = def2.valueType._zod.run({ value: input[key], issues: [] }, ctx);
           if (result instanceof Promise) {
             proms.push(result.then((result2) => {
               if (result2.issues.length) {
@@ -14374,13 +17428,13 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
           continue;
         if (!Object.prototype.propertyIsEnumerable.call(input, key))
           continue;
-        let keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
+        let keyResult = def2.keyType._zod.run({ value: key, issues: [] }, ctx);
         if (keyResult instanceof Promise) {
           throw new Error("Async schemas not supported in object keys currently");
         }
         const checkNumericKey = typeof key === "string" && number.test(key) && keyResult.issues.length;
         if (checkNumericKey) {
-          const retryResult = def.keyType._zod.run({ value: Number(key), issues: [] }, ctx);
+          const retryResult = def2.keyType._zod.run({ value: Number(key), issues: [] }, ctx);
           if (retryResult instanceof Promise) {
             throw new Error("Async schemas not supported in object keys currently");
           }
@@ -14389,7 +17443,7 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
           }
         }
         if (keyResult.issues.length) {
-          if (def.mode === "loose") {
+          if (def2.mode === "loose") {
             payload.value[key] = input[key];
           } else {
             payload.issues.push({
@@ -14403,7 +17457,7 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
           }
           continue;
         }
-        const result = def.valueType._zod.run({ value: input[key], issues: [] }, ctx);
+        const result = def2.valueType._zod.run({ value: input[key], issues: [] }, ctx);
         if (result instanceof Promise) {
           proms.push(result.then((result2) => {
             if (result2.issues.length) {
@@ -14425,8 +17479,8 @@ var $ZodRecord = /* @__PURE__ */ $constructor("$ZodRecord", (inst, def) => {
     return payload;
   };
 });
-var $ZodMap = /* @__PURE__ */ $constructor("$ZodMap", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodMap = /* @__PURE__ */ $constructor("$ZodMap", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
     if (!(input instanceof Map)) {
@@ -14441,8 +17495,8 @@ var $ZodMap = /* @__PURE__ */ $constructor("$ZodMap", (inst, def) => {
     const proms = [];
     payload.value = /* @__PURE__ */ new Map();
     for (const [key, value] of input) {
-      const keyResult = def.keyType._zod.run({ value: key, issues: [] }, ctx);
-      const valueResult = def.valueType._zod.run({ value, issues: [] }, ctx);
+      const keyResult = def2.keyType._zod.run({ value: key, issues: [] }, ctx);
+      const valueResult = def2.valueType._zod.run({ value, issues: [] }, ctx);
       if (keyResult instanceof Promise || valueResult instanceof Promise) {
         proms.push(Promise.all([keyResult, valueResult]).then(([keyResult2, valueResult2]) => {
           handleMapResult(keyResult2, valueResult2, payload, key, input, inst, ctx);
@@ -14487,8 +17541,8 @@ function handleMapResult(keyResult, valueResult, final, key, input, inst, ctx) {
   final.value.set(keyResult.value, valueResult.value);
 }
 __name(handleMapResult, "handleMapResult");
-var $ZodSet = /* @__PURE__ */ $constructor("$ZodSet", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodSet = /* @__PURE__ */ $constructor("$ZodSet", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, ctx) => {
     const input = payload.value;
     if (!(input instanceof Set)) {
@@ -14503,7 +17557,7 @@ var $ZodSet = /* @__PURE__ */ $constructor("$ZodSet", (inst, def) => {
     const proms = [];
     payload.value = /* @__PURE__ */ new Set();
     for (const item of input) {
-      const result = def.valueType._zod.run({ value: item, issues: [] }, ctx);
+      const result = def2.valueType._zod.run({ value: item, issues: [] }, ctx);
       if (result instanceof Promise) {
         proms.push(result.then((result2) => handleSetResult(result2, payload)));
       } else
@@ -14521,9 +17575,9 @@ function handleSetResult(result, final) {
   final.value.add(result.value);
 }
 __name(handleSetResult, "handleSetResult");
-var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
-  $ZodType.init(inst, def);
-  const values = getEnumValues(def.entries);
+var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  const values = getEnumValues(def2.entries);
   const valuesSet = new Set(values);
   inst._zod.values = valuesSet;
   inst._zod.pattern = new RegExp(`^(${values.filter((k) => propertyKeyTypes.has(typeof k)).map((o) => typeof o === "string" ? escapeRegex(o) : o.toString()).join("|")})$`);
@@ -14541,14 +17595,14 @@ var $ZodEnum = /* @__PURE__ */ $constructor("$ZodEnum", (inst, def) => {
     return payload;
   };
 });
-var $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
-  $ZodType.init(inst, def);
-  if (def.values.length === 0) {
+var $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  if (def2.values.length === 0) {
     throw new Error("Cannot create literal schema with no valid values");
   }
-  const values = new Set(def.values);
+  const values = new Set(def2.values);
   inst._zod.values = values;
-  inst._zod.pattern = new RegExp(`^(${def.values.map((o) => typeof o === "string" ? escapeRegex(o) : o ? escapeRegex(o.toString()) : String(o)).join("|")})$`);
+  inst._zod.pattern = new RegExp(`^(${def2.values.map((o) => typeof o === "string" ? escapeRegex(o) : o ? escapeRegex(o.toString()) : String(o)).join("|")})$`);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (values.has(input)) {
@@ -14556,15 +17610,15 @@ var $ZodLiteral = /* @__PURE__ */ $constructor("$ZodLiteral", (inst, def) => {
     }
     payload.issues.push({
       code: "invalid_value",
-      values: def.values,
+      values: def2.values,
       input,
       inst
     });
     return payload;
   };
 });
-var $ZodFile = /* @__PURE__ */ $constructor("$ZodFile", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodFile = /* @__PURE__ */ $constructor("$ZodFile", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, _ctx) => {
     const input = payload.value;
     if (input instanceof File)
@@ -14578,14 +17632,14 @@ var $ZodFile = /* @__PURE__ */ $constructor("$ZodFile", (inst, def) => {
     return payload;
   };
 });
-var $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodTransform = /* @__PURE__ */ $constructor("$ZodTransform", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.optin = "optional";
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
       throw new $ZodEncodeError(inst.constructor.name);
     }
-    const _out = def.transform(payload.value, payload);
+    const _out = def2.transform(payload.value, payload);
     if (ctx.async) {
       const output = _out instanceof Promise ? _out : Promise.resolve(_out);
       return output.then((output2) => {
@@ -14609,21 +17663,21 @@ function handleOptionalResult(result, input) {
   return result;
 }
 __name(handleOptionalResult, "handleOptionalResult");
-var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.optin = "optional";
   inst._zod.optout = "optional";
   defineLazy(inst._zod, "values", () => {
-    return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, void 0]) : void 0;
+    return def2.innerType._zod.values ? /* @__PURE__ */ new Set([...def2.innerType._zod.values, void 0]) : void 0;
   });
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
+    const pattern = def2.innerType._zod.pattern;
     return pattern ? new RegExp(`^(${cleanRegex(pattern.source)})?$`) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
-    if (def.innerType._zod.optin === "optional") {
+    if (def2.innerType._zod.optin === "optional") {
       const input = payload.value;
-      const result = def.innerType._zod.run(payload, ctx);
+      const result = def2.innerType._zod.run(payload, ctx);
       if (result instanceof Promise)
         return result.then((r) => handleOptionalResult(r, input));
       return handleOptionalResult(result, input);
@@ -14631,82 +17685,82 @@ var $ZodOptional = /* @__PURE__ */ $constructor("$ZodOptional", (inst, def) => {
     if (payload.value === void 0) {
       return payload;
     }
-    return def.innerType._zod.run(payload, ctx);
+    return def2.innerType._zod.run(payload, ctx);
   };
 });
-var $ZodExactOptional = /* @__PURE__ */ $constructor("$ZodExactOptional", (inst, def) => {
-  $ZodOptional.init(inst, def);
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
-  defineLazy(inst._zod, "pattern", () => def.innerType._zod.pattern);
+var $ZodExactOptional = /* @__PURE__ */ $constructor("$ZodExactOptional", (inst, def2) => {
+  $ZodOptional.init(inst, def2);
+  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
+  defineLazy(inst._zod, "pattern", () => def2.innerType._zod.pattern);
   inst._zod.parse = (payload, ctx) => {
-    return def.innerType._zod.run(payload, ctx);
+    return def2.innerType._zod.run(payload, ctx);
   };
 });
-var $ZodNullable = /* @__PURE__ */ $constructor("$ZodNullable", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "optin", () => def.innerType._zod.optin);
-  defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
+var $ZodNullable = /* @__PURE__ */ $constructor("$ZodNullable", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  defineLazy(inst._zod, "optin", () => def2.innerType._zod.optin);
+  defineLazy(inst._zod, "optout", () => def2.innerType._zod.optout);
   defineLazy(inst._zod, "pattern", () => {
-    const pattern = def.innerType._zod.pattern;
+    const pattern = def2.innerType._zod.pattern;
     return pattern ? new RegExp(`^(${cleanRegex(pattern.source)}|null)$`) : void 0;
   });
   defineLazy(inst._zod, "values", () => {
-    return def.innerType._zod.values ? /* @__PURE__ */ new Set([...def.innerType._zod.values, null]) : void 0;
+    return def2.innerType._zod.values ? /* @__PURE__ */ new Set([...def2.innerType._zod.values, null]) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
     if (payload.value === null)
       return payload;
-    return def.innerType._zod.run(payload, ctx);
+    return def2.innerType._zod.run(payload, ctx);
   };
 });
-var $ZodDefault = /* @__PURE__ */ $constructor("$ZodDefault", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodDefault = /* @__PURE__ */ $constructor("$ZodDefault", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.optin = "optional";
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
+  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
-      return def.innerType._zod.run(payload, ctx);
+      return def2.innerType._zod.run(payload, ctx);
     }
     if (payload.value === void 0) {
-      payload.value = def.defaultValue;
+      payload.value = def2.defaultValue;
       return payload;
     }
-    const result = def.innerType._zod.run(payload, ctx);
+    const result = def2.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
-      return result.then((result2) => handleDefaultResult(result2, def));
+      return result.then((result2) => handleDefaultResult(result2, def2));
     }
-    return handleDefaultResult(result, def);
+    return handleDefaultResult(result, def2);
   };
 });
-function handleDefaultResult(payload, def) {
+function handleDefaultResult(payload, def2) {
   if (payload.value === void 0) {
-    payload.value = def.defaultValue;
+    payload.value = def2.defaultValue;
   }
   return payload;
 }
 __name(handleDefaultResult, "handleDefaultResult");
-var $ZodPrefault = /* @__PURE__ */ $constructor("$ZodPrefault", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodPrefault = /* @__PURE__ */ $constructor("$ZodPrefault", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.optin = "optional";
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
+  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
-      return def.innerType._zod.run(payload, ctx);
+      return def2.innerType._zod.run(payload, ctx);
     }
     if (payload.value === void 0) {
-      payload.value = def.defaultValue;
+      payload.value = def2.defaultValue;
     }
-    return def.innerType._zod.run(payload, ctx);
+    return def2.innerType._zod.run(payload, ctx);
   };
 });
-var $ZodNonOptional = /* @__PURE__ */ $constructor("$ZodNonOptional", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodNonOptional = /* @__PURE__ */ $constructor("$ZodNonOptional", (inst, def2) => {
+  $ZodType.init(inst, def2);
   defineLazy(inst._zod, "values", () => {
-    const v = def.innerType._zod.values;
+    const v = def2.innerType._zod.values;
     return v ? new Set([...v].filter((x) => x !== void 0)) : void 0;
   });
   inst._zod.parse = (payload, ctx) => {
-    const result = def.innerType._zod.run(payload, ctx);
+    const result = def2.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
       return result.then((result2) => handleNonOptionalResult(result2, inst));
     }
@@ -14725,13 +17779,13 @@ function handleNonOptionalResult(payload, inst) {
   return payload;
 }
 __name(handleNonOptionalResult, "handleNonOptionalResult");
-var $ZodSuccess = /* @__PURE__ */ $constructor("$ZodSuccess", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodSuccess = /* @__PURE__ */ $constructor("$ZodSuccess", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
       throw new $ZodEncodeError("ZodSuccess");
     }
-    const result = def.innerType._zod.run(payload, ctx);
+    const result = def2.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
       return result.then((result2) => {
         payload.value = result2.issues.length === 0;
@@ -14742,21 +17796,21 @@ var $ZodSuccess = /* @__PURE__ */ $constructor("$ZodSuccess", (inst, def) => {
     return payload;
   };
 });
-var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.optin = "optional";
-  defineLazy(inst._zod, "optout", () => def.innerType._zod.optout);
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
+  defineLazy(inst._zod, "optout", () => def2.innerType._zod.optout);
+  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
-      return def.innerType._zod.run(payload, ctx);
+      return def2.innerType._zod.run(payload, ctx);
     }
-    const result = def.innerType._zod.run(payload, ctx);
+    const result = def2.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
       return result.then((result2) => {
         payload.value = result2.value;
         if (result2.issues.length) {
-          payload.value = def.catchValue({
+          payload.value = def2.catchValue({
             ...payload,
             error: {
               issues: result2.issues.map((iss) => finalizeIssue(iss, ctx, config()))
@@ -14771,7 +17825,7 @@ var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
     }
     payload.value = result.value;
     if (result.issues.length) {
-      payload.value = def.catchValue({
+      payload.value = def2.catchValue({
         ...payload,
         error: {
           issues: result.issues.map((iss) => finalizeIssue(iss, ctx, config()))
@@ -14784,8 +17838,8 @@ var $ZodCatch = /* @__PURE__ */ $constructor("$ZodCatch", (inst, def) => {
     return payload;
   };
 });
-var $ZodNaN = /* @__PURE__ */ $constructor("$ZodNaN", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodNaN = /* @__PURE__ */ $constructor("$ZodNaN", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, _ctx) => {
     if (typeof payload.value !== "number" || !Number.isNaN(payload.value)) {
       payload.issues.push({
@@ -14799,25 +17853,25 @@ var $ZodNaN = /* @__PURE__ */ $constructor("$ZodNaN", (inst, def) => {
     return payload;
   };
 });
-var $ZodPipe = /* @__PURE__ */ $constructor("$ZodPipe", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "values", () => def.in._zod.values);
-  defineLazy(inst._zod, "optin", () => def.in._zod.optin);
-  defineLazy(inst._zod, "optout", () => def.out._zod.optout);
-  defineLazy(inst._zod, "propValues", () => def.in._zod.propValues);
+var $ZodPipe = /* @__PURE__ */ $constructor("$ZodPipe", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  defineLazy(inst._zod, "values", () => def2.in._zod.values);
+  defineLazy(inst._zod, "optin", () => def2.in._zod.optin);
+  defineLazy(inst._zod, "optout", () => def2.out._zod.optout);
+  defineLazy(inst._zod, "propValues", () => def2.in._zod.propValues);
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
-      const right = def.out._zod.run(payload, ctx);
+      const right = def2.out._zod.run(payload, ctx);
       if (right instanceof Promise) {
-        return right.then((right2) => handlePipeResult(right2, def.in, ctx));
+        return right.then((right2) => handlePipeResult(right2, def2.in, ctx));
       }
-      return handlePipeResult(right, def.in, ctx);
+      return handlePipeResult(right, def2.in, ctx);
     }
-    const left = def.in._zod.run(payload, ctx);
+    const left = def2.in._zod.run(payload, ctx);
     if (left instanceof Promise) {
-      return left.then((left2) => handlePipeResult(left2, def.out, ctx));
+      return left.then((left2) => handlePipeResult(left2, def2.out, ctx));
     }
-    return handlePipeResult(left, def.out, ctx);
+    return handlePipeResult(left, def2.out, ctx);
   };
 });
 function handlePipeResult(left, next, ctx) {
@@ -14828,47 +17882,47 @@ function handlePipeResult(left, next, ctx) {
   return next._zod.run({ value: left.value, issues: left.issues, fallback: left.fallback }, ctx);
 }
 __name(handlePipeResult, "handlePipeResult");
-var $ZodCodec = /* @__PURE__ */ $constructor("$ZodCodec", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "values", () => def.in._zod.values);
-  defineLazy(inst._zod, "optin", () => def.in._zod.optin);
-  defineLazy(inst._zod, "optout", () => def.out._zod.optout);
-  defineLazy(inst._zod, "propValues", () => def.in._zod.propValues);
+var $ZodCodec = /* @__PURE__ */ $constructor("$ZodCodec", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  defineLazy(inst._zod, "values", () => def2.in._zod.values);
+  defineLazy(inst._zod, "optin", () => def2.in._zod.optin);
+  defineLazy(inst._zod, "optout", () => def2.out._zod.optout);
+  defineLazy(inst._zod, "propValues", () => def2.in._zod.propValues);
   inst._zod.parse = (payload, ctx) => {
     const direction = ctx.direction || "forward";
     if (direction === "forward") {
-      const left = def.in._zod.run(payload, ctx);
+      const left = def2.in._zod.run(payload, ctx);
       if (left instanceof Promise) {
-        return left.then((left2) => handleCodecAResult(left2, def, ctx));
+        return left.then((left2) => handleCodecAResult(left2, def2, ctx));
       }
-      return handleCodecAResult(left, def, ctx);
+      return handleCodecAResult(left, def2, ctx);
     } else {
-      const right = def.out._zod.run(payload, ctx);
+      const right = def2.out._zod.run(payload, ctx);
       if (right instanceof Promise) {
-        return right.then((right2) => handleCodecAResult(right2, def, ctx));
+        return right.then((right2) => handleCodecAResult(right2, def2, ctx));
       }
-      return handleCodecAResult(right, def, ctx);
+      return handleCodecAResult(right, def2, ctx);
     }
   };
 });
-function handleCodecAResult(result, def, ctx) {
+function handleCodecAResult(result, def2, ctx) {
   if (result.issues.length) {
     result.aborted = true;
     return result;
   }
   const direction = ctx.direction || "forward";
   if (direction === "forward") {
-    const transformed = def.transform(result.value, result);
+    const transformed = def2.transform(result.value, result);
     if (transformed instanceof Promise) {
-      return transformed.then((value) => handleCodecTxResult(result, value, def.out, ctx));
+      return transformed.then((value) => handleCodecTxResult(result, value, def2.out, ctx));
     }
-    return handleCodecTxResult(result, transformed, def.out, ctx);
+    return handleCodecTxResult(result, transformed, def2.out, ctx);
   } else {
-    const transformed = def.reverseTransform(result.value, result);
+    const transformed = def2.reverseTransform(result.value, result);
     if (transformed instanceof Promise) {
-      return transformed.then((value) => handleCodecTxResult(result, value, def.in, ctx));
+      return transformed.then((value) => handleCodecTxResult(result, value, def2.in, ctx));
     }
-    return handleCodecTxResult(result, transformed, def.in, ctx);
+    return handleCodecTxResult(result, transformed, def2.in, ctx);
   }
 }
 __name(handleCodecAResult, "handleCodecAResult");
@@ -14880,20 +17934,20 @@ function handleCodecTxResult(left, value, nextSchema, ctx) {
   return nextSchema._zod.run({ value, issues: left.issues }, ctx);
 }
 __name(handleCodecTxResult, "handleCodecTxResult");
-var $ZodPreprocess = /* @__PURE__ */ $constructor("$ZodPreprocess", (inst, def) => {
-  $ZodPipe.init(inst, def);
+var $ZodPreprocess = /* @__PURE__ */ $constructor("$ZodPreprocess", (inst, def2) => {
+  $ZodPipe.init(inst, def2);
 });
-var $ZodReadonly = /* @__PURE__ */ $constructor("$ZodReadonly", (inst, def) => {
-  $ZodType.init(inst, def);
-  defineLazy(inst._zod, "propValues", () => def.innerType._zod.propValues);
-  defineLazy(inst._zod, "values", () => def.innerType._zod.values);
-  defineLazy(inst._zod, "optin", () => def.innerType?._zod?.optin);
-  defineLazy(inst._zod, "optout", () => def.innerType?._zod?.optout);
+var $ZodReadonly = /* @__PURE__ */ $constructor("$ZodReadonly", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  defineLazy(inst._zod, "propValues", () => def2.innerType._zod.propValues);
+  defineLazy(inst._zod, "values", () => def2.innerType._zod.values);
+  defineLazy(inst._zod, "optin", () => def2.innerType?._zod?.optin);
+  defineLazy(inst._zod, "optout", () => def2.innerType?._zod?.optout);
   inst._zod.parse = (payload, ctx) => {
     if (ctx.direction === "backward") {
-      return def.innerType._zod.run(payload, ctx);
+      return def2.innerType._zod.run(payload, ctx);
     }
-    const result = def.innerType._zod.run(payload, ctx);
+    const result = def2.innerType._zod.run(payload, ctx);
     if (result instanceof Promise) {
       return result.then(handleReadonlyResult);
     }
@@ -14905,10 +17959,10 @@ function handleReadonlyResult(payload) {
   return payload;
 }
 __name(handleReadonlyResult, "handleReadonlyResult");
-var $ZodTemplateLiteral = /* @__PURE__ */ $constructor("$ZodTemplateLiteral", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodTemplateLiteral = /* @__PURE__ */ $constructor("$ZodTemplateLiteral", (inst, def2) => {
+  $ZodType.init(inst, def2);
   const regexParts = [];
-  for (const part of def.parts) {
+  for (const part of def2.parts) {
     if (typeof part === "object" && part !== null) {
       if (!part._zod.pattern) {
         throw new Error(`Invalid template literal part, no pattern found: ${[...part._zod.traits].shift()}`);
@@ -14942,7 +17996,7 @@ var $ZodTemplateLiteral = /* @__PURE__ */ $constructor("$ZodTemplateLiteral", (i
         input: payload.value,
         inst,
         code: "invalid_format",
-        format: def.format ?? "template_literal",
+        format: def2.format ?? "template_literal",
         pattern: inst._zod.pattern.source
       });
       return payload;
@@ -14950,10 +18004,10 @@ var $ZodTemplateLiteral = /* @__PURE__ */ $constructor("$ZodTemplateLiteral", (i
     return payload;
   };
 });
-var $ZodFunction = /* @__PURE__ */ $constructor("$ZodFunction", (inst, def) => {
-  $ZodType.init(inst, def);
-  inst._def = def;
-  inst._zod.def = def;
+var $ZodFunction = /* @__PURE__ */ $constructor("$ZodFunction", (inst, def2) => {
+  $ZodType.init(inst, def2);
+  inst._def = def2;
+  inst._zod.def = def2;
   inst.implement = (func) => {
     if (typeof func !== "function") {
       throw new Error("implement() must be called with a function");
@@ -15027,18 +18081,18 @@ var $ZodFunction = /* @__PURE__ */ $constructor("$ZodFunction", (inst, def) => {
   };
   return inst;
 });
-var $ZodPromise = /* @__PURE__ */ $constructor("$ZodPromise", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodPromise = /* @__PURE__ */ $constructor("$ZodPromise", (inst, def2) => {
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, ctx) => {
-    return Promise.resolve(payload.value).then((inner) => def.innerType._zod.run({ value: inner, issues: [] }, ctx));
+    return Promise.resolve(payload.value).then((inner) => def2.innerType._zod.run({ value: inner, issues: [] }, ctx));
   };
 });
-var $ZodLazy = /* @__PURE__ */ $constructor("$ZodLazy", (inst, def) => {
-  $ZodType.init(inst, def);
+var $ZodLazy = /* @__PURE__ */ $constructor("$ZodLazy", (inst, def2) => {
+  $ZodType.init(inst, def2);
   defineLazy(inst._zod, "innerType", () => {
-    const d = def;
+    const d = def2;
     if (!d._cachedInner)
-      d._cachedInner = def.getter();
+      d._cachedInner = def2.getter();
     return d._cachedInner;
   });
   defineLazy(inst._zod, "pattern", () => inst._zod.innerType?._zod?.pattern);
@@ -15050,15 +18104,15 @@ var $ZodLazy = /* @__PURE__ */ $constructor("$ZodLazy", (inst, def) => {
     return inner._zod.run(payload, ctx);
   };
 });
-var $ZodCustom = /* @__PURE__ */ $constructor("$ZodCustom", (inst, def) => {
-  $ZodCheck.init(inst, def);
-  $ZodType.init(inst, def);
+var $ZodCustom = /* @__PURE__ */ $constructor("$ZodCustom", (inst, def2) => {
+  $ZodCheck.init(inst, def2);
+  $ZodType.init(inst, def2);
   inst._zod.parse = (payload, _2) => {
     return payload;
   };
   inst._zod.check = (payload) => {
     const input = payload.value;
-    const r = def.fn(input);
+    const r = def2.fn(input);
     if (r instanceof Promise) {
       return r.then((r2) => handleRefineResult(r2, payload, input, inst));
     }
@@ -21981,28 +25035,28 @@ function _array(Class2, element, params) {
 }
 __name(_array, "_array");
 // @__NO_SIDE_EFFECTS__
-function _union(Class2, options, params) {
+function _union(Class2, options2, params) {
   return new Class2({
     type: "union",
-    options,
+    options: options2,
     ...normalizeParams(params)
   });
 }
 __name(_union, "_union");
-function _xor(Class2, options, params) {
+function _xor(Class2, options2, params) {
   return new Class2({
     type: "union",
-    options,
+    options: options2,
     inclusive: false,
     ...normalizeParams(params)
   });
 }
 __name(_xor, "_xor");
 // @__NO_SIDE_EFFECTS__
-function _discriminatedUnion(Class2, discriminator, options, params) {
+function _discriminatedUnion(Class2, discriminator, options2, params) {
   return new Class2({
     type: "union",
-    options,
+    options: options2,
     discriminator,
     ...normalizeParams(params)
   });
@@ -22337,7 +25391,7 @@ __name(_stringbool, "_stringbool");
 // @__NO_SIDE_EFFECTS__
 function _stringFormat(Class2, format, fnOrRegex, _params = {}) {
   const params = normalizeParams(_params);
-  const def = {
+  const def2 = {
     ...normalizeParams(_params),
     check: "string_format",
     type: "string",
@@ -22346,9 +25400,9 @@ function _stringFormat(Class2, format, fnOrRegex, _params = {}) {
     ...params
   };
   if (fnOrRegex instanceof RegExp) {
-    def.pattern = fnOrRegex;
+    def2.pattern = fnOrRegex;
   }
-  const inst = new Class2(def);
+  const inst = new Class2(def2);
   return inst;
 }
 __name(_stringFormat, "_stringFormat");
@@ -22378,7 +25432,7 @@ function initializeContext(params) {
 __name(initializeContext, "initializeContext");
 function process2(schema, ctx, _params = { path: [], schemaPath: [] }) {
   var _a3;
-  const def = schema._zod.def;
+  const def2 = schema._zod.def;
   const seen = ctx.seen.get(schema);
   if (seen) {
     seen.count++;
@@ -22403,9 +25457,9 @@ function process2(schema, ctx, _params = { path: [], schemaPath: [] }) {
       schema._zod.processJSONSchema(ctx, result.schema, params);
     } else {
       const _json = result.schema;
-      const processor = ctx.processors[def.type];
+      const processor = ctx.processors[def2.type];
       if (!processor) {
-        throw new Error(`[toJSONSchema]: Non-representable type encountered: ${def.type}`);
+        throw new Error(`[toJSONSchema]: Non-representable type encountered: ${def2.type}`);
       }
       processor(schema, ctx, _json, params);
     }
@@ -22654,49 +25708,49 @@ function isTransforming(_schema, _ctx) {
   if (ctx.seen.has(_schema))
     return false;
   ctx.seen.add(_schema);
-  const def = _schema._zod.def;
-  if (def.type === "transform")
+  const def2 = _schema._zod.def;
+  if (def2.type === "transform")
     return true;
-  if (def.type === "array")
-    return isTransforming(def.element, ctx);
-  if (def.type === "set")
-    return isTransforming(def.valueType, ctx);
-  if (def.type === "lazy")
-    return isTransforming(def.getter(), ctx);
-  if (def.type === "promise" || def.type === "optional" || def.type === "nonoptional" || def.type === "nullable" || def.type === "readonly" || def.type === "default" || def.type === "prefault") {
-    return isTransforming(def.innerType, ctx);
+  if (def2.type === "array")
+    return isTransforming(def2.element, ctx);
+  if (def2.type === "set")
+    return isTransforming(def2.valueType, ctx);
+  if (def2.type === "lazy")
+    return isTransforming(def2.getter(), ctx);
+  if (def2.type === "promise" || def2.type === "optional" || def2.type === "nonoptional" || def2.type === "nullable" || def2.type === "readonly" || def2.type === "default" || def2.type === "prefault") {
+    return isTransforming(def2.innerType, ctx);
   }
-  if (def.type === "intersection") {
-    return isTransforming(def.left, ctx) || isTransforming(def.right, ctx);
+  if (def2.type === "intersection") {
+    return isTransforming(def2.left, ctx) || isTransforming(def2.right, ctx);
   }
-  if (def.type === "record" || def.type === "map") {
-    return isTransforming(def.keyType, ctx) || isTransforming(def.valueType, ctx);
+  if (def2.type === "record" || def2.type === "map") {
+    return isTransforming(def2.keyType, ctx) || isTransforming(def2.valueType, ctx);
   }
-  if (def.type === "pipe") {
+  if (def2.type === "pipe") {
     if (_schema._zod.traits.has("$ZodCodec"))
       return true;
-    return isTransforming(def.in, ctx) || isTransforming(def.out, ctx);
+    return isTransforming(def2.in, ctx) || isTransforming(def2.out, ctx);
   }
-  if (def.type === "object") {
-    for (const key in def.shape) {
-      if (isTransforming(def.shape[key], ctx))
+  if (def2.type === "object") {
+    for (const key in def2.shape) {
+      if (isTransforming(def2.shape[key], ctx))
         return true;
     }
     return false;
   }
-  if (def.type === "union") {
-    for (const option of def.options) {
+  if (def2.type === "union") {
+    for (const option of def2.options) {
       if (isTransforming(option, ctx))
         return true;
     }
     return false;
   }
-  if (def.type === "tuple") {
-    for (const item of def.items) {
+  if (def2.type === "tuple") {
+    for (const item of def2.items) {
       if (isTransforming(item, ctx))
         return true;
     }
-    if (def.rest && isTransforming(def.rest, ctx))
+    if (def2.rest && isTransforming(def2.rest, ctx))
       return true;
     return false;
   }
@@ -22727,29 +25781,29 @@ var formatMap = {
   // do not set
 };
 var stringProcessor = /* @__PURE__ */ __name((schema, ctx, _json, _params) => {
-  const json2 = _json;
-  json2.type = "string";
+  const json3 = _json;
+  json3.type = "string";
   const { minimum, maximum, format, patterns, contentEncoding } = schema._zod.bag;
   if (typeof minimum === "number")
-    json2.minLength = minimum;
+    json3.minLength = minimum;
   if (typeof maximum === "number")
-    json2.maxLength = maximum;
+    json3.maxLength = maximum;
   if (format) {
-    json2.format = formatMap[format] ?? format;
-    if (json2.format === "")
-      delete json2.format;
+    json3.format = formatMap[format] ?? format;
+    if (json3.format === "")
+      delete json3.format;
     if (format === "time") {
-      delete json2.format;
+      delete json3.format;
     }
   }
   if (contentEncoding)
-    json2.contentEncoding = contentEncoding;
+    json3.contentEncoding = contentEncoding;
   if (patterns && patterns.size > 0) {
     const regexes = [...patterns];
     if (regexes.length === 1)
-      json2.pattern = regexes[0].source;
+      json3.pattern = regexes[0].source;
     else if (regexes.length > 1) {
-      json2.allOf = [
+      json3.allOf = [
         ...regexes.map((regex) => ({
           ...ctx.target === "draft-07" || ctx.target === "draft-04" || ctx.target === "openapi-3.0" ? { type: "string" } : {},
           pattern: regex.source
@@ -22759,40 +25813,40 @@ var stringProcessor = /* @__PURE__ */ __name((schema, ctx, _json, _params) => {
   }
 }, "stringProcessor");
 var numberProcessor = /* @__PURE__ */ __name((schema, ctx, _json, _params) => {
-  const json2 = _json;
+  const json3 = _json;
   const { minimum, maximum, format, multipleOf, exclusiveMaximum, exclusiveMinimum } = schema._zod.bag;
   if (typeof format === "string" && format.includes("int"))
-    json2.type = "integer";
+    json3.type = "integer";
   else
-    json2.type = "number";
+    json3.type = "number";
   const exMin = typeof exclusiveMinimum === "number" && exclusiveMinimum >= (minimum ?? Number.NEGATIVE_INFINITY);
   const exMax = typeof exclusiveMaximum === "number" && exclusiveMaximum <= (maximum ?? Number.POSITIVE_INFINITY);
   const legacy = ctx.target === "draft-04" || ctx.target === "openapi-3.0";
   if (exMin) {
     if (legacy) {
-      json2.minimum = exclusiveMinimum;
-      json2.exclusiveMinimum = true;
+      json3.minimum = exclusiveMinimum;
+      json3.exclusiveMinimum = true;
     } else {
-      json2.exclusiveMinimum = exclusiveMinimum;
+      json3.exclusiveMinimum = exclusiveMinimum;
     }
   } else if (typeof minimum === "number") {
-    json2.minimum = minimum;
+    json3.minimum = minimum;
   }
   if (exMax) {
     if (legacy) {
-      json2.maximum = exclusiveMaximum;
-      json2.exclusiveMaximum = true;
+      json3.maximum = exclusiveMaximum;
+      json3.exclusiveMaximum = true;
     } else {
-      json2.exclusiveMaximum = exclusiveMaximum;
+      json3.exclusiveMaximum = exclusiveMaximum;
     }
   } else if (typeof maximum === "number") {
-    json2.maximum = maximum;
+    json3.maximum = maximum;
   }
   if (typeof multipleOf === "number")
-    json2.multipleOf = multipleOf;
+    json3.multipleOf = multipleOf;
 }, "numberProcessor");
-var booleanProcessor = /* @__PURE__ */ __name((_schema, _ctx, json2, _params) => {
-  json2.type = "boolean";
+var booleanProcessor = /* @__PURE__ */ __name((_schema, _ctx, json3, _params) => {
+  json3.type = "boolean";
 }, "booleanProcessor");
 var bigintProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
   if (ctx.unrepresentable === "throw") {
@@ -22804,13 +25858,13 @@ var symbolProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
     throw new Error("Symbols cannot be represented in JSON Schema");
   }
 }, "symbolProcessor");
-var nullProcessor = /* @__PURE__ */ __name((_schema, ctx, json2, _params) => {
+var nullProcessor = /* @__PURE__ */ __name((_schema, ctx, json3, _params) => {
   if (ctx.target === "openapi-3.0") {
-    json2.type = "string";
-    json2.nullable = true;
-    json2.enum = [null];
+    json3.type = "string";
+    json3.nullable = true;
+    json3.enum = [null];
   } else {
-    json2.type = "null";
+    json3.type = "null";
   }
 }, "nullProcessor");
 var undefinedProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
@@ -22823,8 +25877,8 @@ var voidProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
     throw new Error("Void cannot be represented in JSON Schema");
   }
 }, "voidProcessor");
-var neverProcessor = /* @__PURE__ */ __name((_schema, _ctx, json2, _params) => {
-  json2.not = {};
+var neverProcessor = /* @__PURE__ */ __name((_schema, _ctx, json3, _params) => {
+  json3.not = {};
 }, "neverProcessor");
 var anyProcessor = /* @__PURE__ */ __name((_schema, _ctx, _json, _params) => {
 }, "anyProcessor");
@@ -22835,19 +25889,19 @@ var dateProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
     throw new Error("Date cannot be represented in JSON Schema");
   }
 }, "dateProcessor");
-var enumProcessor = /* @__PURE__ */ __name((schema, _ctx, json2, _params) => {
-  const def = schema._zod.def;
-  const values = getEnumValues(def.entries);
+var enumProcessor = /* @__PURE__ */ __name((schema, _ctx, json3, _params) => {
+  const def2 = schema._zod.def;
+  const values = getEnumValues(def2.entries);
   if (values.every((v) => typeof v === "number"))
-    json2.type = "number";
+    json3.type = "number";
   if (values.every((v) => typeof v === "string"))
-    json2.type = "string";
-  json2.enum = values;
+    json3.type = "string";
+  json3.enum = values;
 }, "enumProcessor");
-var literalProcessor = /* @__PURE__ */ __name((schema, ctx, json2, _params) => {
-  const def = schema._zod.def;
+var literalProcessor = /* @__PURE__ */ __name((schema, ctx, json3, _params) => {
+  const def2 = schema._zod.def;
   const vals = [];
-  for (const val of def.values) {
+  for (const val of def2.values) {
     if (val === void 0) {
       if (ctx.unrepresentable === "throw") {
         throw new Error("Literal `undefined` cannot be represented in JSON Schema");
@@ -22866,22 +25920,22 @@ var literalProcessor = /* @__PURE__ */ __name((schema, ctx, json2, _params) => {
   if (vals.length === 0) {
   } else if (vals.length === 1) {
     const val = vals[0];
-    json2.type = val === null ? "null" : typeof val;
+    json3.type = val === null ? "null" : typeof val;
     if (ctx.target === "draft-04" || ctx.target === "openapi-3.0") {
-      json2.enum = [val];
+      json3.enum = [val];
     } else {
-      json2.const = val;
+      json3.const = val;
     }
   } else {
     if (vals.every((v) => typeof v === "number"))
-      json2.type = "number";
+      json3.type = "number";
     if (vals.every((v) => typeof v === "string"))
-      json2.type = "string";
+      json3.type = "string";
     if (vals.every((v) => typeof v === "boolean"))
-      json2.type = "boolean";
+      json3.type = "boolean";
     if (vals.every((v) => v === null))
-      json2.type = "null";
-    json2.enum = vals;
+      json3.type = "null";
+    json3.enum = vals;
   }
 }, "literalProcessor");
 var nanProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
@@ -22889,16 +25943,16 @@ var nanProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
     throw new Error("NaN cannot be represented in JSON Schema");
   }
 }, "nanProcessor");
-var templateLiteralProcessor = /* @__PURE__ */ __name((schema, _ctx, json2, _params) => {
-  const _json = json2;
+var templateLiteralProcessor = /* @__PURE__ */ __name((schema, _ctx, json3, _params) => {
+  const _json = json3;
   const pattern = schema._zod.pattern;
   if (!pattern)
     throw new Error("Pattern not found in template literal");
   _json.type = "string";
   _json.pattern = pattern.source;
 }, "templateLiteralProcessor");
-var fileProcessor = /* @__PURE__ */ __name((schema, _ctx, json2, _params) => {
-  const _json = json2;
+var fileProcessor = /* @__PURE__ */ __name((schema, _ctx, json3, _params) => {
+  const _json = json3;
   const file2 = {
     type: "string",
     format: "binary",
@@ -22921,8 +25975,8 @@ var fileProcessor = /* @__PURE__ */ __name((schema, _ctx, json2, _params) => {
     Object.assign(_json, file2);
   }
 }, "fileProcessor");
-var successProcessor = /* @__PURE__ */ __name((_schema, _ctx, json2, _params) => {
-  json2.type = "boolean";
+var successProcessor = /* @__PURE__ */ __name((_schema, _ctx, json3, _params) => {
+  json3.type = "boolean";
 }, "successProcessor");
 var customProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
   if (ctx.unrepresentable === "throw") {
@@ -22950,34 +26004,34 @@ var setProcessor = /* @__PURE__ */ __name((_schema, ctx, _json, _params) => {
   }
 }, "setProcessor");
 var arrayProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
-  const json2 = _json;
-  const def = schema._zod.def;
+  const json3 = _json;
+  const def2 = schema._zod.def;
   const { minimum, maximum } = schema._zod.bag;
   if (typeof minimum === "number")
-    json2.minItems = minimum;
+    json3.minItems = minimum;
   if (typeof maximum === "number")
-    json2.maxItems = maximum;
-  json2.type = "array";
-  json2.items = process2(def.element, ctx, {
+    json3.maxItems = maximum;
+  json3.type = "array";
+  json3.items = process2(def2.element, ctx, {
     ...params,
     path: [...params.path, "items"]
   });
 }, "arrayProcessor");
 var objectProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
-  const json2 = _json;
-  const def = schema._zod.def;
-  json2.type = "object";
-  json2.properties = {};
-  const shape = def.shape;
+  const json3 = _json;
+  const def2 = schema._zod.def;
+  json3.type = "object";
+  json3.properties = {};
+  const shape = def2.shape;
   for (const key in shape) {
-    json2.properties[key] = process2(shape[key], ctx, {
+    json3.properties[key] = process2(shape[key], ctx, {
       ...params,
       path: [...params.path, "properties", key]
     });
   }
   const allKeys = new Set(Object.keys(shape));
   const requiredKeys = new Set([...allKeys].filter((key) => {
-    const v = def.shape[key]._zod;
+    const v = def2.shape[key]._zod;
     if (ctx.io === "input") {
       return v.optin === void 0;
     } else {
@@ -22985,40 +26039,40 @@ var objectProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
     }
   }));
   if (requiredKeys.size > 0) {
-    json2.required = Array.from(requiredKeys);
+    json3.required = Array.from(requiredKeys);
   }
-  if (def.catchall?._zod.def.type === "never") {
-    json2.additionalProperties = false;
-  } else if (!def.catchall) {
+  if (def2.catchall?._zod.def.type === "never") {
+    json3.additionalProperties = false;
+  } else if (!def2.catchall) {
     if (ctx.io === "output")
-      json2.additionalProperties = false;
-  } else if (def.catchall) {
-    json2.additionalProperties = process2(def.catchall, ctx, {
+      json3.additionalProperties = false;
+  } else if (def2.catchall) {
+    json3.additionalProperties = process2(def2.catchall, ctx, {
       ...params,
       path: [...params.path, "additionalProperties"]
     });
   }
 }, "objectProcessor");
-var unionProcessor = /* @__PURE__ */ __name((schema, ctx, json2, params) => {
-  const def = schema._zod.def;
-  const isExclusive = def.inclusive === false;
-  const options = def.options.map((x, i) => process2(x, ctx, {
+var unionProcessor = /* @__PURE__ */ __name((schema, ctx, json3, params) => {
+  const def2 = schema._zod.def;
+  const isExclusive = def2.inclusive === false;
+  const options2 = def2.options.map((x, i) => process2(x, ctx, {
     ...params,
     path: [...params.path, isExclusive ? "oneOf" : "anyOf", i]
   }));
   if (isExclusive) {
-    json2.oneOf = options;
+    json3.oneOf = options2;
   } else {
-    json2.anyOf = options;
+    json3.anyOf = options2;
   }
 }, "unionProcessor");
-var intersectionProcessor = /* @__PURE__ */ __name((schema, ctx, json2, params) => {
-  const def = schema._zod.def;
-  const a = process2(def.left, ctx, {
+var intersectionProcessor = /* @__PURE__ */ __name((schema, ctx, json3, params) => {
+  const def2 = schema._zod.def;
+  const a = process2(def2.left, ctx, {
     ...params,
     path: [...params.path, "allOf", 0]
   });
-  const b = process2(def.right, ctx, {
+  const b = process2(def2.right, ctx, {
     ...params,
     path: [...params.path, "allOf", 1]
   });
@@ -23027,74 +26081,74 @@ var intersectionProcessor = /* @__PURE__ */ __name((schema, ctx, json2, params) 
     ...isSimpleIntersection(a) ? a.allOf : [a],
     ...isSimpleIntersection(b) ? b.allOf : [b]
   ];
-  json2.allOf = allOf;
+  json3.allOf = allOf;
 }, "intersectionProcessor");
 var tupleProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
-  const json2 = _json;
-  const def = schema._zod.def;
-  json2.type = "array";
+  const json3 = _json;
+  const def2 = schema._zod.def;
+  json3.type = "array";
   const prefixPath = ctx.target === "draft-2020-12" ? "prefixItems" : "items";
   const restPath = ctx.target === "draft-2020-12" ? "items" : ctx.target === "openapi-3.0" ? "items" : "additionalItems";
-  const prefixItems = def.items.map((x, i) => process2(x, ctx, {
+  const prefixItems = def2.items.map((x, i) => process2(x, ctx, {
     ...params,
     path: [...params.path, prefixPath, i]
   }));
-  const rest = def.rest ? process2(def.rest, ctx, {
+  const rest = def2.rest ? process2(def2.rest, ctx, {
     ...params,
-    path: [...params.path, restPath, ...ctx.target === "openapi-3.0" ? [def.items.length] : []]
+    path: [...params.path, restPath, ...ctx.target === "openapi-3.0" ? [def2.items.length] : []]
   }) : null;
   if (ctx.target === "draft-2020-12") {
-    json2.prefixItems = prefixItems;
+    json3.prefixItems = prefixItems;
     if (rest) {
-      json2.items = rest;
+      json3.items = rest;
     }
   } else if (ctx.target === "openapi-3.0") {
-    json2.items = {
+    json3.items = {
       anyOf: prefixItems
     };
     if (rest) {
-      json2.items.anyOf.push(rest);
+      json3.items.anyOf.push(rest);
     }
-    json2.minItems = prefixItems.length;
+    json3.minItems = prefixItems.length;
     if (!rest) {
-      json2.maxItems = prefixItems.length;
+      json3.maxItems = prefixItems.length;
     }
   } else {
-    json2.items = prefixItems;
+    json3.items = prefixItems;
     if (rest) {
-      json2.additionalItems = rest;
+      json3.additionalItems = rest;
     }
   }
   const { minimum, maximum } = schema._zod.bag;
   if (typeof minimum === "number")
-    json2.minItems = minimum;
+    json3.minItems = minimum;
   if (typeof maximum === "number")
-    json2.maxItems = maximum;
+    json3.maxItems = maximum;
 }, "tupleProcessor");
 var recordProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
-  const json2 = _json;
-  const def = schema._zod.def;
-  json2.type = "object";
-  const keyType = def.keyType;
+  const json3 = _json;
+  const def2 = schema._zod.def;
+  json3.type = "object";
+  const keyType = def2.keyType;
   const keyBag = keyType._zod.bag;
   const patterns = keyBag?.patterns;
-  if (def.mode === "loose" && patterns && patterns.size > 0) {
-    const valueSchema = process2(def.valueType, ctx, {
+  if (def2.mode === "loose" && patterns && patterns.size > 0) {
+    const valueSchema = process2(def2.valueType, ctx, {
       ...params,
       path: [...params.path, "patternProperties", "*"]
     });
-    json2.patternProperties = {};
+    json3.patternProperties = {};
     for (const pattern of patterns) {
-      json2.patternProperties[pattern.source] = valueSchema;
+      json3.patternProperties[pattern.source] = valueSchema;
     }
   } else {
     if (ctx.target === "draft-07" || ctx.target === "draft-2020-12") {
-      json2.propertyNames = process2(def.keyType, ctx, {
+      json3.propertyNames = process2(def2.keyType, ctx, {
         ...params,
         path: [...params.path, "propertyNames"]
       });
     }
-    json2.additionalProperties = process2(def.valueType, ctx, {
+    json3.additionalProperties = process2(def2.valueType, ctx, {
       ...params,
       path: [...params.path, "additionalProperties"]
     });
@@ -23103,81 +26157,81 @@ var recordProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
   if (keyValues) {
     const validKeyValues = [...keyValues].filter((v) => typeof v === "string" || typeof v === "number");
     if (validKeyValues.length > 0) {
-      json2.required = validKeyValues;
+      json3.required = validKeyValues;
     }
   }
 }, "recordProcessor");
-var nullableProcessor = /* @__PURE__ */ __name((schema, ctx, json2, params) => {
-  const def = schema._zod.def;
-  const inner = process2(def.innerType, ctx, params);
+var nullableProcessor = /* @__PURE__ */ __name((schema, ctx, json3, params) => {
+  const def2 = schema._zod.def;
+  const inner = process2(def2.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   if (ctx.target === "openapi-3.0") {
-    seen.ref = def.innerType;
-    json2.nullable = true;
+    seen.ref = def2.innerType;
+    json3.nullable = true;
   } else {
-    json2.anyOf = [inner, { type: "null" }];
+    json3.anyOf = [inner, { type: "null" }];
   }
 }, "nullableProcessor");
 var nonoptionalProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
-  const def = schema._zod.def;
-  process2(def.innerType, ctx, params);
+  const def2 = schema._zod.def;
+  process2(def2.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  seen.ref = def2.innerType;
 }, "nonoptionalProcessor");
-var defaultProcessor = /* @__PURE__ */ __name((schema, ctx, json2, params) => {
-  const def = schema._zod.def;
-  process2(def.innerType, ctx, params);
+var defaultProcessor = /* @__PURE__ */ __name((schema, ctx, json3, params) => {
+  const def2 = schema._zod.def;
+  process2(def2.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
-  json2.default = JSON.parse(JSON.stringify(def.defaultValue));
+  seen.ref = def2.innerType;
+  json3.default = JSON.parse(JSON.stringify(def2.defaultValue));
 }, "defaultProcessor");
-var prefaultProcessor = /* @__PURE__ */ __name((schema, ctx, json2, params) => {
-  const def = schema._zod.def;
-  process2(def.innerType, ctx, params);
+var prefaultProcessor = /* @__PURE__ */ __name((schema, ctx, json3, params) => {
+  const def2 = schema._zod.def;
+  process2(def2.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  seen.ref = def2.innerType;
   if (ctx.io === "input")
-    json2._prefault = JSON.parse(JSON.stringify(def.defaultValue));
+    json3._prefault = JSON.parse(JSON.stringify(def2.defaultValue));
 }, "prefaultProcessor");
-var catchProcessor = /* @__PURE__ */ __name((schema, ctx, json2, params) => {
-  const def = schema._zod.def;
-  process2(def.innerType, ctx, params);
+var catchProcessor = /* @__PURE__ */ __name((schema, ctx, json3, params) => {
+  const def2 = schema._zod.def;
+  process2(def2.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  seen.ref = def2.innerType;
   let catchValue;
   try {
-    catchValue = def.catchValue(void 0);
+    catchValue = def2.catchValue(void 0);
   } catch {
     throw new Error("Dynamic catch values are not supported in JSON Schema");
   }
-  json2.default = catchValue;
+  json3.default = catchValue;
 }, "catchProcessor");
 var pipeProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
-  const def = schema._zod.def;
-  const inIsTransform = def.in._zod.traits.has("$ZodTransform");
-  const innerType = ctx.io === "input" ? inIsTransform ? def.out : def.in : def.out;
+  const def2 = schema._zod.def;
+  const inIsTransform = def2.in._zod.traits.has("$ZodTransform");
+  const innerType = ctx.io === "input" ? inIsTransform ? def2.out : def2.in : def2.out;
   process2(innerType, ctx, params);
   const seen = ctx.seen.get(schema);
   seen.ref = innerType;
 }, "pipeProcessor");
-var readonlyProcessor = /* @__PURE__ */ __name((schema, ctx, json2, params) => {
-  const def = schema._zod.def;
-  process2(def.innerType, ctx, params);
+var readonlyProcessor = /* @__PURE__ */ __name((schema, ctx, json3, params) => {
+  const def2 = schema._zod.def;
+  process2(def2.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
-  json2.readOnly = true;
+  seen.ref = def2.innerType;
+  json3.readOnly = true;
 }, "readonlyProcessor");
 var promiseProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
-  const def = schema._zod.def;
-  process2(def.innerType, ctx, params);
+  const def2 = schema._zod.def;
+  process2(def2.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  seen.ref = def2.innerType;
 }, "promiseProcessor");
 var optionalProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
-  const def = schema._zod.def;
-  process2(def.innerType, ctx, params);
+  const def2 = schema._zod.def;
+  process2(def2.innerType, ctx, params);
   const seen = ctx.seen.get(schema);
-  seen.ref = def.innerType;
+  seen.ref = def2.innerType;
 }, "optionalProcessor");
 var lazyProcessor = /* @__PURE__ */ __name((schema, ctx, _json, params) => {
   const innerType = schema._zod.innerType;
@@ -23560,33 +26614,33 @@ __export(iso_exports, {
   duration: () => duration2,
   time: () => time2
 });
-var ZodISODateTime = /* @__PURE__ */ $constructor("ZodISODateTime", (inst, def) => {
-  $ZodISODateTime.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodISODateTime = /* @__PURE__ */ $constructor("ZodISODateTime", (inst, def2) => {
+  $ZodISODateTime.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function datetime2(params) {
   return _isoDateTime(ZodISODateTime, params);
 }
 __name(datetime2, "datetime");
-var ZodISODate = /* @__PURE__ */ $constructor("ZodISODate", (inst, def) => {
-  $ZodISODate.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodISODate = /* @__PURE__ */ $constructor("ZodISODate", (inst, def2) => {
+  $ZodISODate.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function date2(params) {
   return _isoDate(ZodISODate, params);
 }
 __name(date2, "date");
-var ZodISOTime = /* @__PURE__ */ $constructor("ZodISOTime", (inst, def) => {
-  $ZodISOTime.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodISOTime = /* @__PURE__ */ $constructor("ZodISOTime", (inst, def2) => {
+  $ZodISOTime.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function time2(params) {
   return _isoTime(ZodISOTime, params);
 }
 __name(time2, "time");
-var ZodISODuration = /* @__PURE__ */ $constructor("ZodISODuration", (inst, def) => {
-  $ZodISODuration.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodISODuration = /* @__PURE__ */ $constructor("ZodISODuration", (inst, def2) => {
+  $ZodISODuration.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function duration2(params) {
   return _isoDuration(ZodISODuration, params);
@@ -23686,8 +26740,8 @@ function _installLazyMethods(inst, group, methods) {
   }
 }
 __name(_installLazyMethods, "_installLazyMethods");
-var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
-  $ZodType.init(inst, def);
+var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def2) => {
+  $ZodType.init(inst, def2);
   Object.assign(inst["~standard"], {
     jsonSchema: {
       input: createStandardJSONSchemaMethod(inst, "input"),
@@ -23695,9 +26749,9 @@ var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
     }
   });
   inst.toJSONSchema = createToJSONSchemaMethod(inst, {});
-  inst.def = def;
-  inst.type = def.type;
-  Object.defineProperty(inst, "_def", { value: def });
+  inst.def = def2;
+  inst.type = def2.type;
+  Object.defineProperty(inst, "_def", { value: def2 });
   inst.parse = (data, params) => parse4(inst, data, params, { callee: inst.parse });
   inst.safeParse = (data, params) => safeParse2(inst, data, params);
   inst.parseAsync = async (data, params) => parseAsync2(inst, data, params, { callee: inst.parseAsync });
@@ -23713,10 +26767,10 @@ var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   inst.safeDecodeAsync = async (data, params) => safeDecodeAsync2(inst, data, params);
   _installLazyMethods(inst, "ZodType", {
     check(...chks) {
-      const def2 = this.def;
-      return this.clone(util_exports.mergeDefs(def2, {
+      const def3 = this.def;
+      return this.clone(util_exports.mergeDefs(def3, {
         checks: [
-          ...def2.checks ?? [],
+          ...def3.checks ?? [],
           ...chks.map((ch) => typeof ch === "function" ? { _zod: { check: ch, def: { check: "custom" }, onattach: [] } } : ch)
         ]
       }), { parent: true });
@@ -23724,8 +26778,8 @@ var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
     with(...chks) {
       return this.check(...chks);
     },
-    clone(def2, params) {
-      return clone(this, def2, params);
+    clone(def3, params) {
+      return clone(this, def3, params);
     },
     brand() {
       return this;
@@ -23815,10 +26869,10 @@ var ZodType = /* @__PURE__ */ $constructor("ZodType", (inst, def) => {
   });
   return inst;
 });
-var _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def) => {
-  $ZodString.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => stringProcessor(inst, ctx, json2, params);
+var _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def2) => {
+  $ZodString.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => stringProcessor(inst, ctx, json3, params);
   const bag = inst._zod.bag;
   inst.format = bag.format ?? null;
   inst.minLength = bag.minimum ?? null;
@@ -23871,9 +26925,9 @@ var _ZodString = /* @__PURE__ */ $constructor("_ZodString", (inst, def) => {
     }
   });
 });
-var ZodString = /* @__PURE__ */ $constructor("ZodString", (inst, def) => {
-  $ZodString.init(inst, def);
-  _ZodString.init(inst, def);
+var ZodString = /* @__PURE__ */ $constructor("ZodString", (inst, def2) => {
+  $ZodString.init(inst, def2);
+  _ZodString.init(inst, def2);
   inst.email = (params) => inst.check(_email(ZodEmail, params));
   inst.url = (params) => inst.check(_url(ZodURL, params));
   inst.jwt = (params) => inst.check(_jwt(ZodJWT, params));
@@ -23906,29 +26960,29 @@ function string2(params) {
   return _string(ZodString, params);
 }
 __name(string2, "string");
-var ZodStringFormat = /* @__PURE__ */ $constructor("ZodStringFormat", (inst, def) => {
-  $ZodStringFormat.init(inst, def);
-  _ZodString.init(inst, def);
+var ZodStringFormat = /* @__PURE__ */ $constructor("ZodStringFormat", (inst, def2) => {
+  $ZodStringFormat.init(inst, def2);
+  _ZodString.init(inst, def2);
 });
-var ZodEmail = /* @__PURE__ */ $constructor("ZodEmail", (inst, def) => {
-  $ZodEmail.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodEmail = /* @__PURE__ */ $constructor("ZodEmail", (inst, def2) => {
+  $ZodEmail.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function email2(params) {
   return _email(ZodEmail, params);
 }
 __name(email2, "email");
-var ZodGUID = /* @__PURE__ */ $constructor("ZodGUID", (inst, def) => {
-  $ZodGUID.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodGUID = /* @__PURE__ */ $constructor("ZodGUID", (inst, def2) => {
+  $ZodGUID.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function guid2(params) {
   return _guid(ZodGUID, params);
 }
 __name(guid2, "guid");
-var ZodUUID = /* @__PURE__ */ $constructor("ZodUUID", (inst, def) => {
-  $ZodUUID.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodUUID = /* @__PURE__ */ $constructor("ZodUUID", (inst, def2) => {
+  $ZodUUID.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function uuid2(params) {
   return _uuid(ZodUUID, params);
@@ -23946,9 +27000,9 @@ function uuidv7(params) {
   return _uuidv7(ZodUUID, params);
 }
 __name(uuidv7, "uuidv7");
-var ZodURL = /* @__PURE__ */ $constructor("ZodURL", (inst, def) => {
-  $ZodURL.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodURL = /* @__PURE__ */ $constructor("ZodURL", (inst, def2) => {
+  $ZodURL.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function url(params) {
   return _url(ZodURL, params);
@@ -23962,137 +27016,137 @@ function httpUrl(params) {
   });
 }
 __name(httpUrl, "httpUrl");
-var ZodEmoji = /* @__PURE__ */ $constructor("ZodEmoji", (inst, def) => {
-  $ZodEmoji.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodEmoji = /* @__PURE__ */ $constructor("ZodEmoji", (inst, def2) => {
+  $ZodEmoji.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function emoji2(params) {
   return _emoji2(ZodEmoji, params);
 }
 __name(emoji2, "emoji");
-var ZodNanoID = /* @__PURE__ */ $constructor("ZodNanoID", (inst, def) => {
-  $ZodNanoID.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodNanoID = /* @__PURE__ */ $constructor("ZodNanoID", (inst, def2) => {
+  $ZodNanoID.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function nanoid2(params) {
   return _nanoid(ZodNanoID, params);
 }
 __name(nanoid2, "nanoid");
-var ZodCUID = /* @__PURE__ */ $constructor("ZodCUID", (inst, def) => {
-  $ZodCUID.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodCUID = /* @__PURE__ */ $constructor("ZodCUID", (inst, def2) => {
+  $ZodCUID.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function cuid3(params) {
   return _cuid(ZodCUID, params);
 }
 __name(cuid3, "cuid");
-var ZodCUID2 = /* @__PURE__ */ $constructor("ZodCUID2", (inst, def) => {
-  $ZodCUID2.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodCUID2 = /* @__PURE__ */ $constructor("ZodCUID2", (inst, def2) => {
+  $ZodCUID2.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function cuid22(params) {
   return _cuid2(ZodCUID2, params);
 }
 __name(cuid22, "cuid2");
-var ZodULID = /* @__PURE__ */ $constructor("ZodULID", (inst, def) => {
-  $ZodULID.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodULID = /* @__PURE__ */ $constructor("ZodULID", (inst, def2) => {
+  $ZodULID.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function ulid2(params) {
   return _ulid(ZodULID, params);
 }
 __name(ulid2, "ulid");
-var ZodXID = /* @__PURE__ */ $constructor("ZodXID", (inst, def) => {
-  $ZodXID.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodXID = /* @__PURE__ */ $constructor("ZodXID", (inst, def2) => {
+  $ZodXID.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function xid2(params) {
   return _xid(ZodXID, params);
 }
 __name(xid2, "xid");
-var ZodKSUID = /* @__PURE__ */ $constructor("ZodKSUID", (inst, def) => {
-  $ZodKSUID.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodKSUID = /* @__PURE__ */ $constructor("ZodKSUID", (inst, def2) => {
+  $ZodKSUID.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function ksuid2(params) {
   return _ksuid(ZodKSUID, params);
 }
 __name(ksuid2, "ksuid");
-var ZodIPv4 = /* @__PURE__ */ $constructor("ZodIPv4", (inst, def) => {
-  $ZodIPv4.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodIPv4 = /* @__PURE__ */ $constructor("ZodIPv4", (inst, def2) => {
+  $ZodIPv4.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function ipv42(params) {
   return _ipv4(ZodIPv4, params);
 }
 __name(ipv42, "ipv4");
-var ZodMAC = /* @__PURE__ */ $constructor("ZodMAC", (inst, def) => {
-  $ZodMAC.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodMAC = /* @__PURE__ */ $constructor("ZodMAC", (inst, def2) => {
+  $ZodMAC.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function mac2(params) {
   return _mac(ZodMAC, params);
 }
 __name(mac2, "mac");
-var ZodIPv6 = /* @__PURE__ */ $constructor("ZodIPv6", (inst, def) => {
-  $ZodIPv6.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodIPv6 = /* @__PURE__ */ $constructor("ZodIPv6", (inst, def2) => {
+  $ZodIPv6.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function ipv62(params) {
   return _ipv6(ZodIPv6, params);
 }
 __name(ipv62, "ipv6");
-var ZodCIDRv4 = /* @__PURE__ */ $constructor("ZodCIDRv4", (inst, def) => {
-  $ZodCIDRv4.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodCIDRv4 = /* @__PURE__ */ $constructor("ZodCIDRv4", (inst, def2) => {
+  $ZodCIDRv4.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function cidrv42(params) {
   return _cidrv4(ZodCIDRv4, params);
 }
 __name(cidrv42, "cidrv4");
-var ZodCIDRv6 = /* @__PURE__ */ $constructor("ZodCIDRv6", (inst, def) => {
-  $ZodCIDRv6.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodCIDRv6 = /* @__PURE__ */ $constructor("ZodCIDRv6", (inst, def2) => {
+  $ZodCIDRv6.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function cidrv62(params) {
   return _cidrv6(ZodCIDRv6, params);
 }
 __name(cidrv62, "cidrv6");
-var ZodBase64 = /* @__PURE__ */ $constructor("ZodBase64", (inst, def) => {
-  $ZodBase64.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodBase64 = /* @__PURE__ */ $constructor("ZodBase64", (inst, def2) => {
+  $ZodBase64.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function base642(params) {
   return _base64(ZodBase64, params);
 }
 __name(base642, "base64");
-var ZodBase64URL = /* @__PURE__ */ $constructor("ZodBase64URL", (inst, def) => {
-  $ZodBase64URL.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodBase64URL = /* @__PURE__ */ $constructor("ZodBase64URL", (inst, def2) => {
+  $ZodBase64URL.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function base64url3(params) {
   return _base64url(ZodBase64URL, params);
 }
 __name(base64url3, "base64url");
-var ZodE164 = /* @__PURE__ */ $constructor("ZodE164", (inst, def) => {
-  $ZodE164.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodE164 = /* @__PURE__ */ $constructor("ZodE164", (inst, def2) => {
+  $ZodE164.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function e1642(params) {
   return _e164(ZodE164, params);
 }
 __name(e1642, "e164");
-var ZodJWT = /* @__PURE__ */ $constructor("ZodJWT", (inst, def) => {
-  $ZodJWT.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodJWT = /* @__PURE__ */ $constructor("ZodJWT", (inst, def2) => {
+  $ZodJWT.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function jwt(params) {
   return _jwt(ZodJWT, params);
 }
 __name(jwt, "jwt");
-var ZodCustomStringFormat = /* @__PURE__ */ $constructor("ZodCustomStringFormat", (inst, def) => {
-  $ZodCustomStringFormat.init(inst, def);
-  ZodStringFormat.init(inst, def);
+var ZodCustomStringFormat = /* @__PURE__ */ $constructor("ZodCustomStringFormat", (inst, def2) => {
+  $ZodCustomStringFormat.init(inst, def2);
+  ZodStringFormat.init(inst, def2);
 });
 function stringFormat(format, fnOrRegex, _params = {}) {
   return _stringFormat(ZodCustomStringFormat, format, fnOrRegex, _params);
@@ -24115,10 +27169,10 @@ function hash(alg, params) {
   return _stringFormat(ZodCustomStringFormat, format, regex, params);
 }
 __name(hash, "hash");
-var ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def) => {
-  $ZodNumber.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => numberProcessor(inst, ctx, json2, params);
+var ZodNumber = /* @__PURE__ */ $constructor("ZodNumber", (inst, def2) => {
+  $ZodNumber.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => numberProcessor(inst, ctx, json3, params);
   _installLazyMethods(inst, "ZodNumber", {
     gt(value, params) {
       return this.check(_gt(value, params));
@@ -24177,9 +27231,9 @@ function number2(params) {
   return _number(ZodNumber, params);
 }
 __name(number2, "number");
-var ZodNumberFormat = /* @__PURE__ */ $constructor("ZodNumberFormat", (inst, def) => {
-  $ZodNumberFormat.init(inst, def);
-  ZodNumber.init(inst, def);
+var ZodNumberFormat = /* @__PURE__ */ $constructor("ZodNumberFormat", (inst, def2) => {
+  $ZodNumberFormat.init(inst, def2);
+  ZodNumber.init(inst, def2);
 });
 function int(params) {
   return _int(ZodNumberFormat, params);
@@ -24201,19 +27255,19 @@ function uint32(params) {
   return _uint32(ZodNumberFormat, params);
 }
 __name(uint32, "uint32");
-var ZodBoolean = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def) => {
-  $ZodBoolean.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => booleanProcessor(inst, ctx, json2, params);
+var ZodBoolean = /* @__PURE__ */ $constructor("ZodBoolean", (inst, def2) => {
+  $ZodBoolean.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => booleanProcessor(inst, ctx, json3, params);
 });
 function boolean2(params) {
   return _boolean(ZodBoolean, params);
 }
 __name(boolean2, "boolean");
-var ZodBigInt = /* @__PURE__ */ $constructor("ZodBigInt", (inst, def) => {
-  $ZodBigInt.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => bigintProcessor(inst, ctx, json2, params);
+var ZodBigInt = /* @__PURE__ */ $constructor("ZodBigInt", (inst, def2) => {
+  $ZodBigInt.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => bigintProcessor(inst, ctx, json3, params);
   inst.gte = (value, params) => inst.check(_gte(value, params));
   inst.min = (value, params) => inst.check(_gte(value, params));
   inst.gt = (value, params) => inst.check(_gt(value, params));
@@ -24236,9 +27290,9 @@ function bigint2(params) {
   return _bigint(ZodBigInt, params);
 }
 __name(bigint2, "bigint");
-var ZodBigIntFormat = /* @__PURE__ */ $constructor("ZodBigIntFormat", (inst, def) => {
-  $ZodBigIntFormat.init(inst, def);
-  ZodBigInt.init(inst, def);
+var ZodBigIntFormat = /* @__PURE__ */ $constructor("ZodBigIntFormat", (inst, def2) => {
+  $ZodBigIntFormat.init(inst, def2);
+  ZodBigInt.init(inst, def2);
 });
 function int64(params) {
   return _int64(ZodBigIntFormat, params);
@@ -24248,73 +27302,73 @@ function uint64(params) {
   return _uint64(ZodBigIntFormat, params);
 }
 __name(uint64, "uint64");
-var ZodSymbol = /* @__PURE__ */ $constructor("ZodSymbol", (inst, def) => {
-  $ZodSymbol.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => symbolProcessor(inst, ctx, json2, params);
+var ZodSymbol = /* @__PURE__ */ $constructor("ZodSymbol", (inst, def2) => {
+  $ZodSymbol.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => symbolProcessor(inst, ctx, json3, params);
 });
 function symbol(params) {
   return _symbol(ZodSymbol, params);
 }
 __name(symbol, "symbol");
-var ZodUndefined = /* @__PURE__ */ $constructor("ZodUndefined", (inst, def) => {
-  $ZodUndefined.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => undefinedProcessor(inst, ctx, json2, params);
+var ZodUndefined = /* @__PURE__ */ $constructor("ZodUndefined", (inst, def2) => {
+  $ZodUndefined.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => undefinedProcessor(inst, ctx, json3, params);
 });
 function _undefined3(params) {
   return _undefined2(ZodUndefined, params);
 }
 __name(_undefined3, "_undefined");
-var ZodNull = /* @__PURE__ */ $constructor("ZodNull", (inst, def) => {
-  $ZodNull.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => nullProcessor(inst, ctx, json2, params);
+var ZodNull = /* @__PURE__ */ $constructor("ZodNull", (inst, def2) => {
+  $ZodNull.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => nullProcessor(inst, ctx, json3, params);
 });
 function _null3(params) {
   return _null2(ZodNull, params);
 }
 __name(_null3, "_null");
-var ZodAny = /* @__PURE__ */ $constructor("ZodAny", (inst, def) => {
-  $ZodAny.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => anyProcessor(inst, ctx, json2, params);
+var ZodAny = /* @__PURE__ */ $constructor("ZodAny", (inst, def2) => {
+  $ZodAny.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => anyProcessor(inst, ctx, json3, params);
 });
 function any() {
   return _any(ZodAny);
 }
 __name(any, "any");
-var ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def) => {
-  $ZodUnknown.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => unknownProcessor(inst, ctx, json2, params);
+var ZodUnknown = /* @__PURE__ */ $constructor("ZodUnknown", (inst, def2) => {
+  $ZodUnknown.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => unknownProcessor(inst, ctx, json3, params);
 });
 function unknown() {
   return _unknown(ZodUnknown);
 }
 __name(unknown, "unknown");
-var ZodNever = /* @__PURE__ */ $constructor("ZodNever", (inst, def) => {
-  $ZodNever.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => neverProcessor(inst, ctx, json2, params);
+var ZodNever = /* @__PURE__ */ $constructor("ZodNever", (inst, def2) => {
+  $ZodNever.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => neverProcessor(inst, ctx, json3, params);
 });
 function never(params) {
   return _never(ZodNever, params);
 }
 __name(never, "never");
-var ZodVoid = /* @__PURE__ */ $constructor("ZodVoid", (inst, def) => {
-  $ZodVoid.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => voidProcessor(inst, ctx, json2, params);
+var ZodVoid = /* @__PURE__ */ $constructor("ZodVoid", (inst, def2) => {
+  $ZodVoid.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => voidProcessor(inst, ctx, json3, params);
 });
 function _void2(params) {
   return _void(ZodVoid, params);
 }
 __name(_void2, "_void");
-var ZodDate = /* @__PURE__ */ $constructor("ZodDate", (inst, def) => {
-  $ZodDate.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => dateProcessor(inst, ctx, json2, params);
+var ZodDate = /* @__PURE__ */ $constructor("ZodDate", (inst, def2) => {
+  $ZodDate.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => dateProcessor(inst, ctx, json3, params);
   inst.min = (value, params) => inst.check(_gte(value, params));
   inst.max = (value, params) => inst.check(_lte(value, params));
   const c = inst._zod.bag;
@@ -24325,11 +27379,11 @@ function date3(params) {
   return _date(ZodDate, params);
 }
 __name(date3, "date");
-var ZodArray = /* @__PURE__ */ $constructor("ZodArray", (inst, def) => {
-  $ZodArray.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => arrayProcessor(inst, ctx, json2, params);
-  inst.element = def.element;
+var ZodArray = /* @__PURE__ */ $constructor("ZodArray", (inst, def2) => {
+  $ZodArray.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => arrayProcessor(inst, ctx, json3, params);
+  inst.element = def2.element;
   _installLazyMethods(inst, "ZodArray", {
     min(n, params) {
       return this.check(_minLength(n, params));
@@ -24357,12 +27411,12 @@ function keyof(schema) {
   return _enum2(Object.keys(shape));
 }
 __name(keyof, "keyof");
-var ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
-  $ZodObjectJIT.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => objectProcessor(inst, ctx, json2, params);
+var ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def2) => {
+  $ZodObjectJIT.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => objectProcessor(inst, ctx, json3, params);
   util_exports.defineLazy(inst, "shape", () => {
-    return def.shape;
+    return def2.shape;
   });
   _installLazyMethods(inst, "ZodObject", {
     keyof() {
@@ -24407,12 +27461,12 @@ var ZodObject = /* @__PURE__ */ $constructor("ZodObject", (inst, def) => {
   });
 });
 function object(shape, params) {
-  const def = {
+  const def2 = {
     type: "object",
     shape: shape ?? {},
     ...util_exports.normalizeParams(params)
   };
-  return new ZodObject(def);
+  return new ZodObject(def2);
 }
 __name(object, "object");
 function strictObject(shape, params) {
@@ -24433,52 +27487,52 @@ function looseObject(shape, params) {
   });
 }
 __name(looseObject, "looseObject");
-var ZodUnion = /* @__PURE__ */ $constructor("ZodUnion", (inst, def) => {
-  $ZodUnion.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => unionProcessor(inst, ctx, json2, params);
-  inst.options = def.options;
+var ZodUnion = /* @__PURE__ */ $constructor("ZodUnion", (inst, def2) => {
+  $ZodUnion.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => unionProcessor(inst, ctx, json3, params);
+  inst.options = def2.options;
 });
-function union(options, params) {
+function union(options2, params) {
   return new ZodUnion({
     type: "union",
-    options,
+    options: options2,
     ...util_exports.normalizeParams(params)
   });
 }
 __name(union, "union");
-var ZodXor = /* @__PURE__ */ $constructor("ZodXor", (inst, def) => {
-  ZodUnion.init(inst, def);
-  $ZodXor.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => unionProcessor(inst, ctx, json2, params);
-  inst.options = def.options;
+var ZodXor = /* @__PURE__ */ $constructor("ZodXor", (inst, def2) => {
+  ZodUnion.init(inst, def2);
+  $ZodXor.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => unionProcessor(inst, ctx, json3, params);
+  inst.options = def2.options;
 });
-function xor(options, params) {
+function xor(options2, params) {
   return new ZodXor({
     type: "union",
-    options,
+    options: options2,
     inclusive: false,
     ...util_exports.normalizeParams(params)
   });
 }
 __name(xor, "xor");
-var ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("ZodDiscriminatedUnion", (inst, def) => {
-  ZodUnion.init(inst, def);
-  $ZodDiscriminatedUnion.init(inst, def);
+var ZodDiscriminatedUnion = /* @__PURE__ */ $constructor("ZodDiscriminatedUnion", (inst, def2) => {
+  ZodUnion.init(inst, def2);
+  $ZodDiscriminatedUnion.init(inst, def2);
 });
-function discriminatedUnion(discriminator, options, params) {
+function discriminatedUnion(discriminator, options2, params) {
   return new ZodDiscriminatedUnion({
     type: "union",
-    options,
+    options: options2,
     discriminator,
     ...util_exports.normalizeParams(params)
   });
 }
 __name(discriminatedUnion, "discriminatedUnion");
-var ZodIntersection = /* @__PURE__ */ $constructor("ZodIntersection", (inst, def) => {
-  $ZodIntersection.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => intersectionProcessor(inst, ctx, json2, params);
+var ZodIntersection = /* @__PURE__ */ $constructor("ZodIntersection", (inst, def2) => {
+  $ZodIntersection.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => intersectionProcessor(inst, ctx, json3, params);
 });
 function intersection(left, right) {
   return new ZodIntersection({
@@ -24488,10 +27542,10 @@ function intersection(left, right) {
   });
 }
 __name(intersection, "intersection");
-var ZodTuple = /* @__PURE__ */ $constructor("ZodTuple", (inst, def) => {
-  $ZodTuple.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => tupleProcessor(inst, ctx, json2, params);
+var ZodTuple = /* @__PURE__ */ $constructor("ZodTuple", (inst, def2) => {
+  $ZodTuple.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => tupleProcessor(inst, ctx, json3, params);
   inst.rest = (rest) => inst.clone({
     ...inst._zod.def,
     rest
@@ -24509,12 +27563,12 @@ function tuple(items, _paramsOrRest, _params) {
   });
 }
 __name(tuple, "tuple");
-var ZodRecord = /* @__PURE__ */ $constructor("ZodRecord", (inst, def) => {
-  $ZodRecord.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => recordProcessor(inst, ctx, json2, params);
-  inst.keyType = def.keyType;
-  inst.valueType = def.valueType;
+var ZodRecord = /* @__PURE__ */ $constructor("ZodRecord", (inst, def2) => {
+  $ZodRecord.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => recordProcessor(inst, ctx, json3, params);
+  inst.keyType = def2.keyType;
+  inst.valueType = def2.valueType;
 });
 function record(keyType, valueType, params) {
   if (!valueType || !valueType._zod) {
@@ -24554,12 +27608,12 @@ function looseRecord(keyType, valueType, params) {
   });
 }
 __name(looseRecord, "looseRecord");
-var ZodMap = /* @__PURE__ */ $constructor("ZodMap", (inst, def) => {
-  $ZodMap.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => mapProcessor(inst, ctx, json2, params);
-  inst.keyType = def.keyType;
-  inst.valueType = def.valueType;
+var ZodMap = /* @__PURE__ */ $constructor("ZodMap", (inst, def2) => {
+  $ZodMap.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => mapProcessor(inst, ctx, json3, params);
+  inst.keyType = def2.keyType;
+  inst.valueType = def2.valueType;
   inst.min = (...args) => inst.check(_minSize(...args));
   inst.nonempty = (params) => inst.check(_minSize(1, params));
   inst.max = (...args) => inst.check(_maxSize(...args));
@@ -24574,10 +27628,10 @@ function map(keyType, valueType, params) {
   });
 }
 __name(map, "map");
-var ZodSet = /* @__PURE__ */ $constructor("ZodSet", (inst, def) => {
-  $ZodSet.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => setProcessor(inst, ctx, json2, params);
+var ZodSet = /* @__PURE__ */ $constructor("ZodSet", (inst, def2) => {
+  $ZodSet.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => setProcessor(inst, ctx, json3, params);
   inst.min = (...args) => inst.check(_minSize(...args));
   inst.nonempty = (params) => inst.check(_minSize(1, params));
   inst.max = (...args) => inst.check(_maxSize(...args));
@@ -24591,30 +27645,30 @@ function set(valueType, params) {
   });
 }
 __name(set, "set");
-var ZodEnum = /* @__PURE__ */ $constructor("ZodEnum", (inst, def) => {
-  $ZodEnum.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => enumProcessor(inst, ctx, json2, params);
-  inst.enum = def.entries;
-  inst.options = Object.values(def.entries);
-  const keys = new Set(Object.keys(def.entries));
+var ZodEnum = /* @__PURE__ */ $constructor("ZodEnum", (inst, def2) => {
+  $ZodEnum.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => enumProcessor(inst, ctx, json3, params);
+  inst.enum = def2.entries;
+  inst.options = Object.values(def2.entries);
+  const keys = new Set(Object.keys(def2.entries));
   inst.extract = (values, params) => {
     const newEntries = {};
     for (const value of values) {
       if (keys.has(value)) {
-        newEntries[value] = def.entries[value];
+        newEntries[value] = def2.entries[value];
       } else
         throw new Error(`Key ${value} not found in enum`);
     }
     return new ZodEnum({
-      ...def,
+      ...def2,
       checks: [],
       ...util_exports.normalizeParams(params),
       entries: newEntries
     });
   };
   inst.exclude = (values, params) => {
-    const newEntries = { ...def.entries };
+    const newEntries = { ...def2.entries };
     for (const value of values) {
       if (keys.has(value)) {
         delete newEntries[value];
@@ -24622,7 +27676,7 @@ var ZodEnum = /* @__PURE__ */ $constructor("ZodEnum", (inst, def) => {
         throw new Error(`Key ${value} not found in enum`);
     }
     return new ZodEnum({
-      ...def,
+      ...def2,
       checks: [],
       ...util_exports.normalizeParams(params),
       entries: newEntries
@@ -24646,17 +27700,17 @@ function nativeEnum(entries, params) {
   });
 }
 __name(nativeEnum, "nativeEnum");
-var ZodLiteral = /* @__PURE__ */ $constructor("ZodLiteral", (inst, def) => {
-  $ZodLiteral.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => literalProcessor(inst, ctx, json2, params);
-  inst.values = new Set(def.values);
+var ZodLiteral = /* @__PURE__ */ $constructor("ZodLiteral", (inst, def2) => {
+  $ZodLiteral.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => literalProcessor(inst, ctx, json3, params);
+  inst.values = new Set(def2.values);
   Object.defineProperty(inst, "value", {
     get() {
-      if (def.values.length > 1) {
+      if (def2.values.length > 1) {
         throw new Error("This schema contains multiple valid literal values. Use `.values` instead.");
       }
-      return def.values[0];
+      return def2.values[0];
     }
   });
 });
@@ -24668,10 +27722,10 @@ function literal(value, params) {
   });
 }
 __name(literal, "literal");
-var ZodFile = /* @__PURE__ */ $constructor("ZodFile", (inst, def) => {
-  $ZodFile.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => fileProcessor(inst, ctx, json2, params);
+var ZodFile = /* @__PURE__ */ $constructor("ZodFile", (inst, def2) => {
+  $ZodFile.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => fileProcessor(inst, ctx, json3, params);
   inst.min = (size, params) => inst.check(_minSize(size, params));
   inst.max = (size, params) => inst.check(_maxSize(size, params));
   inst.mime = (types, params) => inst.check(_mime(Array.isArray(types) ? types : [types], params));
@@ -24680,17 +27734,17 @@ function file(params) {
   return _file(ZodFile, params);
 }
 __name(file, "file");
-var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def) => {
-  $ZodTransform.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => transformProcessor(inst, ctx, json2, params);
+var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def2) => {
+  $ZodTransform.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => transformProcessor(inst, ctx, json3, params);
   inst._zod.parse = (payload, _ctx) => {
     if (_ctx.direction === "backward") {
       throw new $ZodEncodeError(inst.constructor.name);
     }
     payload.addIssue = (issue2) => {
       if (typeof issue2 === "string") {
-        payload.issues.push(util_exports.issue(issue2, payload.value, def));
+        payload.issues.push(util_exports.issue(issue2, payload.value, def2));
       } else {
         const _issue = issue2;
         if (_issue.fatal)
@@ -24701,7 +27755,7 @@ var ZodTransform = /* @__PURE__ */ $constructor("ZodTransform", (inst, def) => {
         payload.issues.push(util_exports.issue(_issue));
       }
     };
-    const output = def.transform(payload.value, payload);
+    const output = def2.transform(payload.value, payload);
     if (output instanceof Promise) {
       return output.then((output2) => {
         payload.value = output2;
@@ -24721,10 +27775,10 @@ function transform(fn) {
   });
 }
 __name(transform, "transform");
-var ZodOptional = /* @__PURE__ */ $constructor("ZodOptional", (inst, def) => {
-  $ZodOptional.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => optionalProcessor(inst, ctx, json2, params);
+var ZodOptional = /* @__PURE__ */ $constructor("ZodOptional", (inst, def2) => {
+  $ZodOptional.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => optionalProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function optional(innerType) {
@@ -24734,10 +27788,10 @@ function optional(innerType) {
   });
 }
 __name(optional, "optional");
-var ZodExactOptional = /* @__PURE__ */ $constructor("ZodExactOptional", (inst, def) => {
-  $ZodExactOptional.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => optionalProcessor(inst, ctx, json2, params);
+var ZodExactOptional = /* @__PURE__ */ $constructor("ZodExactOptional", (inst, def2) => {
+  $ZodExactOptional.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => optionalProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function exactOptional(innerType) {
@@ -24747,10 +27801,10 @@ function exactOptional(innerType) {
   });
 }
 __name(exactOptional, "exactOptional");
-var ZodNullable = /* @__PURE__ */ $constructor("ZodNullable", (inst, def) => {
-  $ZodNullable.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => nullableProcessor(inst, ctx, json2, params);
+var ZodNullable = /* @__PURE__ */ $constructor("ZodNullable", (inst, def2) => {
+  $ZodNullable.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => nullableProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function nullable(innerType) {
@@ -24764,10 +27818,10 @@ function nullish2(innerType) {
   return optional(nullable(innerType));
 }
 __name(nullish2, "nullish");
-var ZodDefault = /* @__PURE__ */ $constructor("ZodDefault", (inst, def) => {
-  $ZodDefault.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => defaultProcessor(inst, ctx, json2, params);
+var ZodDefault = /* @__PURE__ */ $constructor("ZodDefault", (inst, def2) => {
+  $ZodDefault.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => defaultProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
   inst.removeDefault = inst.unwrap;
 });
@@ -24781,10 +27835,10 @@ function _default2(innerType, defaultValue) {
   });
 }
 __name(_default2, "_default");
-var ZodPrefault = /* @__PURE__ */ $constructor("ZodPrefault", (inst, def) => {
-  $ZodPrefault.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => prefaultProcessor(inst, ctx, json2, params);
+var ZodPrefault = /* @__PURE__ */ $constructor("ZodPrefault", (inst, def2) => {
+  $ZodPrefault.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => prefaultProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function prefault(innerType, defaultValue) {
@@ -24797,10 +27851,10 @@ function prefault(innerType, defaultValue) {
   });
 }
 __name(prefault, "prefault");
-var ZodNonOptional = /* @__PURE__ */ $constructor("ZodNonOptional", (inst, def) => {
-  $ZodNonOptional.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => nonoptionalProcessor(inst, ctx, json2, params);
+var ZodNonOptional = /* @__PURE__ */ $constructor("ZodNonOptional", (inst, def2) => {
+  $ZodNonOptional.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => nonoptionalProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function nonoptional(innerType, params) {
@@ -24811,10 +27865,10 @@ function nonoptional(innerType, params) {
   });
 }
 __name(nonoptional, "nonoptional");
-var ZodSuccess = /* @__PURE__ */ $constructor("ZodSuccess", (inst, def) => {
-  $ZodSuccess.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => successProcessor(inst, ctx, json2, params);
+var ZodSuccess = /* @__PURE__ */ $constructor("ZodSuccess", (inst, def2) => {
+  $ZodSuccess.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => successProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function success(innerType) {
@@ -24824,10 +27878,10 @@ function success(innerType) {
   });
 }
 __name(success, "success");
-var ZodCatch = /* @__PURE__ */ $constructor("ZodCatch", (inst, def) => {
-  $ZodCatch.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => catchProcessor(inst, ctx, json2, params);
+var ZodCatch = /* @__PURE__ */ $constructor("ZodCatch", (inst, def2) => {
+  $ZodCatch.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => catchProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
   inst.removeCatch = inst.unwrap;
 });
@@ -24839,21 +27893,21 @@ function _catch2(innerType, catchValue) {
   });
 }
 __name(_catch2, "_catch");
-var ZodNaN = /* @__PURE__ */ $constructor("ZodNaN", (inst, def) => {
-  $ZodNaN.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => nanProcessor(inst, ctx, json2, params);
+var ZodNaN = /* @__PURE__ */ $constructor("ZodNaN", (inst, def2) => {
+  $ZodNaN.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => nanProcessor(inst, ctx, json3, params);
 });
 function nan(params) {
   return _nan(ZodNaN, params);
 }
 __name(nan, "nan");
-var ZodPipe = /* @__PURE__ */ $constructor("ZodPipe", (inst, def) => {
-  $ZodPipe.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => pipeProcessor(inst, ctx, json2, params);
-  inst.in = def.in;
-  inst.out = def.out;
+var ZodPipe = /* @__PURE__ */ $constructor("ZodPipe", (inst, def2) => {
+  $ZodPipe.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => pipeProcessor(inst, ctx, json3, params);
+  inst.in = def2.in;
+  inst.out = def2.out;
 });
 function pipe(in_, out) {
   return new ZodPipe({
@@ -24864,9 +27918,9 @@ function pipe(in_, out) {
   });
 }
 __name(pipe, "pipe");
-var ZodCodec = /* @__PURE__ */ $constructor("ZodCodec", (inst, def) => {
-  ZodPipe.init(inst, def);
-  $ZodCodec.init(inst, def);
+var ZodCodec = /* @__PURE__ */ $constructor("ZodCodec", (inst, def2) => {
+  ZodPipe.init(inst, def2);
+  $ZodCodec.init(inst, def2);
 });
 function codec(in_, out, params) {
   return new ZodCodec({
@@ -24879,24 +27933,24 @@ function codec(in_, out, params) {
 }
 __name(codec, "codec");
 function invertCodec(codec2) {
-  const def = codec2._zod.def;
+  const def2 = codec2._zod.def;
   return new ZodCodec({
     type: "pipe",
-    in: def.out,
-    out: def.in,
-    transform: def.reverseTransform,
-    reverseTransform: def.transform
+    in: def2.out,
+    out: def2.in,
+    transform: def2.reverseTransform,
+    reverseTransform: def2.transform
   });
 }
 __name(invertCodec, "invertCodec");
-var ZodPreprocess = /* @__PURE__ */ $constructor("ZodPreprocess", (inst, def) => {
-  ZodPipe.init(inst, def);
-  $ZodPreprocess.init(inst, def);
+var ZodPreprocess = /* @__PURE__ */ $constructor("ZodPreprocess", (inst, def2) => {
+  ZodPipe.init(inst, def2);
+  $ZodPreprocess.init(inst, def2);
 });
-var ZodReadonly = /* @__PURE__ */ $constructor("ZodReadonly", (inst, def) => {
-  $ZodReadonly.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => readonlyProcessor(inst, ctx, json2, params);
+var ZodReadonly = /* @__PURE__ */ $constructor("ZodReadonly", (inst, def2) => {
+  $ZodReadonly.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => readonlyProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function readonly(innerType) {
@@ -24906,10 +27960,10 @@ function readonly(innerType) {
   });
 }
 __name(readonly, "readonly");
-var ZodTemplateLiteral = /* @__PURE__ */ $constructor("ZodTemplateLiteral", (inst, def) => {
-  $ZodTemplateLiteral.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => templateLiteralProcessor(inst, ctx, json2, params);
+var ZodTemplateLiteral = /* @__PURE__ */ $constructor("ZodTemplateLiteral", (inst, def2) => {
+  $ZodTemplateLiteral.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => templateLiteralProcessor(inst, ctx, json3, params);
 });
 function templateLiteral(parts, params) {
   return new ZodTemplateLiteral({
@@ -24919,10 +27973,10 @@ function templateLiteral(parts, params) {
   });
 }
 __name(templateLiteral, "templateLiteral");
-var ZodLazy = /* @__PURE__ */ $constructor("ZodLazy", (inst, def) => {
-  $ZodLazy.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => lazyProcessor(inst, ctx, json2, params);
+var ZodLazy = /* @__PURE__ */ $constructor("ZodLazy", (inst, def2) => {
+  $ZodLazy.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => lazyProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.getter();
 });
 function lazy(getter) {
@@ -24932,10 +27986,10 @@ function lazy(getter) {
   });
 }
 __name(lazy, "lazy");
-var ZodPromise = /* @__PURE__ */ $constructor("ZodPromise", (inst, def) => {
-  $ZodPromise.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => promiseProcessor(inst, ctx, json2, params);
+var ZodPromise = /* @__PURE__ */ $constructor("ZodPromise", (inst, def2) => {
+  $ZodPromise.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => promiseProcessor(inst, ctx, json3, params);
   inst.unwrap = () => inst._zod.def.innerType;
 });
 function promise(innerType) {
@@ -24945,10 +27999,10 @@ function promise(innerType) {
   });
 }
 __name(promise, "promise");
-var ZodFunction = /* @__PURE__ */ $constructor("ZodFunction", (inst, def) => {
-  $ZodFunction.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => functionProcessor(inst, ctx, json2, params);
+var ZodFunction = /* @__PURE__ */ $constructor("ZodFunction", (inst, def2) => {
+  $ZodFunction.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => functionProcessor(inst, ctx, json3, params);
 });
 function _function(params) {
   return new ZodFunction({
@@ -24958,10 +28012,10 @@ function _function(params) {
   });
 }
 __name(_function, "_function");
-var ZodCustom = /* @__PURE__ */ $constructor("ZodCustom", (inst, def) => {
-  $ZodCustom.init(inst, def);
-  ZodType.init(inst, def);
-  inst._zod.processJSONSchema = (ctx, json2, params) => customProcessor(inst, ctx, json2, params);
+var ZodCustom = /* @__PURE__ */ $constructor("ZodCustom", (inst, def2) => {
+  $ZodCustom.init(inst, def2);
+  ZodType.init(inst, def2);
+  inst._zod.processJSONSchema = (ctx, json3, params) => customProcessor(inst, ctx, json3, params);
 });
 function check(fn) {
   const ch = new $ZodCheck({
@@ -25462,13 +28516,13 @@ function convertSchema(schema, ctx) {
   let baseSchema = convertBaseSchema(schema, ctx);
   const hasExplicitType = schema.type || schema.enum !== void 0 || schema.const !== void 0;
   if (schema.anyOf && Array.isArray(schema.anyOf)) {
-    const options = schema.anyOf.map((s2) => convertSchema(s2, ctx));
-    const anyOfUnion = z.union(options);
+    const options2 = schema.anyOf.map((s2) => convertSchema(s2, ctx));
+    const anyOfUnion = z.union(options2);
     baseSchema = hasExplicitType ? z.intersection(baseSchema, anyOfUnion) : anyOfUnion;
   }
   if (schema.oneOf && Array.isArray(schema.oneOf)) {
-    const options = schema.oneOf.map((s2) => convertSchema(s2, ctx));
-    const oneOfUnion = z.xor(options);
+    const options2 = schema.oneOf.map((s2) => convertSchema(s2, ctx));
+    const oneOfUnion = z.xor(options2);
     baseSchema = hasExplicitType ? z.intersection(baseSchema, oneOfUnion) : oneOfUnion;
   }
   if (schema.allOf && Array.isArray(schema.allOf)) {
@@ -25600,16 +28654,16 @@ var parseSections = /* @__PURE__ */ __name((content) => {
       continue;
     }
     if (inFence) continue;
-    const heading = line.match(/^(#{1,6})\s+(.+?)\s*$/);
-    if (!heading) continue;
-    const title = heading[2];
+    const heading2 = line.match(/^(#{1,6})\s+(.+?)\s*$/);
+    if (!heading2) continue;
+    const title = heading2[2];
     const base = slugify2(title);
     const count = slugCounts.get(base) ?? 0;
     slugCounts.set(base, count + 1);
     sections.push({
       slug: count === 0 ? base : `${base}-${count + 1}`,
       title,
-      level: heading[1].length,
+      level: heading2[1].length,
       headingLine: i,
       endLine: lines.length
       // fixed up below
@@ -25633,10 +28687,10 @@ var extractSection = /* @__PURE__ */ __name((content, section) => {
 }, "extractSection");
 var replaceSection = /* @__PURE__ */ __name((content, section, newBody, newTitle) => {
   const lines = content.split("\n");
-  const heading = newTitle !== void 0 ? `${"#".repeat(section.level)} ${newTitle}` : lines[section.headingLine];
+  const heading2 = newTitle !== void 0 ? `${"#".repeat(section.level)} ${newTitle}` : lines[section.headingLine];
   const bodyLines = newBody === "" ? [] : ["", ...newBody.split("\n")];
   const rest = lines.slice(section.endLine);
-  const replaced = [...lines.slice(0, section.headingLine), heading, ...bodyLines];
+  const replaced = [...lines.slice(0, section.headingLine), heading2, ...bodyLines];
   if (rest.length > 0 && replaced[replaced.length - 1].trim() !== "") {
     replaced.push("");
   }
@@ -25913,6 +28967,7 @@ documentsRoute.get("/:id/history", async (c) => {
   const id = c.req.param("id");
   const limit = parseInt(c.req.query("limit") || "20");
   const cursor = c.req.query("cursor");
+  const accept = c.req.header("Accept") || "";
   const loaded = await loadDoc(c, id);
   if ("response" in loaded) return loaded.response;
   let query = `
@@ -25929,6 +28984,26 @@ documentsRoute.get("/:id/history", async (c) => {
   const result = await c.env.DB.prepare(query).bind(...params).all();
   const revisions = result.results.slice(0, limit);
   const hasMore = result.results.length > limit;
+  if (accept.includes("text/html")) {
+    let html2 = '<ul class="plain">\n';
+    for (const rev of revisions) {
+      html2 += `  <li>
+`;
+      html2 += `    <span>${new Date(rev.created_at).toLocaleString()}</span>
+`;
+      html2 += `    <span class="tag">${rev.author_type}${rev.api_key_name ? ": " + rev.api_key_name : ""}</span>
+`;
+      html2 += `    <span class="muted">${rev.content_bytes} bytes</span>
+`;
+      html2 += `  </li>
+`;
+    }
+    if (revisions.length === 0) {
+      html2 += '  <li class="muted">\u5C65\u6B74\u304C\u3042\u308A\u307E\u305B\u3093</li>\n';
+    }
+    html2 += "</ul>\n";
+    return c.html(html2);
+  }
   return c.json({
     data: revisions,
     next_cursor: hasMore ? String(revisions[revisions.length - 1].created_at) : null,
@@ -25951,7 +29026,16 @@ documentsRoute.get("/:id/history/:rev", async (c) => {
 documentsRoute.post("/", async (c) => {
   try {
     const auth = c.get("auth");
-    const body = await c.req.json();
+    const contentType = c.req.header("Content-Type") || "";
+    let body;
+    if (contentType.includes("application/json")) {
+      body = await c.req.json();
+    } else {
+      body = await c.req.parseBody();
+    }
+    if (body.content === void 0) {
+      body.content = "";
+    }
     const parsed = createDocSchema.parse(body);
     if (!isCollectionAllowed(auth, parsed.collection_id)) {
       return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
@@ -25979,6 +29063,10 @@ documentsRoute.post("/", async (c) => {
     ).run();
     await createRevision(c.env.DB, id, parsed.title, parsed.content, author, now);
     const linkWarnings = await syncDocumentLinks(c.env.DB, id, parsed.content);
+    const accept = c.req.header("Accept") || "";
+    if (accept.includes("text/html")) {
+      return c.html(`<script>window.location.href="/doc.html?id=${id}";<\/script>`);
+    }
     const doc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
     return c.json(linkWarnings.length > 0 ? { ...doc, link_warnings: linkWarnings } : doc, 201);
   } catch (error51) {
@@ -25993,7 +29081,13 @@ documentsRoute.put("/:id", async (c) => {
   const id = c.req.param("id");
   try {
     const auth = c.get("auth");
-    const body = await c.req.json();
+    const contentType = c.req.header("Content-Type") || "";
+    let body;
+    if (contentType.includes("application/json")) {
+      body = await c.req.json();
+    } else {
+      body = await c.req.parseBody();
+    }
     const parsed = updateDocSchema.parse(body);
     const existing = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
     if (!existing) {
@@ -26029,6 +29123,10 @@ documentsRoute.put("/:id", async (c) => {
     await createRevision(c.env.DB, id, doc.title, doc.content, authorOf(auth), now);
     const linkWarnings = parsed.content !== void 0 ? await syncDocumentLinks(c.env.DB, id, doc.content) : [];
     const updated = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
+    const accept = c.req.header("Accept") || "";
+    if (accept.includes("text/html")) {
+      return c.html('<script>alert("\u4FDD\u5B58\u3057\u307E\u3057\u305F"); window.location.reload();<\/script>');
+    }
     return c.json(linkWarnings.length > 0 ? { ...updated, link_warnings: linkWarnings } : updated);
   } catch (error51) {
     if (error51.name === "ZodError") {
@@ -26052,6 +29150,10 @@ documentsRoute.delete("/:id", async (c) => {
     c.env.DB.prepare("DELETE FROM document_links WHERE from_doc_id = ? OR to_doc_id = ?").bind(id, id),
     c.env.DB.prepare("DELETE FROM documents WHERE id = ?").bind(id)
   ]);
+  const accept = c.req.header("Accept") || "";
+  if (accept.includes("text/html")) {
+    return c.html('<script>window.location.href="/";<\/script>');
+  }
   return c.json({ success: true, id });
 });
 documentsRoute.get("/:id/links", async (c) => {
@@ -26165,7 +29267,13 @@ collectionsRoute.get("/:id/export", async (c) => {
 collectionsRoute.post("/", async (c) => {
   try {
     const auth = c.get("auth");
-    const body = await c.req.json();
+    const contentType = c.req.header("Content-Type") || "";
+    let body;
+    if (contentType.includes("application/json")) {
+      body = await c.req.json();
+    } else {
+      body = await c.req.parseBody();
+    }
     const parsed = createCollectionSchema.parse(body);
     if (auth.authorType === "ai" && auth.allowedCollections !== null) {
       return c.json({ error: { code: "FORBIDDEN", message: "This API key cannot create collections" } }, 403);
@@ -26192,6 +29300,10 @@ collectionsRoute.post("/", async (c) => {
       now,
       now
     ).run();
+    const accept = c.req.header("Accept") || "";
+    if (accept.includes("text/html")) {
+      return c.redirect("/collections/html");
+    }
     const collection = await c.env.DB.prepare("SELECT * FROM collections WHERE id = ?").bind(id).first();
     return c.json(collection, 201);
   } catch (error51) {
@@ -26293,78 +29405,2173 @@ searchRoute.get("/", async (c) => {
   try {
     const query = c.req.query("q");
     if (!query) {
-      return c.json({ error: { code: "MISSING_QUERY", message: 'Query parameter "q" is required' } }, 400);
+      return c.json({ error: { code: "INVALID_QUERY", message: "Query is required" } }, 400);
     }
     const scope = c.req.query("scope") || "";
-    const priority = c.req.query("priority") || "";
     const limit = parseInt(c.req.query("limit") || "10");
     let collectionId = null;
     if (scope.startsWith("collection:")) {
       collectionId = scope.substring("collection:".length);
     }
-    const escapedQuery = query.replace(/["\]]/g, "");
-    let sql = `
-      SELECT
-        d.id,
-        d.title,
-        d.content,
-        d.collection_id,
-        d.priority,
-        d.status
-      FROM documents_fts
-      JOIN documents d ON documents_fts.rowid = d.rowid
-      WHERE documents_fts MATCH ? AND d.status = 'published'
-    `;
-    const params = [escapedQuery];
+    let sql;
+    const params = [];
+    if ([...query].length < 3) {
+      sql = `
+        SELECT d.id, d.title, d.content, d.collection_id, d.priority, d.status
+        FROM documents d
+        WHERE d.status = 'published' AND (d.title LIKE ? OR d.content LIKE ?)
+      `;
+      params.push(`%${query}%`, `%${query}%`);
+    } else {
+      sql = `
+        SELECT
+          d.id,
+          d.title,
+          d.content,
+          d.collection_id,
+          d.priority,
+          d.status
+        FROM documents_fts
+        JOIN documents d ON documents_fts.rowid = d.rowid
+        WHERE documents_fts MATCH ? AND d.status = 'published'
+      `;
+      params.push(query.replace(/["\]]/g, ""));
+    }
     const auth = c.get("auth");
     if (collectionId) {
       if (!isCollectionAllowed(auth, collectionId)) {
-        return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
+        return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed" } }, 403);
       }
       sql += " AND d.collection_id = ?";
       params.push(collectionId);
     } else if (auth.authorType === "ai" && auth.allowedCollections !== null) {
       if (auth.allowedCollections.length === 0) {
-        return c.json([]);
+        return c.json({ data: [] });
       }
       sql += ` AND d.collection_id IN (${auth.allowedCollections.map(() => "?").join(", ")})`;
       params.push(...auth.allowedCollections);
     }
-    if (priority) {
-      sql += " AND d.priority = ?";
-      params.push(priority);
-    }
     sql += " LIMIT ?";
     params.push(limit);
-    const results = await c.env.DB.prepare(sql).bind(...params).all();
-    const formatted = results.results.map((r) => {
-      const snippet = extractSnippet(r.content, query);
-      const lines = r.content.split("\n");
-      let section = "";
-      for (const line of lines) {
-        const match3 = line.match(/^#+\s+(.+)$/);
-        if (match3) {
-          section = match3[1];
-          break;
-        }
-      }
-      return {
-        id: r.id,
-        title: r.title,
-        snippet: snippet || r.content.substring(0, 200) + "...",
-        score: r.score || 0,
-        section: section || null,
-        collection_id: r.collection_id
-      };
-    });
-    return c.json(formatted);
+    const result = await c.env.DB.prepare(sql).bind(...params).all();
+    const results = result.results.map((r) => ({
+      id: r.id,
+      title: r.title,
+      snippet: extractSnippet(r.content, query),
+      collection_id: r.collection_id,
+      priority: r.priority
+    }));
+    return c.json({ data: results });
   } catch (error51) {
     console.error("Search error:", error51);
-    return c.json({ error: { code: "SEARCH_ERROR", message: "Search failed" } }, 500);
+    return c.json({ error: { code: "INTERNAL_ERROR", message: "Search failed" } }, 500);
   }
 });
 
+// node_modules/marked/lib/marked.esm.js
+function _getDefaults() {
+  return {
+    async: false,
+    breaks: false,
+    extensions: null,
+    gfm: true,
+    hooks: null,
+    pedantic: false,
+    renderer: null,
+    silent: false,
+    tokenizer: null,
+    walkTokens: null
+  };
+}
+__name(_getDefaults, "_getDefaults");
+var _defaults = _getDefaults();
+function changeDefaults(newDefaults) {
+  _defaults = newDefaults;
+}
+__name(changeDefaults, "changeDefaults");
+var escapeTest = /[&<>"']/;
+var escapeReplace = new RegExp(escapeTest.source, "g");
+var escapeTestNoEncode = /[<>"']|&(?!(#\d{1,7}|#[Xx][a-fA-F0-9]{1,6}|\w+);)/;
+var escapeReplaceNoEncode = new RegExp(escapeTestNoEncode.source, "g");
+var escapeReplacements = {
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;"
+};
+var getEscapeReplacement = /* @__PURE__ */ __name((ch) => escapeReplacements[ch], "getEscapeReplacement");
+function escape$1(html2, encode3) {
+  if (encode3) {
+    if (escapeTest.test(html2)) {
+      return html2.replace(escapeReplace, getEscapeReplacement);
+    }
+  } else {
+    if (escapeTestNoEncode.test(html2)) {
+      return html2.replace(escapeReplaceNoEncode, getEscapeReplacement);
+    }
+  }
+  return html2;
+}
+__name(escape$1, "escape$1");
+var unescapeTest = /&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/ig;
+function unescape(html2) {
+  return html2.replace(unescapeTest, (_2, n) => {
+    n = n.toLowerCase();
+    if (n === "colon")
+      return ":";
+    if (n.charAt(0) === "#") {
+      return n.charAt(1) === "x" ? String.fromCharCode(parseInt(n.substring(2), 16)) : String.fromCharCode(+n.substring(1));
+    }
+    return "";
+  });
+}
+__name(unescape, "unescape");
+var caret = /(^|[^\[])\^/g;
+function edit(regex, opt) {
+  let source = typeof regex === "string" ? regex : regex.source;
+  opt = opt || "";
+  const obj = {
+    replace: /* @__PURE__ */ __name((name, val) => {
+      let valSource = typeof val === "string" ? val : val.source;
+      valSource = valSource.replace(caret, "$1");
+      source = source.replace(name, valSource);
+      return obj;
+    }, "replace"),
+    getRegex: /* @__PURE__ */ __name(() => {
+      return new RegExp(source, opt);
+    }, "getRegex")
+  };
+  return obj;
+}
+__name(edit, "edit");
+function cleanUrl(href) {
+  try {
+    href = encodeURI(href).replace(/%25/g, "%");
+  } catch (e) {
+    return null;
+  }
+  return href;
+}
+__name(cleanUrl, "cleanUrl");
+var noopTest = { exec: /* @__PURE__ */ __name(() => null, "exec") };
+function splitCells(tableRow, count) {
+  const row = tableRow.replace(/\|/g, (match3, offset, str) => {
+    let escaped = false;
+    let curr = offset;
+    while (--curr >= 0 && str[curr] === "\\")
+      escaped = !escaped;
+    if (escaped) {
+      return "|";
+    } else {
+      return " |";
+    }
+  }), cells = row.split(/ \|/);
+  let i = 0;
+  if (!cells[0].trim()) {
+    cells.shift();
+  }
+  if (cells.length > 0 && !cells[cells.length - 1].trim()) {
+    cells.pop();
+  }
+  if (count) {
+    if (cells.length > count) {
+      cells.splice(count);
+    } else {
+      while (cells.length < count)
+        cells.push("");
+    }
+  }
+  for (; i < cells.length; i++) {
+    cells[i] = cells[i].trim().replace(/\\\|/g, "|");
+  }
+  return cells;
+}
+__name(splitCells, "splitCells");
+function rtrim(str, c, invert) {
+  const l = str.length;
+  if (l === 0) {
+    return "";
+  }
+  let suffLen = 0;
+  while (suffLen < l) {
+    const currChar = str.charAt(l - suffLen - 1);
+    if (currChar === c && !invert) {
+      suffLen++;
+    } else if (currChar !== c && invert) {
+      suffLen++;
+    } else {
+      break;
+    }
+  }
+  return str.slice(0, l - suffLen);
+}
+__name(rtrim, "rtrim");
+function findClosingBracket(str, b) {
+  if (str.indexOf(b[1]) === -1) {
+    return -1;
+  }
+  let level = 0;
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === "\\") {
+      i++;
+    } else if (str[i] === b[0]) {
+      level++;
+    } else if (str[i] === b[1]) {
+      level--;
+      if (level < 0) {
+        return i;
+      }
+    }
+  }
+  return -1;
+}
+__name(findClosingBracket, "findClosingBracket");
+function outputLink(cap, link2, raw2, lexer2) {
+  const href = link2.href;
+  const title = link2.title ? escape$1(link2.title) : null;
+  const text = cap[1].replace(/\\([\[\]])/g, "$1");
+  if (cap[0].charAt(0) !== "!") {
+    lexer2.state.inLink = true;
+    const token = {
+      type: "link",
+      raw: raw2,
+      href,
+      title,
+      text,
+      tokens: lexer2.inlineTokens(text)
+    };
+    lexer2.state.inLink = false;
+    return token;
+  }
+  return {
+    type: "image",
+    raw: raw2,
+    href,
+    title,
+    text: escape$1(text)
+  };
+}
+__name(outputLink, "outputLink");
+function indentCodeCompensation(raw2, text) {
+  const matchIndentToCode = raw2.match(/^(\s+)(?:```)/);
+  if (matchIndentToCode === null) {
+    return text;
+  }
+  const indentToCode = matchIndentToCode[1];
+  return text.split("\n").map((node) => {
+    const matchIndentInNode = node.match(/^\s+/);
+    if (matchIndentInNode === null) {
+      return node;
+    }
+    const [indentInNode] = matchIndentInNode;
+    if (indentInNode.length >= indentToCode.length) {
+      return node.slice(indentToCode.length);
+    }
+    return node;
+  }).join("\n");
+}
+__name(indentCodeCompensation, "indentCodeCompensation");
+var _Tokenizer = class {
+  static {
+    __name(this, "_Tokenizer");
+  }
+  options;
+  rules;
+  // set by the lexer
+  lexer;
+  // set by the lexer
+  constructor(options2) {
+    this.options = options2 || _defaults;
+  }
+  space(src) {
+    const cap = this.rules.block.newline.exec(src);
+    if (cap && cap[0].length > 0) {
+      return {
+        type: "space",
+        raw: cap[0]
+      };
+    }
+  }
+  code(src) {
+    const cap = this.rules.block.code.exec(src);
+    if (cap) {
+      const text = cap[0].replace(/^ {1,4}/gm, "");
+      return {
+        type: "code",
+        raw: cap[0],
+        codeBlockStyle: "indented",
+        text: !this.options.pedantic ? rtrim(text, "\n") : text
+      };
+    }
+  }
+  fences(src) {
+    const cap = this.rules.block.fences.exec(src);
+    if (cap) {
+      const raw2 = cap[0];
+      const text = indentCodeCompensation(raw2, cap[3] || "");
+      return {
+        type: "code",
+        raw: raw2,
+        lang: cap[2] ? cap[2].trim().replace(this.rules.inline.anyPunctuation, "$1") : cap[2],
+        text
+      };
+    }
+  }
+  heading(src) {
+    const cap = this.rules.block.heading.exec(src);
+    if (cap) {
+      let text = cap[2].trim();
+      if (/#$/.test(text)) {
+        const trimmed = rtrim(text, "#");
+        if (this.options.pedantic) {
+          text = trimmed.trim();
+        } else if (!trimmed || / $/.test(trimmed)) {
+          text = trimmed.trim();
+        }
+      }
+      return {
+        type: "heading",
+        raw: cap[0],
+        depth: cap[1].length,
+        text,
+        tokens: this.lexer.inline(text)
+      };
+    }
+  }
+  hr(src) {
+    const cap = this.rules.block.hr.exec(src);
+    if (cap) {
+      return {
+        type: "hr",
+        raw: cap[0]
+      };
+    }
+  }
+  blockquote(src) {
+    const cap = this.rules.block.blockquote.exec(src);
+    if (cap) {
+      let text = cap[0].replace(/\n {0,3}((?:=+|-+) *)(?=\n|$)/g, "\n    $1");
+      text = rtrim(text.replace(/^ *>[ \t]?/gm, ""), "\n");
+      const top = this.lexer.state.top;
+      this.lexer.state.top = true;
+      const tokens = this.lexer.blockTokens(text);
+      this.lexer.state.top = top;
+      return {
+        type: "blockquote",
+        raw: cap[0],
+        tokens,
+        text
+      };
+    }
+  }
+  list(src) {
+    let cap = this.rules.block.list.exec(src);
+    if (cap) {
+      let bull = cap[1].trim();
+      const isordered = bull.length > 1;
+      const list2 = {
+        type: "list",
+        raw: "",
+        ordered: isordered,
+        start: isordered ? +bull.slice(0, -1) : "",
+        loose: false,
+        items: []
+      };
+      bull = isordered ? `\\d{1,9}\\${bull.slice(-1)}` : `\\${bull}`;
+      if (this.options.pedantic) {
+        bull = isordered ? bull : "[*+-]";
+      }
+      const itemRegex = new RegExp(`^( {0,3}${bull})((?:[	 ][^\\n]*)?(?:\\n|$))`);
+      let raw2 = "";
+      let itemContents = "";
+      let endsWithBlankLine = false;
+      while (src) {
+        let endEarly = false;
+        if (!(cap = itemRegex.exec(src))) {
+          break;
+        }
+        if (this.rules.block.hr.test(src)) {
+          break;
+        }
+        raw2 = cap[0];
+        src = src.substring(raw2.length);
+        let line = cap[2].split("\n", 1)[0].replace(/^\t+/, (t) => " ".repeat(3 * t.length));
+        let nextLine = src.split("\n", 1)[0];
+        let indent = 0;
+        if (this.options.pedantic) {
+          indent = 2;
+          itemContents = line.trimStart();
+        } else {
+          indent = cap[2].search(/[^ ]/);
+          indent = indent > 4 ? 1 : indent;
+          itemContents = line.slice(indent);
+          indent += cap[1].length;
+        }
+        let blankLine = false;
+        if (!line && /^ *$/.test(nextLine)) {
+          raw2 += nextLine + "\n";
+          src = src.substring(nextLine.length + 1);
+          endEarly = true;
+        }
+        if (!endEarly) {
+          const nextBulletRegex = new RegExp(`^ {0,${Math.min(3, indent - 1)}}(?:[*+-]|\\d{1,9}[.)])((?:[ 	][^\\n]*)?(?:\\n|$))`);
+          const hrRegex = new RegExp(`^ {0,${Math.min(3, indent - 1)}}((?:- *){3,}|(?:_ *){3,}|(?:\\* *){3,})(?:\\n+|$)`);
+          const fencesBeginRegex = new RegExp(`^ {0,${Math.min(3, indent - 1)}}(?:\`\`\`|~~~)`);
+          const headingBeginRegex = new RegExp(`^ {0,${Math.min(3, indent - 1)}}#`);
+          while (src) {
+            const rawLine = src.split("\n", 1)[0];
+            nextLine = rawLine;
+            if (this.options.pedantic) {
+              nextLine = nextLine.replace(/^ {1,4}(?=( {4})*[^ ])/g, "  ");
+            }
+            if (fencesBeginRegex.test(nextLine)) {
+              break;
+            }
+            if (headingBeginRegex.test(nextLine)) {
+              break;
+            }
+            if (nextBulletRegex.test(nextLine)) {
+              break;
+            }
+            if (hrRegex.test(src)) {
+              break;
+            }
+            if (nextLine.search(/[^ ]/) >= indent || !nextLine.trim()) {
+              itemContents += "\n" + nextLine.slice(indent);
+            } else {
+              if (blankLine) {
+                break;
+              }
+              if (line.search(/[^ ]/) >= 4) {
+                break;
+              }
+              if (fencesBeginRegex.test(line)) {
+                break;
+              }
+              if (headingBeginRegex.test(line)) {
+                break;
+              }
+              if (hrRegex.test(line)) {
+                break;
+              }
+              itemContents += "\n" + nextLine;
+            }
+            if (!blankLine && !nextLine.trim()) {
+              blankLine = true;
+            }
+            raw2 += rawLine + "\n";
+            src = src.substring(rawLine.length + 1);
+            line = nextLine.slice(indent);
+          }
+        }
+        if (!list2.loose) {
+          if (endsWithBlankLine) {
+            list2.loose = true;
+          } else if (/\n *\n *$/.test(raw2)) {
+            endsWithBlankLine = true;
+          }
+        }
+        let istask = null;
+        let ischecked;
+        if (this.options.gfm) {
+          istask = /^\[[ xX]\] /.exec(itemContents);
+          if (istask) {
+            ischecked = istask[0] !== "[ ] ";
+            itemContents = itemContents.replace(/^\[[ xX]\] +/, "");
+          }
+        }
+        list2.items.push({
+          type: "list_item",
+          raw: raw2,
+          task: !!istask,
+          checked: ischecked,
+          loose: false,
+          text: itemContents,
+          tokens: []
+        });
+        list2.raw += raw2;
+      }
+      list2.items[list2.items.length - 1].raw = raw2.trimEnd();
+      list2.items[list2.items.length - 1].text = itemContents.trimEnd();
+      list2.raw = list2.raw.trimEnd();
+      for (let i = 0; i < list2.items.length; i++) {
+        this.lexer.state.top = false;
+        list2.items[i].tokens = this.lexer.blockTokens(list2.items[i].text, []);
+        if (!list2.loose) {
+          const spacers = list2.items[i].tokens.filter((t) => t.type === "space");
+          const hasMultipleLineBreaks = spacers.length > 0 && spacers.some((t) => /\n.*\n/.test(t.raw));
+          list2.loose = hasMultipleLineBreaks;
+        }
+      }
+      if (list2.loose) {
+        for (let i = 0; i < list2.items.length; i++) {
+          list2.items[i].loose = true;
+        }
+      }
+      return list2;
+    }
+  }
+  html(src) {
+    const cap = this.rules.block.html.exec(src);
+    if (cap) {
+      const token = {
+        type: "html",
+        block: true,
+        raw: cap[0],
+        pre: cap[1] === "pre" || cap[1] === "script" || cap[1] === "style",
+        text: cap[0]
+      };
+      return token;
+    }
+  }
+  def(src) {
+    const cap = this.rules.block.def.exec(src);
+    if (cap) {
+      const tag2 = cap[1].toLowerCase().replace(/\s+/g, " ");
+      const href = cap[2] ? cap[2].replace(/^<(.*)>$/, "$1").replace(this.rules.inline.anyPunctuation, "$1") : "";
+      const title = cap[3] ? cap[3].substring(1, cap[3].length - 1).replace(this.rules.inline.anyPunctuation, "$1") : cap[3];
+      return {
+        type: "def",
+        tag: tag2,
+        raw: cap[0],
+        href,
+        title
+      };
+    }
+  }
+  table(src) {
+    const cap = this.rules.block.table.exec(src);
+    if (!cap) {
+      return;
+    }
+    if (!/[:|]/.test(cap[2])) {
+      return;
+    }
+    const headers = splitCells(cap[1]);
+    const aligns = cap[2].replace(/^\||\| *$/g, "").split("|");
+    const rows = cap[3] && cap[3].trim() ? cap[3].replace(/\n[ \t]*$/, "").split("\n") : [];
+    const item = {
+      type: "table",
+      raw: cap[0],
+      header: [],
+      align: [],
+      rows: []
+    };
+    if (headers.length !== aligns.length) {
+      return;
+    }
+    for (const align of aligns) {
+      if (/^ *-+: *$/.test(align)) {
+        item.align.push("right");
+      } else if (/^ *:-+: *$/.test(align)) {
+        item.align.push("center");
+      } else if (/^ *:-+ *$/.test(align)) {
+        item.align.push("left");
+      } else {
+        item.align.push(null);
+      }
+    }
+    for (const header of headers) {
+      item.header.push({
+        text: header,
+        tokens: this.lexer.inline(header)
+      });
+    }
+    for (const row of rows) {
+      item.rows.push(splitCells(row, item.header.length).map((cell) => {
+        return {
+          text: cell,
+          tokens: this.lexer.inline(cell)
+        };
+      }));
+    }
+    return item;
+  }
+  lheading(src) {
+    const cap = this.rules.block.lheading.exec(src);
+    if (cap) {
+      return {
+        type: "heading",
+        raw: cap[0],
+        depth: cap[2].charAt(0) === "=" ? 1 : 2,
+        text: cap[1],
+        tokens: this.lexer.inline(cap[1])
+      };
+    }
+  }
+  paragraph(src) {
+    const cap = this.rules.block.paragraph.exec(src);
+    if (cap) {
+      const text = cap[1].charAt(cap[1].length - 1) === "\n" ? cap[1].slice(0, -1) : cap[1];
+      return {
+        type: "paragraph",
+        raw: cap[0],
+        text,
+        tokens: this.lexer.inline(text)
+      };
+    }
+  }
+  text(src) {
+    const cap = this.rules.block.text.exec(src);
+    if (cap) {
+      return {
+        type: "text",
+        raw: cap[0],
+        text: cap[0],
+        tokens: this.lexer.inline(cap[0])
+      };
+    }
+  }
+  escape(src) {
+    const cap = this.rules.inline.escape.exec(src);
+    if (cap) {
+      return {
+        type: "escape",
+        raw: cap[0],
+        text: escape$1(cap[1])
+      };
+    }
+  }
+  tag(src) {
+    const cap = this.rules.inline.tag.exec(src);
+    if (cap) {
+      if (!this.lexer.state.inLink && /^<a /i.test(cap[0])) {
+        this.lexer.state.inLink = true;
+      } else if (this.lexer.state.inLink && /^<\/a>/i.test(cap[0])) {
+        this.lexer.state.inLink = false;
+      }
+      if (!this.lexer.state.inRawBlock && /^<(pre|code|kbd|script)(\s|>)/i.test(cap[0])) {
+        this.lexer.state.inRawBlock = true;
+      } else if (this.lexer.state.inRawBlock && /^<\/(pre|code|kbd|script)(\s|>)/i.test(cap[0])) {
+        this.lexer.state.inRawBlock = false;
+      }
+      return {
+        type: "html",
+        raw: cap[0],
+        inLink: this.lexer.state.inLink,
+        inRawBlock: this.lexer.state.inRawBlock,
+        block: false,
+        text: cap[0]
+      };
+    }
+  }
+  link(src) {
+    const cap = this.rules.inline.link.exec(src);
+    if (cap) {
+      const trimmedUrl = cap[2].trim();
+      if (!this.options.pedantic && /^</.test(trimmedUrl)) {
+        if (!/>$/.test(trimmedUrl)) {
+          return;
+        }
+        const rtrimSlash = rtrim(trimmedUrl.slice(0, -1), "\\");
+        if ((trimmedUrl.length - rtrimSlash.length) % 2 === 0) {
+          return;
+        }
+      } else {
+        const lastParenIndex = findClosingBracket(cap[2], "()");
+        if (lastParenIndex > -1) {
+          const start = cap[0].indexOf("!") === 0 ? 5 : 4;
+          const linkLen = start + cap[1].length + lastParenIndex;
+          cap[2] = cap[2].substring(0, lastParenIndex);
+          cap[0] = cap[0].substring(0, linkLen).trim();
+          cap[3] = "";
+        }
+      }
+      let href = cap[2];
+      let title = "";
+      if (this.options.pedantic) {
+        const link2 = /^([^'"]*[^\s])\s+(['"])(.*)\2/.exec(href);
+        if (link2) {
+          href = link2[1];
+          title = link2[3];
+        }
+      } else {
+        title = cap[3] ? cap[3].slice(1, -1) : "";
+      }
+      href = href.trim();
+      if (/^</.test(href)) {
+        if (this.options.pedantic && !/>$/.test(trimmedUrl)) {
+          href = href.slice(1);
+        } else {
+          href = href.slice(1, -1);
+        }
+      }
+      return outputLink(cap, {
+        href: href ? href.replace(this.rules.inline.anyPunctuation, "$1") : href,
+        title: title ? title.replace(this.rules.inline.anyPunctuation, "$1") : title
+      }, cap[0], this.lexer);
+    }
+  }
+  reflink(src, links) {
+    let cap;
+    if ((cap = this.rules.inline.reflink.exec(src)) || (cap = this.rules.inline.nolink.exec(src))) {
+      const linkString = (cap[2] || cap[1]).replace(/\s+/g, " ");
+      const link2 = links[linkString.toLowerCase()];
+      if (!link2) {
+        const text = cap[0].charAt(0);
+        return {
+          type: "text",
+          raw: text,
+          text
+        };
+      }
+      return outputLink(cap, link2, cap[0], this.lexer);
+    }
+  }
+  emStrong(src, maskedSrc, prevChar = "") {
+    let match3 = this.rules.inline.emStrongLDelim.exec(src);
+    if (!match3)
+      return;
+    if (match3[3] && prevChar.match(/[\p{L}\p{N}]/u))
+      return;
+    const nextChar = match3[1] || match3[2] || "";
+    if (!nextChar || !prevChar || this.rules.inline.punctuation.exec(prevChar)) {
+      const lLength = [...match3[0]].length - 1;
+      let rDelim, rLength, delimTotal = lLength, midDelimTotal = 0;
+      const endReg = match3[0][0] === "*" ? this.rules.inline.emStrongRDelimAst : this.rules.inline.emStrongRDelimUnd;
+      endReg.lastIndex = 0;
+      maskedSrc = maskedSrc.slice(-1 * src.length + lLength);
+      while ((match3 = endReg.exec(maskedSrc)) != null) {
+        rDelim = match3[1] || match3[2] || match3[3] || match3[4] || match3[5] || match3[6];
+        if (!rDelim)
+          continue;
+        rLength = [...rDelim].length;
+        if (match3[3] || match3[4]) {
+          delimTotal += rLength;
+          continue;
+        } else if (match3[5] || match3[6]) {
+          if (lLength % 3 && !((lLength + rLength) % 3)) {
+            midDelimTotal += rLength;
+            continue;
+          }
+        }
+        delimTotal -= rLength;
+        if (delimTotal > 0)
+          continue;
+        rLength = Math.min(rLength, rLength + delimTotal + midDelimTotal);
+        const lastCharLength = [...match3[0]][0].length;
+        const raw2 = src.slice(0, lLength + match3.index + lastCharLength + rLength);
+        if (Math.min(lLength, rLength) % 2) {
+          const text2 = raw2.slice(1, -1);
+          return {
+            type: "em",
+            raw: raw2,
+            text: text2,
+            tokens: this.lexer.inlineTokens(text2)
+          };
+        }
+        const text = raw2.slice(2, -2);
+        return {
+          type: "strong",
+          raw: raw2,
+          text,
+          tokens: this.lexer.inlineTokens(text)
+        };
+      }
+    }
+  }
+  codespan(src) {
+    const cap = this.rules.inline.code.exec(src);
+    if (cap) {
+      let text = cap[2].replace(/\n/g, " ");
+      const hasNonSpaceChars = /[^ ]/.test(text);
+      const hasSpaceCharsOnBothEnds = /^ /.test(text) && / $/.test(text);
+      if (hasNonSpaceChars && hasSpaceCharsOnBothEnds) {
+        text = text.substring(1, text.length - 1);
+      }
+      text = escape$1(text, true);
+      return {
+        type: "codespan",
+        raw: cap[0],
+        text
+      };
+    }
+  }
+  br(src) {
+    const cap = this.rules.inline.br.exec(src);
+    if (cap) {
+      return {
+        type: "br",
+        raw: cap[0]
+      };
+    }
+  }
+  del(src) {
+    const cap = this.rules.inline.del.exec(src);
+    if (cap) {
+      return {
+        type: "del",
+        raw: cap[0],
+        text: cap[2],
+        tokens: this.lexer.inlineTokens(cap[2])
+      };
+    }
+  }
+  autolink(src) {
+    const cap = this.rules.inline.autolink.exec(src);
+    if (cap) {
+      let text, href;
+      if (cap[2] === "@") {
+        text = escape$1(cap[1]);
+        href = "mailto:" + text;
+      } else {
+        text = escape$1(cap[1]);
+        href = text;
+      }
+      return {
+        type: "link",
+        raw: cap[0],
+        text,
+        href,
+        tokens: [
+          {
+            type: "text",
+            raw: text,
+            text
+          }
+        ]
+      };
+    }
+  }
+  url(src) {
+    let cap;
+    if (cap = this.rules.inline.url.exec(src)) {
+      let text, href;
+      if (cap[2] === "@") {
+        text = escape$1(cap[0]);
+        href = "mailto:" + text;
+      } else {
+        let prevCapZero;
+        do {
+          prevCapZero = cap[0];
+          cap[0] = this.rules.inline._backpedal.exec(cap[0])?.[0] ?? "";
+        } while (prevCapZero !== cap[0]);
+        text = escape$1(cap[0]);
+        if (cap[1] === "www.") {
+          href = "http://" + cap[0];
+        } else {
+          href = cap[0];
+        }
+      }
+      return {
+        type: "link",
+        raw: cap[0],
+        text,
+        href,
+        tokens: [
+          {
+            type: "text",
+            raw: text,
+            text
+          }
+        ]
+      };
+    }
+  }
+  inlineText(src) {
+    const cap = this.rules.inline.text.exec(src);
+    if (cap) {
+      let text;
+      if (this.lexer.state.inRawBlock) {
+        text = cap[0];
+      } else {
+        text = escape$1(cap[0]);
+      }
+      return {
+        type: "text",
+        raw: cap[0],
+        text
+      };
+    }
+  }
+};
+var newline = /^(?: *(?:\n|$))+/;
+var blockCode = /^( {4}[^\n]+(?:\n(?: *(?:\n|$))*)?)+/;
+var fences = /^ {0,3}(`{3,}(?=[^`\n]*(?:\n|$))|~{3,})([^\n]*)(?:\n|$)(?:|([\s\S]*?)(?:\n|$))(?: {0,3}\1[~`]* *(?=\n|$)|$)/;
+var hr = /^ {0,3}((?:-[\t ]*){3,}|(?:_[ \t]*){3,}|(?:\*[ \t]*){3,})(?:\n+|$)/;
+var heading = /^ {0,3}(#{1,6})(?=\s|$)(.*)(?:\n+|$)/;
+var bullet = /(?:[*+-]|\d{1,9}[.)])/;
+var lheading = edit(/^(?!bull |blockCode|fences|blockquote|heading|html)((?:.|\n(?!\s*?\n|bull |blockCode|fences|blockquote|heading|html))+?)\n {0,3}(=+|-+) *(?:\n+|$)/).replace(/bull/g, bullet).replace(/blockCode/g, / {4}/).replace(/fences/g, / {0,3}(?:`{3,}|~{3,})/).replace(/blockquote/g, / {0,3}>/).replace(/heading/g, / {0,3}#{1,6}/).replace(/html/g, / {0,3}<[^\n>]+>\n/).getRegex();
+var _paragraph = /^([^\n]+(?:\n(?!hr|heading|lheading|blockquote|fences|list|html|table| +\n)[^\n]+)*)/;
+var blockText = /^[^\n]+/;
+var _blockLabel = /(?!\s*\])(?:\\.|[^\[\]\\])+/;
+var def = edit(/^ {0,3}\[(label)\]: *(?:\n *)?([^<\s][^\s]*|<.*?>)(?:(?: +(?:\n *)?| *\n *)(title))? *(?:\n+|$)/).replace("label", _blockLabel).replace("title", /(?:"(?:\\"?|[^"\\])*"|'[^'\n]*(?:\n[^'\n]+)*\n?'|\([^()]*\))/).getRegex();
+var list = edit(/^( {0,3}bull)([ \t][^\n]+?)?(?:\n|$)/).replace(/bull/g, bullet).getRegex();
+var _tag = "address|article|aside|base|basefont|blockquote|body|caption|center|col|colgroup|dd|details|dialog|dir|div|dl|dt|fieldset|figcaption|figure|footer|form|frame|frameset|h[1-6]|head|header|hr|html|iframe|legend|li|link|main|menu|menuitem|meta|nav|noframes|ol|optgroup|option|p|param|search|section|summary|table|tbody|td|tfoot|th|thead|title|tr|track|ul";
+var _comment = /<!--(?:-?>|[\s\S]*?(?:-->|$))/;
+var html = edit("^ {0,3}(?:<(script|pre|style|textarea)[\\s>][\\s\\S]*?(?:</\\1>[^\\n]*\\n+|$)|comment[^\\n]*(\\n+|$)|<\\?[\\s\\S]*?(?:\\?>\\n*|$)|<![A-Z][\\s\\S]*?(?:>\\n*|$)|<!\\[CDATA\\[[\\s\\S]*?(?:\\]\\]>\\n*|$)|</?(tag)(?: +|\\n|/?>)[\\s\\S]*?(?:(?:\\n *)+\\n|$)|<(?!script|pre|style|textarea)([a-z][\\w-]*)(?:attribute)*? */?>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n *)+\\n|$)|</(?!script|pre|style|textarea)[a-z][\\w-]*\\s*>(?=[ \\t]*(?:\\n|$))[\\s\\S]*?(?:(?:\\n *)+\\n|$))", "i").replace("comment", _comment).replace("tag", _tag).replace("attribute", / +[a-zA-Z:_][\w.:-]*(?: *= *"[^"\n]*"| *= *'[^'\n]*'| *= *[^\s"'=<>`]+)?/).getRegex();
+var paragraph = edit(_paragraph).replace("hr", hr).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("|table", "").replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", _tag).getRegex();
+var blockquote = edit(/^( {0,3}> ?(paragraph|[^\n]*)(?:\n|$))+/).replace("paragraph", paragraph).getRegex();
+var blockNormal = {
+  blockquote,
+  code: blockCode,
+  def,
+  fences,
+  heading,
+  hr,
+  html,
+  lheading,
+  list,
+  newline,
+  paragraph,
+  table: noopTest,
+  text: blockText
+};
+var gfmTable = edit("^ *([^\\n ].*)\\n {0,3}((?:\\| *)?:?-+:? *(?:\\| *:?-+:? *)*(?:\\| *)?)(?:\\n((?:(?! *\\n|hr|heading|blockquote|code|fences|list|html).*(?:\\n|$))*)\\n*|$)").replace("hr", hr).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("blockquote", " {0,3}>").replace("code", " {4}[^\\n]").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", _tag).getRegex();
+var blockGfm = {
+  ...blockNormal,
+  table: gfmTable,
+  paragraph: edit(_paragraph).replace("hr", hr).replace("heading", " {0,3}#{1,6}(?:\\s|$)").replace("|lheading", "").replace("table", gfmTable).replace("blockquote", " {0,3}>").replace("fences", " {0,3}(?:`{3,}(?=[^`\\n]*\\n)|~{3,})[^\\n]*\\n").replace("list", " {0,3}(?:[*+-]|1[.)]) ").replace("html", "</?(?:tag)(?: +|\\n|/?>)|<(?:script|pre|style|textarea|!--)").replace("tag", _tag).getRegex()
+};
+var blockPedantic = {
+  ...blockNormal,
+  html: edit(`^ *(?:comment *(?:\\n|\\s*$)|<(tag)[\\s\\S]+?</\\1> *(?:\\n{2,}|\\s*$)|<tag(?:"[^"]*"|'[^']*'|\\s[^'"/>\\s]*)*?/?> *(?:\\n{2,}|\\s*$))`).replace("comment", _comment).replace(/tag/g, "(?!(?:a|em|strong|small|s|cite|q|dfn|abbr|data|time|code|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo|span|br|wbr|ins|del|img)\\b)\\w+(?!:|[^\\w\\s@]*@)\\b").getRegex(),
+  def: /^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +(["(][^\n]+[")]))? *(?:\n+|$)/,
+  heading: /^(#{1,6})(.*)(?:\n+|$)/,
+  fences: noopTest,
+  // fences not supported
+  lheading: /^(.+?)\n {0,3}(=+|-+) *(?:\n+|$)/,
+  paragraph: edit(_paragraph).replace("hr", hr).replace("heading", " *#{1,6} *[^\n]").replace("lheading", lheading).replace("|table", "").replace("blockquote", " {0,3}>").replace("|fences", "").replace("|list", "").replace("|html", "").replace("|tag", "").getRegex()
+};
+var escape = /^\\([!"#$%&'()*+,\-./:;<=>?@\[\]\\^_`{|}~])/;
+var inlineCode = /^(`+)([^`]|[^`][\s\S]*?[^`])\1(?!`)/;
+var br = /^( {2,}|\\)\n(?!\s*$)/;
+var inlineText = /^(`+|[^`])(?:(?= {2,}\n)|[\s\S]*?(?:(?=[\\<!\[`*_]|\b_|$)|[^ ](?= {2,}\n)))/;
+var _punctuation = "\\p{P}\\p{S}";
+var punctuation = edit(/^((?![*_])[\spunctuation])/, "u").replace(/punctuation/g, _punctuation).getRegex();
+var blockSkip = /\[[^[\]]*?\]\([^\(\)]*?\)|`[^`]*?`|<[^<>]*?>/g;
+var emStrongLDelim = edit(/^(?:\*+(?:((?!\*)[punct])|[^\s*]))|^_+(?:((?!_)[punct])|([^\s_]))/, "u").replace(/punct/g, _punctuation).getRegex();
+var emStrongRDelimAst = edit("^[^_*]*?__[^_*]*?\\*[^_*]*?(?=__)|[^*]+(?=[^*])|(?!\\*)[punct](\\*+)(?=[\\s]|$)|[^punct\\s](\\*+)(?!\\*)(?=[punct\\s]|$)|(?!\\*)[punct\\s](\\*+)(?=[^punct\\s])|[\\s](\\*+)(?!\\*)(?=[punct])|(?!\\*)[punct](\\*+)(?!\\*)(?=[punct])|[^punct\\s](\\*+)(?=[^punct\\s])", "gu").replace(/punct/g, _punctuation).getRegex();
+var emStrongRDelimUnd = edit("^[^_*]*?\\*\\*[^_*]*?_[^_*]*?(?=\\*\\*)|[^_]+(?=[^_])|(?!_)[punct](_+)(?=[\\s]|$)|[^punct\\s](_+)(?!_)(?=[punct\\s]|$)|(?!_)[punct\\s](_+)(?=[^punct\\s])|[\\s](_+)(?!_)(?=[punct])|(?!_)[punct](_+)(?!_)(?=[punct])", "gu").replace(/punct/g, _punctuation).getRegex();
+var anyPunctuation = edit(/\\([punct])/, "gu").replace(/punct/g, _punctuation).getRegex();
+var autolink = edit(/^<(scheme:[^\s\x00-\x1f<>]*|email)>/).replace("scheme", /[a-zA-Z][a-zA-Z0-9+.-]{1,31}/).replace("email", /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+(@)[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+(?![-_])/).getRegex();
+var _inlineComment = edit(_comment).replace("(?:-->|$)", "-->").getRegex();
+var tag = edit("^comment|^</[a-zA-Z][\\w:-]*\\s*>|^<[a-zA-Z][\\w-]*(?:attribute)*?\\s*/?>|^<\\?[\\s\\S]*?\\?>|^<![a-zA-Z]+\\s[\\s\\S]*?>|^<!\\[CDATA\\[[\\s\\S]*?\\]\\]>").replace("comment", _inlineComment).replace("attribute", /\s+[a-zA-Z:_][\w.:-]*(?:\s*=\s*"[^"]*"|\s*=\s*'[^']*'|\s*=\s*[^\s"'=<>`]+)?/).getRegex();
+var _inlineLabel = /(?:\[(?:\\.|[^\[\]\\])*\]|\\.|`[^`]*`|[^\[\]\\`])*?/;
+var link = edit(/^!?\[(label)\]\(\s*(href)(?:\s+(title))?\s*\)/).replace("label", _inlineLabel).replace("href", /<(?:\\.|[^\n<>\\])+>|[^\s\x00-\x1f]*/).replace("title", /"(?:\\"?|[^"\\])*"|'(?:\\'?|[^'\\])*'|\((?:\\\)?|[^)\\])*\)/).getRegex();
+var reflink = edit(/^!?\[(label)\]\[(ref)\]/).replace("label", _inlineLabel).replace("ref", _blockLabel).getRegex();
+var nolink = edit(/^!?\[(ref)\](?:\[\])?/).replace("ref", _blockLabel).getRegex();
+var reflinkSearch = edit("reflink|nolink(?!\\()", "g").replace("reflink", reflink).replace("nolink", nolink).getRegex();
+var inlineNormal = {
+  _backpedal: noopTest,
+  // only used for GFM url
+  anyPunctuation,
+  autolink,
+  blockSkip,
+  br,
+  code: inlineCode,
+  del: noopTest,
+  emStrongLDelim,
+  emStrongRDelimAst,
+  emStrongRDelimUnd,
+  escape,
+  link,
+  nolink,
+  punctuation,
+  reflink,
+  reflinkSearch,
+  tag,
+  text: inlineText,
+  url: noopTest
+};
+var inlinePedantic = {
+  ...inlineNormal,
+  link: edit(/^!?\[(label)\]\((.*?)\)/).replace("label", _inlineLabel).getRegex(),
+  reflink: edit(/^!?\[(label)\]\s*\[([^\]]*)\]/).replace("label", _inlineLabel).getRegex()
+};
+var inlineGfm = {
+  ...inlineNormal,
+  escape: edit(escape).replace("])", "~|])").getRegex(),
+  url: edit(/^((?:ftp|https?):\/\/|www\.)(?:[a-zA-Z0-9\-]+\.?)+[^\s<]*|^email/, "i").replace("email", /[A-Za-z0-9._+-]+(@)[a-zA-Z0-9-_]+(?:\.[a-zA-Z0-9-_]*[a-zA-Z0-9])+(?![-_])/).getRegex(),
+  _backpedal: /(?:[^?!.,:;*_'"~()&]+|\([^)]*\)|&(?![a-zA-Z0-9]+;$)|[?!.,:;*_'"~)]+(?!$))+/,
+  del: /^(~~?)(?=[^\s~])([\s\S]*?[^\s~])\1(?=[^~]|$)/,
+  text: /^([`~]+|[^`~])(?:(?= {2,}\n)|(?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)|[\s\S]*?(?:(?=[\\<!\[`*~_]|\b_|https?:\/\/|ftp:\/\/|www\.|$)|[^ ](?= {2,}\n)|[^a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-](?=[a-zA-Z0-9.!#$%&'*+\/=?_`{\|}~-]+@)))/
+};
+var inlineBreaks = {
+  ...inlineGfm,
+  br: edit(br).replace("{2,}", "*").getRegex(),
+  text: edit(inlineGfm.text).replace("\\b_", "\\b_| {2,}\\n").replace(/\{2,\}/g, "*").getRegex()
+};
+var block = {
+  normal: blockNormal,
+  gfm: blockGfm,
+  pedantic: blockPedantic
+};
+var inline = {
+  normal: inlineNormal,
+  gfm: inlineGfm,
+  breaks: inlineBreaks,
+  pedantic: inlinePedantic
+};
+var _Lexer = class __Lexer {
+  static {
+    __name(this, "_Lexer");
+  }
+  tokens;
+  options;
+  state;
+  tokenizer;
+  inlineQueue;
+  constructor(options2) {
+    this.tokens = [];
+    this.tokens.links = /* @__PURE__ */ Object.create(null);
+    this.options = options2 || _defaults;
+    this.options.tokenizer = this.options.tokenizer || new _Tokenizer();
+    this.tokenizer = this.options.tokenizer;
+    this.tokenizer.options = this.options;
+    this.tokenizer.lexer = this;
+    this.inlineQueue = [];
+    this.state = {
+      inLink: false,
+      inRawBlock: false,
+      top: true
+    };
+    const rules = {
+      block: block.normal,
+      inline: inline.normal
+    };
+    if (this.options.pedantic) {
+      rules.block = block.pedantic;
+      rules.inline = inline.pedantic;
+    } else if (this.options.gfm) {
+      rules.block = block.gfm;
+      if (this.options.breaks) {
+        rules.inline = inline.breaks;
+      } else {
+        rules.inline = inline.gfm;
+      }
+    }
+    this.tokenizer.rules = rules;
+  }
+  /**
+   * Expose Rules
+   */
+  static get rules() {
+    return {
+      block,
+      inline
+    };
+  }
+  /**
+   * Static Lex Method
+   */
+  static lex(src, options2) {
+    const lexer2 = new __Lexer(options2);
+    return lexer2.lex(src);
+  }
+  /**
+   * Static Lex Inline Method
+   */
+  static lexInline(src, options2) {
+    const lexer2 = new __Lexer(options2);
+    return lexer2.inlineTokens(src);
+  }
+  /**
+   * Preprocessing
+   */
+  lex(src) {
+    src = src.replace(/\r\n|\r/g, "\n");
+    this.blockTokens(src, this.tokens);
+    for (let i = 0; i < this.inlineQueue.length; i++) {
+      const next = this.inlineQueue[i];
+      this.inlineTokens(next.src, next.tokens);
+    }
+    this.inlineQueue = [];
+    return this.tokens;
+  }
+  blockTokens(src, tokens = []) {
+    if (this.options.pedantic) {
+      src = src.replace(/\t/g, "    ").replace(/^ +$/gm, "");
+    } else {
+      src = src.replace(/^( *)(\t+)/gm, (_2, leading, tabs) => {
+        return leading + "    ".repeat(tabs.length);
+      });
+    }
+    let token;
+    let lastToken;
+    let cutSrc;
+    let lastParagraphClipped;
+    while (src) {
+      if (this.options.extensions && this.options.extensions.block && this.options.extensions.block.some((extTokenizer) => {
+        if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
+          src = src.substring(token.raw.length);
+          tokens.push(token);
+          return true;
+        }
+        return false;
+      })) {
+        continue;
+      }
+      if (token = this.tokenizer.space(src)) {
+        src = src.substring(token.raw.length);
+        if (token.raw.length === 1 && tokens.length > 0) {
+          tokens[tokens.length - 1].raw += "\n";
+        } else {
+          tokens.push(token);
+        }
+        continue;
+      }
+      if (token = this.tokenizer.code(src)) {
+        src = src.substring(token.raw.length);
+        lastToken = tokens[tokens.length - 1];
+        if (lastToken && (lastToken.type === "paragraph" || lastToken.type === "text")) {
+          lastToken.raw += "\n" + token.raw;
+          lastToken.text += "\n" + token.text;
+          this.inlineQueue[this.inlineQueue.length - 1].src = lastToken.text;
+        } else {
+          tokens.push(token);
+        }
+        continue;
+      }
+      if (token = this.tokenizer.fences(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.heading(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.hr(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.blockquote(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.list(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.html(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.def(src)) {
+        src = src.substring(token.raw.length);
+        lastToken = tokens[tokens.length - 1];
+        if (lastToken && (lastToken.type === "paragraph" || lastToken.type === "text")) {
+          lastToken.raw += "\n" + token.raw;
+          lastToken.text += "\n" + token.raw;
+          this.inlineQueue[this.inlineQueue.length - 1].src = lastToken.text;
+        } else if (!this.tokens.links[token.tag]) {
+          this.tokens.links[token.tag] = {
+            href: token.href,
+            title: token.title
+          };
+        }
+        continue;
+      }
+      if (token = this.tokenizer.table(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.lheading(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      cutSrc = src;
+      if (this.options.extensions && this.options.extensions.startBlock) {
+        let startIndex = Infinity;
+        const tempSrc = src.slice(1);
+        let tempStart;
+        this.options.extensions.startBlock.forEach((getStartIndex) => {
+          tempStart = getStartIndex.call({ lexer: this }, tempSrc);
+          if (typeof tempStart === "number" && tempStart >= 0) {
+            startIndex = Math.min(startIndex, tempStart);
+          }
+        });
+        if (startIndex < Infinity && startIndex >= 0) {
+          cutSrc = src.substring(0, startIndex + 1);
+        }
+      }
+      if (this.state.top && (token = this.tokenizer.paragraph(cutSrc))) {
+        lastToken = tokens[tokens.length - 1];
+        if (lastParagraphClipped && lastToken.type === "paragraph") {
+          lastToken.raw += "\n" + token.raw;
+          lastToken.text += "\n" + token.text;
+          this.inlineQueue.pop();
+          this.inlineQueue[this.inlineQueue.length - 1].src = lastToken.text;
+        } else {
+          tokens.push(token);
+        }
+        lastParagraphClipped = cutSrc.length !== src.length;
+        src = src.substring(token.raw.length);
+        continue;
+      }
+      if (token = this.tokenizer.text(src)) {
+        src = src.substring(token.raw.length);
+        lastToken = tokens[tokens.length - 1];
+        if (lastToken && lastToken.type === "text") {
+          lastToken.raw += "\n" + token.raw;
+          lastToken.text += "\n" + token.text;
+          this.inlineQueue.pop();
+          this.inlineQueue[this.inlineQueue.length - 1].src = lastToken.text;
+        } else {
+          tokens.push(token);
+        }
+        continue;
+      }
+      if (src) {
+        const errMsg = "Infinite loop on byte: " + src.charCodeAt(0);
+        if (this.options.silent) {
+          console.error(errMsg);
+          break;
+        } else {
+          throw new Error(errMsg);
+        }
+      }
+    }
+    this.state.top = true;
+    return tokens;
+  }
+  inline(src, tokens = []) {
+    this.inlineQueue.push({ src, tokens });
+    return tokens;
+  }
+  /**
+   * Lexing/Compiling
+   */
+  inlineTokens(src, tokens = []) {
+    let token, lastToken, cutSrc;
+    let maskedSrc = src;
+    let match3;
+    let keepPrevChar, prevChar;
+    if (this.tokens.links) {
+      const links = Object.keys(this.tokens.links);
+      if (links.length > 0) {
+        while ((match3 = this.tokenizer.rules.inline.reflinkSearch.exec(maskedSrc)) != null) {
+          if (links.includes(match3[0].slice(match3[0].lastIndexOf("[") + 1, -1))) {
+            maskedSrc = maskedSrc.slice(0, match3.index) + "[" + "a".repeat(match3[0].length - 2) + "]" + maskedSrc.slice(this.tokenizer.rules.inline.reflinkSearch.lastIndex);
+          }
+        }
+      }
+    }
+    while ((match3 = this.tokenizer.rules.inline.blockSkip.exec(maskedSrc)) != null) {
+      maskedSrc = maskedSrc.slice(0, match3.index) + "[" + "a".repeat(match3[0].length - 2) + "]" + maskedSrc.slice(this.tokenizer.rules.inline.blockSkip.lastIndex);
+    }
+    while ((match3 = this.tokenizer.rules.inline.anyPunctuation.exec(maskedSrc)) != null) {
+      maskedSrc = maskedSrc.slice(0, match3.index) + "++" + maskedSrc.slice(this.tokenizer.rules.inline.anyPunctuation.lastIndex);
+    }
+    while (src) {
+      if (!keepPrevChar) {
+        prevChar = "";
+      }
+      keepPrevChar = false;
+      if (this.options.extensions && this.options.extensions.inline && this.options.extensions.inline.some((extTokenizer) => {
+        if (token = extTokenizer.call({ lexer: this }, src, tokens)) {
+          src = src.substring(token.raw.length);
+          tokens.push(token);
+          return true;
+        }
+        return false;
+      })) {
+        continue;
+      }
+      if (token = this.tokenizer.escape(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.tag(src)) {
+        src = src.substring(token.raw.length);
+        lastToken = tokens[tokens.length - 1];
+        if (lastToken && token.type === "text" && lastToken.type === "text") {
+          lastToken.raw += token.raw;
+          lastToken.text += token.text;
+        } else {
+          tokens.push(token);
+        }
+        continue;
+      }
+      if (token = this.tokenizer.link(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.reflink(src, this.tokens.links)) {
+        src = src.substring(token.raw.length);
+        lastToken = tokens[tokens.length - 1];
+        if (lastToken && token.type === "text" && lastToken.type === "text") {
+          lastToken.raw += token.raw;
+          lastToken.text += token.text;
+        } else {
+          tokens.push(token);
+        }
+        continue;
+      }
+      if (token = this.tokenizer.emStrong(src, maskedSrc, prevChar)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.codespan(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.br(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.del(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (token = this.tokenizer.autolink(src)) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      if (!this.state.inLink && (token = this.tokenizer.url(src))) {
+        src = src.substring(token.raw.length);
+        tokens.push(token);
+        continue;
+      }
+      cutSrc = src;
+      if (this.options.extensions && this.options.extensions.startInline) {
+        let startIndex = Infinity;
+        const tempSrc = src.slice(1);
+        let tempStart;
+        this.options.extensions.startInline.forEach((getStartIndex) => {
+          tempStart = getStartIndex.call({ lexer: this }, tempSrc);
+          if (typeof tempStart === "number" && tempStart >= 0) {
+            startIndex = Math.min(startIndex, tempStart);
+          }
+        });
+        if (startIndex < Infinity && startIndex >= 0) {
+          cutSrc = src.substring(0, startIndex + 1);
+        }
+      }
+      if (token = this.tokenizer.inlineText(cutSrc)) {
+        src = src.substring(token.raw.length);
+        if (token.raw.slice(-1) !== "_") {
+          prevChar = token.raw.slice(-1);
+        }
+        keepPrevChar = true;
+        lastToken = tokens[tokens.length - 1];
+        if (lastToken && lastToken.type === "text") {
+          lastToken.raw += token.raw;
+          lastToken.text += token.text;
+        } else {
+          tokens.push(token);
+        }
+        continue;
+      }
+      if (src) {
+        const errMsg = "Infinite loop on byte: " + src.charCodeAt(0);
+        if (this.options.silent) {
+          console.error(errMsg);
+          break;
+        } else {
+          throw new Error(errMsg);
+        }
+      }
+    }
+    return tokens;
+  }
+};
+var _Renderer = class {
+  static {
+    __name(this, "_Renderer");
+  }
+  options;
+  constructor(options2) {
+    this.options = options2 || _defaults;
+  }
+  code(code, infostring, escaped) {
+    const lang = (infostring || "").match(/^\S*/)?.[0];
+    code = code.replace(/\n$/, "") + "\n";
+    if (!lang) {
+      return "<pre><code>" + (escaped ? code : escape$1(code, true)) + "</code></pre>\n";
+    }
+    return '<pre><code class="language-' + escape$1(lang) + '">' + (escaped ? code : escape$1(code, true)) + "</code></pre>\n";
+  }
+  blockquote(quote) {
+    return `<blockquote>
+${quote}</blockquote>
+`;
+  }
+  html(html2, block2) {
+    return html2;
+  }
+  heading(text, level, raw2) {
+    return `<h${level}>${text}</h${level}>
+`;
+  }
+  hr() {
+    return "<hr>\n";
+  }
+  list(body, ordered, start) {
+    const type = ordered ? "ol" : "ul";
+    const startatt = ordered && start !== 1 ? ' start="' + start + '"' : "";
+    return "<" + type + startatt + ">\n" + body + "</" + type + ">\n";
+  }
+  listitem(text, task, checked) {
+    return `<li>${text}</li>
+`;
+  }
+  checkbox(checked) {
+    return "<input " + (checked ? 'checked="" ' : "") + 'disabled="" type="checkbox">';
+  }
+  paragraph(text) {
+    return `<p>${text}</p>
+`;
+  }
+  table(header, body) {
+    if (body)
+      body = `<tbody>${body}</tbody>`;
+    return "<table>\n<thead>\n" + header + "</thead>\n" + body + "</table>\n";
+  }
+  tablerow(content) {
+    return `<tr>
+${content}</tr>
+`;
+  }
+  tablecell(content, flags) {
+    const type = flags.header ? "th" : "td";
+    const tag2 = flags.align ? `<${type} align="${flags.align}">` : `<${type}>`;
+    return tag2 + content + `</${type}>
+`;
+  }
+  /**
+   * span level renderer
+   */
+  strong(text) {
+    return `<strong>${text}</strong>`;
+  }
+  em(text) {
+    return `<em>${text}</em>`;
+  }
+  codespan(text) {
+    return `<code>${text}</code>`;
+  }
+  br() {
+    return "<br>";
+  }
+  del(text) {
+    return `<del>${text}</del>`;
+  }
+  link(href, title, text) {
+    const cleanHref = cleanUrl(href);
+    if (cleanHref === null) {
+      return text;
+    }
+    href = cleanHref;
+    let out = '<a href="' + href + '"';
+    if (title) {
+      out += ' title="' + title + '"';
+    }
+    out += ">" + text + "</a>";
+    return out;
+  }
+  image(href, title, text) {
+    const cleanHref = cleanUrl(href);
+    if (cleanHref === null) {
+      return text;
+    }
+    href = cleanHref;
+    let out = `<img src="${href}" alt="${text}"`;
+    if (title) {
+      out += ` title="${title}"`;
+    }
+    out += ">";
+    return out;
+  }
+  text(text) {
+    return text;
+  }
+};
+var _TextRenderer = class {
+  static {
+    __name(this, "_TextRenderer");
+  }
+  // no need for block level renderers
+  strong(text) {
+    return text;
+  }
+  em(text) {
+    return text;
+  }
+  codespan(text) {
+    return text;
+  }
+  del(text) {
+    return text;
+  }
+  html(text) {
+    return text;
+  }
+  text(text) {
+    return text;
+  }
+  link(href, title, text) {
+    return "" + text;
+  }
+  image(href, title, text) {
+    return "" + text;
+  }
+  br() {
+    return "";
+  }
+};
+var _Parser = class __Parser {
+  static {
+    __name(this, "_Parser");
+  }
+  options;
+  renderer;
+  textRenderer;
+  constructor(options2) {
+    this.options = options2 || _defaults;
+    this.options.renderer = this.options.renderer || new _Renderer();
+    this.renderer = this.options.renderer;
+    this.renderer.options = this.options;
+    this.textRenderer = new _TextRenderer();
+  }
+  /**
+   * Static Parse Method
+   */
+  static parse(tokens, options2) {
+    const parser2 = new __Parser(options2);
+    return parser2.parse(tokens);
+  }
+  /**
+   * Static Parse Inline Method
+   */
+  static parseInline(tokens, options2) {
+    const parser2 = new __Parser(options2);
+    return parser2.parseInline(tokens);
+  }
+  /**
+   * Parse Loop
+   */
+  parse(tokens, top = true) {
+    let out = "";
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (this.options.extensions && this.options.extensions.renderers && this.options.extensions.renderers[token.type]) {
+        const genericToken = token;
+        const ret = this.options.extensions.renderers[genericToken.type].call({ parser: this }, genericToken);
+        if (ret !== false || !["space", "hr", "heading", "code", "table", "blockquote", "list", "html", "paragraph", "text"].includes(genericToken.type)) {
+          out += ret || "";
+          continue;
+        }
+      }
+      switch (token.type) {
+        case "space": {
+          continue;
+        }
+        case "hr": {
+          out += this.renderer.hr();
+          continue;
+        }
+        case "heading": {
+          const headingToken = token;
+          out += this.renderer.heading(this.parseInline(headingToken.tokens), headingToken.depth, unescape(this.parseInline(headingToken.tokens, this.textRenderer)));
+          continue;
+        }
+        case "code": {
+          const codeToken = token;
+          out += this.renderer.code(codeToken.text, codeToken.lang, !!codeToken.escaped);
+          continue;
+        }
+        case "table": {
+          const tableToken = token;
+          let header = "";
+          let cell = "";
+          for (let j = 0; j < tableToken.header.length; j++) {
+            cell += this.renderer.tablecell(this.parseInline(tableToken.header[j].tokens), { header: true, align: tableToken.align[j] });
+          }
+          header += this.renderer.tablerow(cell);
+          let body = "";
+          for (let j = 0; j < tableToken.rows.length; j++) {
+            const row = tableToken.rows[j];
+            cell = "";
+            for (let k = 0; k < row.length; k++) {
+              cell += this.renderer.tablecell(this.parseInline(row[k].tokens), { header: false, align: tableToken.align[k] });
+            }
+            body += this.renderer.tablerow(cell);
+          }
+          out += this.renderer.table(header, body);
+          continue;
+        }
+        case "blockquote": {
+          const blockquoteToken = token;
+          const body = this.parse(blockquoteToken.tokens);
+          out += this.renderer.blockquote(body);
+          continue;
+        }
+        case "list": {
+          const listToken = token;
+          const ordered = listToken.ordered;
+          const start = listToken.start;
+          const loose = listToken.loose;
+          let body = "";
+          for (let j = 0; j < listToken.items.length; j++) {
+            const item = listToken.items[j];
+            const checked = item.checked;
+            const task = item.task;
+            let itemBody = "";
+            if (item.task) {
+              const checkbox = this.renderer.checkbox(!!checked);
+              if (loose) {
+                if (item.tokens.length > 0 && item.tokens[0].type === "paragraph") {
+                  item.tokens[0].text = checkbox + " " + item.tokens[0].text;
+                  if (item.tokens[0].tokens && item.tokens[0].tokens.length > 0 && item.tokens[0].tokens[0].type === "text") {
+                    item.tokens[0].tokens[0].text = checkbox + " " + item.tokens[0].tokens[0].text;
+                  }
+                } else {
+                  item.tokens.unshift({
+                    type: "text",
+                    text: checkbox + " "
+                  });
+                }
+              } else {
+                itemBody += checkbox + " ";
+              }
+            }
+            itemBody += this.parse(item.tokens, loose);
+            body += this.renderer.listitem(itemBody, task, !!checked);
+          }
+          out += this.renderer.list(body, ordered, start);
+          continue;
+        }
+        case "html": {
+          const htmlToken = token;
+          out += this.renderer.html(htmlToken.text, htmlToken.block);
+          continue;
+        }
+        case "paragraph": {
+          const paragraphToken = token;
+          out += this.renderer.paragraph(this.parseInline(paragraphToken.tokens));
+          continue;
+        }
+        case "text": {
+          let textToken = token;
+          let body = textToken.tokens ? this.parseInline(textToken.tokens) : textToken.text;
+          while (i + 1 < tokens.length && tokens[i + 1].type === "text") {
+            textToken = tokens[++i];
+            body += "\n" + (textToken.tokens ? this.parseInline(textToken.tokens) : textToken.text);
+          }
+          out += top ? this.renderer.paragraph(body) : body;
+          continue;
+        }
+        default: {
+          const errMsg = 'Token with "' + token.type + '" type was not found.';
+          if (this.options.silent) {
+            console.error(errMsg);
+            return "";
+          } else {
+            throw new Error(errMsg);
+          }
+        }
+      }
+    }
+    return out;
+  }
+  /**
+   * Parse Inline Tokens
+   */
+  parseInline(tokens, renderer) {
+    renderer = renderer || this.renderer;
+    let out = "";
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (this.options.extensions && this.options.extensions.renderers && this.options.extensions.renderers[token.type]) {
+        const ret = this.options.extensions.renderers[token.type].call({ parser: this }, token);
+        if (ret !== false || !["escape", "html", "link", "image", "strong", "em", "codespan", "br", "del", "text"].includes(token.type)) {
+          out += ret || "";
+          continue;
+        }
+      }
+      switch (token.type) {
+        case "escape": {
+          const escapeToken = token;
+          out += renderer.text(escapeToken.text);
+          break;
+        }
+        case "html": {
+          const tagToken = token;
+          out += renderer.html(tagToken.text);
+          break;
+        }
+        case "link": {
+          const linkToken = token;
+          out += renderer.link(linkToken.href, linkToken.title, this.parseInline(linkToken.tokens, renderer));
+          break;
+        }
+        case "image": {
+          const imageToken = token;
+          out += renderer.image(imageToken.href, imageToken.title, imageToken.text);
+          break;
+        }
+        case "strong": {
+          const strongToken = token;
+          out += renderer.strong(this.parseInline(strongToken.tokens, renderer));
+          break;
+        }
+        case "em": {
+          const emToken = token;
+          out += renderer.em(this.parseInline(emToken.tokens, renderer));
+          break;
+        }
+        case "codespan": {
+          const codespanToken = token;
+          out += renderer.codespan(codespanToken.text);
+          break;
+        }
+        case "br": {
+          out += renderer.br();
+          break;
+        }
+        case "del": {
+          const delToken = token;
+          out += renderer.del(this.parseInline(delToken.tokens, renderer));
+          break;
+        }
+        case "text": {
+          const textToken = token;
+          out += renderer.text(textToken.text);
+          break;
+        }
+        default: {
+          const errMsg = 'Token with "' + token.type + '" type was not found.';
+          if (this.options.silent) {
+            console.error(errMsg);
+            return "";
+          } else {
+            throw new Error(errMsg);
+          }
+        }
+      }
+    }
+    return out;
+  }
+};
+var _Hooks = class {
+  static {
+    __name(this, "_Hooks");
+  }
+  options;
+  constructor(options2) {
+    this.options = options2 || _defaults;
+  }
+  static passThroughHooks = /* @__PURE__ */ new Set([
+    "preprocess",
+    "postprocess",
+    "processAllTokens"
+  ]);
+  /**
+   * Process markdown before marked
+   */
+  preprocess(markdown) {
+    return markdown;
+  }
+  /**
+   * Process HTML after marked is finished
+   */
+  postprocess(html2) {
+    return html2;
+  }
+  /**
+   * Process all tokens before walk tokens
+   */
+  processAllTokens(tokens) {
+    return tokens;
+  }
+};
+var Marked = class {
+  static {
+    __name(this, "Marked");
+  }
+  defaults = _getDefaults();
+  options = this.setOptions;
+  parse = this.#parseMarkdown(_Lexer.lex, _Parser.parse);
+  parseInline = this.#parseMarkdown(_Lexer.lexInline, _Parser.parseInline);
+  Parser = _Parser;
+  Renderer = _Renderer;
+  TextRenderer = _TextRenderer;
+  Lexer = _Lexer;
+  Tokenizer = _Tokenizer;
+  Hooks = _Hooks;
+  constructor(...args) {
+    this.use(...args);
+  }
+  /**
+   * Run callback for every token
+   */
+  walkTokens(tokens, callback) {
+    let values = [];
+    for (const token of tokens) {
+      values = values.concat(callback.call(this, token));
+      switch (token.type) {
+        case "table": {
+          const tableToken = token;
+          for (const cell of tableToken.header) {
+            values = values.concat(this.walkTokens(cell.tokens, callback));
+          }
+          for (const row of tableToken.rows) {
+            for (const cell of row) {
+              values = values.concat(this.walkTokens(cell.tokens, callback));
+            }
+          }
+          break;
+        }
+        case "list": {
+          const listToken = token;
+          values = values.concat(this.walkTokens(listToken.items, callback));
+          break;
+        }
+        default: {
+          const genericToken = token;
+          if (this.defaults.extensions?.childTokens?.[genericToken.type]) {
+            this.defaults.extensions.childTokens[genericToken.type].forEach((childTokens) => {
+              const tokens2 = genericToken[childTokens].flat(Infinity);
+              values = values.concat(this.walkTokens(tokens2, callback));
+            });
+          } else if (genericToken.tokens) {
+            values = values.concat(this.walkTokens(genericToken.tokens, callback));
+          }
+        }
+      }
+    }
+    return values;
+  }
+  use(...args) {
+    const extensions = this.defaults.extensions || { renderers: {}, childTokens: {} };
+    args.forEach((pack) => {
+      const opts = { ...pack };
+      opts.async = this.defaults.async || opts.async || false;
+      if (pack.extensions) {
+        pack.extensions.forEach((ext) => {
+          if (!ext.name) {
+            throw new Error("extension name required");
+          }
+          if ("renderer" in ext) {
+            const prevRenderer = extensions.renderers[ext.name];
+            if (prevRenderer) {
+              extensions.renderers[ext.name] = function(...args2) {
+                let ret = ext.renderer.apply(this, args2);
+                if (ret === false) {
+                  ret = prevRenderer.apply(this, args2);
+                }
+                return ret;
+              };
+            } else {
+              extensions.renderers[ext.name] = ext.renderer;
+            }
+          }
+          if ("tokenizer" in ext) {
+            if (!ext.level || ext.level !== "block" && ext.level !== "inline") {
+              throw new Error("extension level must be 'block' or 'inline'");
+            }
+            const extLevel = extensions[ext.level];
+            if (extLevel) {
+              extLevel.unshift(ext.tokenizer);
+            } else {
+              extensions[ext.level] = [ext.tokenizer];
+            }
+            if (ext.start) {
+              if (ext.level === "block") {
+                if (extensions.startBlock) {
+                  extensions.startBlock.push(ext.start);
+                } else {
+                  extensions.startBlock = [ext.start];
+                }
+              } else if (ext.level === "inline") {
+                if (extensions.startInline) {
+                  extensions.startInline.push(ext.start);
+                } else {
+                  extensions.startInline = [ext.start];
+                }
+              }
+            }
+          }
+          if ("childTokens" in ext && ext.childTokens) {
+            extensions.childTokens[ext.name] = ext.childTokens;
+          }
+        });
+        opts.extensions = extensions;
+      }
+      if (pack.renderer) {
+        const renderer = this.defaults.renderer || new _Renderer(this.defaults);
+        for (const prop in pack.renderer) {
+          if (!(prop in renderer)) {
+            throw new Error(`renderer '${prop}' does not exist`);
+          }
+          if (prop === "options") {
+            continue;
+          }
+          const rendererProp = prop;
+          const rendererFunc = pack.renderer[rendererProp];
+          const prevRenderer = renderer[rendererProp];
+          renderer[rendererProp] = (...args2) => {
+            let ret = rendererFunc.apply(renderer, args2);
+            if (ret === false) {
+              ret = prevRenderer.apply(renderer, args2);
+            }
+            return ret || "";
+          };
+        }
+        opts.renderer = renderer;
+      }
+      if (pack.tokenizer) {
+        const tokenizer = this.defaults.tokenizer || new _Tokenizer(this.defaults);
+        for (const prop in pack.tokenizer) {
+          if (!(prop in tokenizer)) {
+            throw new Error(`tokenizer '${prop}' does not exist`);
+          }
+          if (["options", "rules", "lexer"].includes(prop)) {
+            continue;
+          }
+          const tokenizerProp = prop;
+          const tokenizerFunc = pack.tokenizer[tokenizerProp];
+          const prevTokenizer = tokenizer[tokenizerProp];
+          tokenizer[tokenizerProp] = (...args2) => {
+            let ret = tokenizerFunc.apply(tokenizer, args2);
+            if (ret === false) {
+              ret = prevTokenizer.apply(tokenizer, args2);
+            }
+            return ret;
+          };
+        }
+        opts.tokenizer = tokenizer;
+      }
+      if (pack.hooks) {
+        const hooks = this.defaults.hooks || new _Hooks();
+        for (const prop in pack.hooks) {
+          if (!(prop in hooks)) {
+            throw new Error(`hook '${prop}' does not exist`);
+          }
+          if (prop === "options") {
+            continue;
+          }
+          const hooksProp = prop;
+          const hooksFunc = pack.hooks[hooksProp];
+          const prevHook = hooks[hooksProp];
+          if (_Hooks.passThroughHooks.has(prop)) {
+            hooks[hooksProp] = (arg) => {
+              if (this.defaults.async) {
+                return Promise.resolve(hooksFunc.call(hooks, arg)).then((ret2) => {
+                  return prevHook.call(hooks, ret2);
+                });
+              }
+              const ret = hooksFunc.call(hooks, arg);
+              return prevHook.call(hooks, ret);
+            };
+          } else {
+            hooks[hooksProp] = (...args2) => {
+              let ret = hooksFunc.apply(hooks, args2);
+              if (ret === false) {
+                ret = prevHook.apply(hooks, args2);
+              }
+              return ret;
+            };
+          }
+        }
+        opts.hooks = hooks;
+      }
+      if (pack.walkTokens) {
+        const walkTokens2 = this.defaults.walkTokens;
+        const packWalktokens = pack.walkTokens;
+        opts.walkTokens = function(token) {
+          let values = [];
+          values.push(packWalktokens.call(this, token));
+          if (walkTokens2) {
+            values = values.concat(walkTokens2.call(this, token));
+          }
+          return values;
+        };
+      }
+      this.defaults = { ...this.defaults, ...opts };
+    });
+    return this;
+  }
+  setOptions(opt) {
+    this.defaults = { ...this.defaults, ...opt };
+    return this;
+  }
+  lexer(src, options2) {
+    return _Lexer.lex(src, options2 ?? this.defaults);
+  }
+  parser(tokens, options2) {
+    return _Parser.parse(tokens, options2 ?? this.defaults);
+  }
+  #parseMarkdown(lexer2, parser2) {
+    return (src, options2) => {
+      const origOpt = { ...options2 };
+      const opt = { ...this.defaults, ...origOpt };
+      if (this.defaults.async === true && origOpt.async === false) {
+        if (!opt.silent) {
+          console.warn("marked(): The async option was set to true by an extension. The async: false option sent to parse will be ignored.");
+        }
+        opt.async = true;
+      }
+      const throwError = this.#onError(!!opt.silent, !!opt.async);
+      if (typeof src === "undefined" || src === null) {
+        return throwError(new Error("marked(): input parameter is undefined or null"));
+      }
+      if (typeof src !== "string") {
+        return throwError(new Error("marked(): input parameter is of type " + Object.prototype.toString.call(src) + ", string expected"));
+      }
+      if (opt.hooks) {
+        opt.hooks.options = opt;
+      }
+      if (opt.async) {
+        return Promise.resolve(opt.hooks ? opt.hooks.preprocess(src) : src).then((src2) => lexer2(src2, opt)).then((tokens) => opt.hooks ? opt.hooks.processAllTokens(tokens) : tokens).then((tokens) => opt.walkTokens ? Promise.all(this.walkTokens(tokens, opt.walkTokens)).then(() => tokens) : tokens).then((tokens) => parser2(tokens, opt)).then((html2) => opt.hooks ? opt.hooks.postprocess(html2) : html2).catch(throwError);
+      }
+      try {
+        if (opt.hooks) {
+          src = opt.hooks.preprocess(src);
+        }
+        let tokens = lexer2(src, opt);
+        if (opt.hooks) {
+          tokens = opt.hooks.processAllTokens(tokens);
+        }
+        if (opt.walkTokens) {
+          this.walkTokens(tokens, opt.walkTokens);
+        }
+        let html2 = parser2(tokens, opt);
+        if (opt.hooks) {
+          html2 = opt.hooks.postprocess(html2);
+        }
+        return html2;
+      } catch (e) {
+        return throwError(e);
+      }
+    };
+  }
+  #onError(silent, async) {
+    return (e) => {
+      e.message += "\nPlease report this to https://github.com/markedjs/marked.";
+      if (silent) {
+        const msg = "<p>An error occurred:</p><pre>" + escape$1(e.message + "", true) + "</pre>";
+        if (async) {
+          return Promise.resolve(msg);
+        }
+        return msg;
+      }
+      if (async) {
+        return Promise.reject(e);
+      }
+      throw e;
+    };
+  }
+};
+var markedInstance = new Marked();
+function marked(src, opt) {
+  return markedInstance.parse(src, opt);
+}
+__name(marked, "marked");
+marked.options = marked.setOptions = function(options2) {
+  markedInstance.setOptions(options2);
+  marked.defaults = markedInstance.defaults;
+  changeDefaults(marked.defaults);
+  return marked;
+};
+marked.getDefaults = _getDefaults;
+marked.defaults = _defaults;
+marked.use = function(...args) {
+  markedInstance.use(...args);
+  marked.defaults = markedInstance.defaults;
+  changeDefaults(marked.defaults);
+  return marked;
+};
+marked.walkTokens = function(tokens, callback) {
+  return markedInstance.walkTokens(tokens, callback);
+};
+marked.parseInline = markedInstance.parseInline;
+marked.Parser = _Parser;
+marked.parser = _Parser.parse;
+marked.Renderer = _Renderer;
+marked.TextRenderer = _TextRenderer;
+marked.Lexer = _Lexer;
+marked.lexer = _Lexer.lex;
+marked.Tokenizer = _Tokenizer;
+marked.Hooks = _Hooks;
+marked.parse = marked;
+var options = marked.options;
+var setOptions = marked.setOptions;
+var use = marked.use;
+var walkTokens = marked.walkTokens;
+var parseInline = marked.parseInline;
+var parser = _Parser.parse;
+var lexer = _Lexer.lex;
+
+// src/services/markdown.ts
+var escapeHtml = /* @__PURE__ */ __name((s2) => s2.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;"), "escapeHtml");
+var SAFE_PROTOCOLS = /^(https?:|mailto:|\/)/i;
+var resolveDocLinks = /* @__PURE__ */ __name((content, titles) => {
+  const lines = content.split("\n");
+  let inFence = false;
+  let fenceMarker = "";
+  return lines.map((line) => {
+    const fenceMatch = line.match(/^\s*(```+|~~~+)/);
+    if (fenceMatch) {
+      if (!inFence) {
+        inFence = true;
+        fenceMarker = fenceMatch[1][0];
+      } else if (fenceMatch[1][0] === fenceMarker) {
+        inFence = false;
+      }
+      return line;
+    }
+    if (inFence) return line;
+    return line.replace(/\[\[(doc_[a-zA-Z0-9_-]+)(?:\|([^\]]*))?\]\]/g, (_2, id, label) => {
+      const title = label || titles.get(id) || id;
+      return `[${title}](/?doc=${id})`;
+    });
+  }).join("\n");
+}, "resolveDocLinks");
+var renderMarkdown = /* @__PURE__ */ __name((content, linkTitles) => {
+  const slugCounts = /* @__PURE__ */ new Map();
+  const marked2 = new Marked({
+    renderer: {
+      html(html2) {
+        return escapeHtml(html2);
+      },
+      heading(text, level, raw2) {
+        const base = slugify2(raw2);
+        const count = slugCounts.get(base) ?? 0;
+        slugCounts.set(base, count + 1);
+        const slug = count === 0 ? base : `${base}-${count + 1}`;
+        return `<h${level} id="${escapeHtml(slug)}">${text}</h${level}>
+`;
+      },
+      link(href, title, text) {
+        const safeHref = SAFE_PROTOCOLS.test(href) ? href : "#";
+        const titleAttr = title ? ` title="${escapeHtml(title)}"` : "";
+        return `<a href="${escapeHtml(safeHref)}"${titleAttr}>${text}</a>`;
+      },
+      image(href, title, text) {
+        const safeHref = SAFE_PROTOCOLS.test(href) ? href : "";
+        const titleAttr = title ? ` title="${escapeHtml(title)}"` : "";
+        return `<img src="${escapeHtml(safeHref)}" alt="${escapeHtml(text)}"${titleAttr}>`;
+      },
+      table(header, body) {
+        return `<div class="table-wrap"><table><thead>${header}</thead><tbody>${body}</tbody></table></div>
+`;
+      }
+    }
+  });
+  const source = linkTitles ? resolveDocLinks(content, linkTitles) : content;
+  return marked2.parse(source, { async: false });
+}, "renderMarkdown");
+
 // src/routes/files.ts
+var MAX_FILE_BYTES = 10 * 1024 * 1024;
 var filesRoute = new Hono2();
 var generateId4 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
 var getExtension = /* @__PURE__ */ __name((filename, mimeType) => {
@@ -26383,6 +31590,51 @@ var getExtension = /* @__PURE__ */ __name((filename, mimeType) => {
   };
   return mimeMap[mimeType] || "bin";
 }, "getExtension");
+var renderFilesList = /* @__PURE__ */ __name(async (c) => {
+  const limit = parseInt(c.req.query("limit") || "50");
+  const result = await c.env.DB.prepare(`
+    SELECT * FROM files ORDER BY created_at DESC LIMIT ?
+  `).bind(limit).all();
+  let html2 = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:var(--space-4)">\n';
+  for (const file2 of result.results) {
+    const isImage = typeof file2.mime_type === "string" && file2.mime_type.startsWith("image/");
+    html2 += `  <div class="doc-meta-card" style="display:flex; gap:var(--space-4); align-items:start">
+`;
+    if (isImage) {
+      html2 += `    <img src="/files/${escapeHtml(file2.id)}/raw" style="width:64px; height:64px; object-fit:cover; border-radius:var(--radius-sm); border:1px solid var(--border)">
+`;
+    } else {
+      html2 += `    <div style="width:64px; height:64px; background:var(--surface-dim); display:flex; align-items:center; justify-content:center; border-radius:var(--radius-sm); font-size:24px">\u{1F4C4}</div>
+`;
+    }
+    html2 += `    <div style="flex:1; min-width:0">
+`;
+    html2 += `      <div style="font-weight:600; font-size:var(--text-sm); white-space:nowrap; overflow:hidden; text-overflow:ellipsis"><a href="/files/${escapeHtml(file2.id)}/raw" target="_blank">${escapeHtml(file2.filename)}</a></div>
+`;
+    html2 += `      <div class="muted" style="font-size:var(--text-xs); margin-top:2px">${escapeHtml(file2.mime_type)} \u30FB ${(file2.size_bytes / 1024).toFixed(1)} KB</div>
+`;
+    html2 += `      <div class="muted" style="font-size:10px; margin-top:4px">Embed: <code style="font-size:9px">/files/${escapeHtml(file2.id)}/raw</code></div>
+`;
+    html2 += `      <button class="btn-quiet btn-danger btn-sm" style="margin-top:var(--space-2); padding-left:0" hx-delete="/files/${escapeHtml(file2.id)}" hx-confirm="Delete this file?" hx-target="#files-list">Delete</button>
+`;
+    html2 += `    </div>
+`;
+    html2 += `  </div>
+`;
+  }
+  if (result.results.length === 0) {
+    html2 += '  <div class="muted" style="grid-column:1/-1; padding:var(--space-8); text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md)">No files uploaded.</div>\n';
+  }
+  html2 += "</div>\n";
+  return html2;
+}, "renderFilesList");
+filesRoute.get("/", async (c) => {
+  const limit = parseInt(c.req.query("limit") || "50");
+  const result = await c.env.DB.prepare(`
+    SELECT * FROM files ORDER BY created_at DESC LIMIT ?
+  `).bind(limit).all();
+  return c.json({ data: result.results });
+});
 filesRoute.post("/", async (c) => {
   try {
     const auth = c.get("auth");
@@ -26390,6 +31642,9 @@ filesRoute.post("/", async (c) => {
     const file2 = body.file;
     if (!file2) {
       return c.json({ error: { code: "MISSING_FILE", message: "No file uploaded" } }, 400);
+    }
+    if (file2.size > MAX_FILE_BYTES) {
+      return c.json({ error: { code: "FILE_TOO_LARGE", message: `File exceeds ${MAX_FILE_BYTES / 1024 / 1024} MB` } }, 413);
     }
     const documentId = body.document_id;
     const author = authorOf(auth);
@@ -26417,6 +31672,10 @@ filesRoute.post("/", async (c) => {
       author.apiKeyId,
       now
     ).run();
+    const accept = c.req.header("Accept") || "";
+    if (accept.includes("text/html")) {
+      return c.html(await renderFilesList(c));
+    }
     const fileRecord = await c.env.DB.prepare("SELECT * FROM files WHERE id = ?").bind(fileId).first();
     return c.json(fileRecord, 201);
   } catch (error51) {
@@ -26424,43 +31683,9 @@ filesRoute.post("/", async (c) => {
     return c.json({ error: { code: "UPLOAD_ERROR", message: "Failed to upload file" } }, 500);
   }
 });
-filesRoute.get("/:id", async (c) => {
-  const id = c.req.param("id");
-  const file2 = await c.env.DB.prepare("SELECT * FROM files WHERE id = ?").bind(id).first();
-  if (!file2) {
-    return c.json({ error: { code: "FILE_NOT_FOUND", message: "File not found" } }, 404);
-  }
-  if (file2.document_id) {
-    const doc = await c.env.DB.prepare("SELECT collection_id FROM documents WHERE id = ?").bind(file2.document_id).first();
-    if (doc && !isCollectionAllowed(c.get("auth"), doc.collection_id)) {
-      return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
-    }
-  }
-  return c.json(file2);
-});
-filesRoute.get("/:id/raw", async (c) => {
-  const id = c.req.param("id");
-  const file2 = await c.env.DB.prepare("SELECT * FROM files WHERE id = ?").bind(id).first();
-  if (!file2) {
-    return c.json({ error: { code: "FILE_NOT_FOUND", message: "File not found" } }, 404);
-  }
-  if (file2.document_id) {
-    const doc = await c.env.DB.prepare("SELECT collection_id FROM documents WHERE id = ?").bind(file2.document_id).first();
-    if (doc && !isCollectionAllowed(c.get("auth"), doc.collection_id)) {
-      return c.json({ error: { code: "FORBIDDEN", message: "Collection not allowed for this API key" } }, 403);
-    }
-  }
-  const object2 = await c.env.R2.get(file2.r2_key);
-  if (!object2) {
-    return c.json({ error: { code: "FILE_NOT_FOUND", message: "File not found in storage" } }, 404);
-  }
-  const headers = new Headers();
-  headers.set("Content-Type", file2.mime_type);
-  headers.set("Content-Disposition", `inline; filename="${file2.filename}"`);
-  return new Response(object2.body, { headers });
-});
 filesRoute.delete("/:id", async (c) => {
   const id = c.req.param("id");
+  const accept = c.req.header("Accept") || "";
   const file2 = await c.env.DB.prepare("SELECT * FROM files WHERE id = ?").bind(id).first();
   if (!file2) {
     return c.json({ error: { code: "FILE_NOT_FOUND", message: "File not found" } }, 404);
@@ -26473,10 +31698,14 @@ filesRoute.delete("/:id", async (c) => {
   }
   await c.env.R2.delete(file2.r2_key);
   await c.env.DB.prepare("DELETE FROM files WHERE id = ?").bind(id).run();
+  if (accept.includes("text/html")) {
+    return c.html(await renderFilesList(c));
+  }
   return c.json({ success: true, id });
 });
 
 // src/routes/inbox.ts
+var MAX_INBOX_CONTENT = 1e5;
 var inboxRoute = new Hono2();
 var generateId5 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
 var createTokenSchema = external_exports.object({
@@ -26567,7 +31796,10 @@ inboxRoute.post("/:token", async (c) => {
     if (typeof content !== "string" || content.length === 0) {
       return c.json({ error: { code: "INVALID_CONTENT", message: "Content is required" } }, 400);
     }
-    const sourceHint = body.source_hint || null;
+    if (content.length > MAX_INBOX_CONTENT) {
+      return c.json({ error: { code: "CONTENT_TOO_LARGE", message: `Content exceeds ${MAX_INBOX_CONTENT} characters` } }, 413);
+    }
+    const sourceHint = typeof body.source_hint === "string" ? body.source_hint.slice(0, 500) : null;
     const ip = c.req.header("CF-Connecting-IP") || c.req.header("X-Forwarded-For") || "unknown";
     const ipHash = Array.from(ip).reduce((hash2, char) => (hash2 << 5) - hash2 + char.charCodeAt(0) | 0, 0).toString(16);
     const itemId = generateId5("item");
@@ -26583,6 +31815,48 @@ inboxRoute.post("/:token", async (c) => {
     return c.json({ error: { code: "INTERNAL_ERROR", message: "Failed to submit to inbox" } }, 500);
   }
 });
+var renderInboxList = /* @__PURE__ */ __name(async (c) => {
+  const status = c.req.query("status") || "pending";
+  const limit = parseInt(c.req.query("limit") || "20");
+  const result = await c.env.DB.prepare(`
+    SELECT i.*, d.title as document_title
+    FROM inbox_items i
+    JOIN documents d ON i.document_id = d.id
+    WHERE i.status = ?
+    ORDER BY i.submitted_at DESC
+    LIMIT ?
+  `).bind(status, limit).all();
+  let html2 = '<div style="display:flex; flex-direction:column; gap:var(--space-4)">\n';
+  for (const item of result.results) {
+    html2 += `  <div class="doc-meta-card">
+`;
+    html2 += `    <div style="display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-3)">
+`;
+    html2 += `      <strong style="font-size:var(--text-sm)">${escapeHtml(item.document_title)}</strong>
+`;
+    html2 += `      <span class="muted" style="font-size:var(--text-xs)">(${escapeHtml(item.document_id)})</span>
+`;
+    html2 += `      <div class="spacer"></div>
+`;
+    html2 += `      <button class="btn-primary btn-sm" hx-post="/inbox/${escapeHtml(item.id)}/approve" hx-target="#inbox-list">Approve</button>
+`;
+    html2 += `      <button class="btn btn-danger btn-sm" hx-post="/inbox/${escapeHtml(item.id)}/reject" hx-target="#inbox-list">Reject</button>
+`;
+    html2 += `    </div>
+`;
+    html2 += `    <div class="muted" style="font-size:var(--text-xs); margin-bottom:var(--space-3)">Submitted: ${new Date(item.submitted_at).toLocaleString()} ${item.source_hint ? "\u30FB Source: " + escapeHtml(item.source_hint) : ""}</div>
+`;
+    html2 += `    <pre style="margin:0; font-size:var(--text-xs); background:var(--surface-dim); padding:var(--space-3); border-radius:var(--radius-sm)"><code>${escapeHtml(item.content)}</code></pre>
+`;
+    html2 += `  </div>
+`;
+  }
+  if (result.results.length === 0) {
+    html2 += '  <div class="muted" style="padding:var(--space-6); text-align:center; border:1px dashed var(--border); border-radius:var(--radius-md)">No pending submissions.</div>\n';
+  }
+  html2 += "</div>\n";
+  return html2;
+}, "renderInboxList");
 inboxRoute.get("/", async (c) => {
   const status = c.req.query("status") || "pending";
   const limit = parseInt(c.req.query("limit") || "20");
@@ -26599,6 +31873,7 @@ inboxRoute.get("/", async (c) => {
 inboxRoute.post("/:id/approve", async (c) => {
   try {
     const id = c.req.param("id");
+    const accept = c.req.header("Accept") || "";
     const item = await c.env.DB.prepare("SELECT * FROM inbox_items WHERE id = ?").bind(id).first();
     if (!item) {
       return c.json({ error: { code: "ITEM_NOT_FOUND", message: "Item not found" } }, 404);
@@ -26624,6 +31899,9 @@ inboxRoute.post("/:id/approve", async (c) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(generateId5("rev"), doc.id, doc.title, newContent, author.authorType, author.apiKeyId, author.apiKeyName, now).run();
     await c.env.DB.prepare("UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?").bind("approved", now, id).run();
+    if (accept.includes("text/html")) {
+      return c.html(await renderInboxList(c));
+    }
     return c.json({ success: true, document_id: doc.id, updated_at: now });
   } catch (error51) {
     console.error("Error approving inbox item:", error51);
@@ -26633,6 +31911,7 @@ inboxRoute.post("/:id/approve", async (c) => {
 inboxRoute.post("/:id/reject", async (c) => {
   try {
     const id = c.req.param("id");
+    const accept = c.req.header("Accept") || "";
     const item = await c.env.DB.prepare("SELECT * FROM inbox_items WHERE id = ?").bind(id).first();
     if (!item) {
       return c.json({ error: { code: "ITEM_NOT_FOUND", message: "Item not found" } }, 404);
@@ -26642,6 +31921,9 @@ inboxRoute.post("/:id/reject", async (c) => {
     }
     const now = Date.now();
     await c.env.DB.prepare("UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?").bind("rejected", now, id).run();
+    if (accept.includes("text/html")) {
+      return c.html(await renderInboxList(c));
+    }
     return c.json({ success: true, id });
   } catch (error51) {
     console.error("Error rejecting inbox item:", error51);
@@ -26670,6 +31952,56 @@ var apiKeysRoute = new Hono2();
 var generateId6 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
 var PUBLIC_COLUMNS = "id, name, scopes, collection_ids, entry_doc_id, expires_at, last_used_at, is_active, created_at";
 apiKeysRoute.get("/", async (c) => {
+  const accept = c.req.header("Accept") || "";
+  if (accept.includes("text/html")) {
+    const result2 = await c.env.DB.prepare(
+      `SELECT ${PUBLIC_COLUMNS} FROM api_keys ORDER BY created_at DESC`
+    ).all();
+    let html2 = '<ul class="plain">\n';
+    for (const key of result2.results) {
+      const scopes = JSON.parse(key.scopes);
+      html2 += `  <li>
+`;
+      html2 += `    <div class="row">
+`;
+      html2 += `      <strong>${escapeHtml(key.name)}</strong>
+`;
+      html2 += `      <span class="tag">${escapeHtml(scopes.join(", "))}</span>
+`;
+      if (!key.is_active) {
+        html2 += `      <span class="tag" style="color:#dc2626">\u5931\u52B9\u6E08\u307F</span>
+`;
+      }
+      html2 += `      <span class="spacer" style="flex:1"></span>
+`;
+      if (key.is_active) {
+        html2 += `      <button class="danger" hx-delete="/api-keys/${escapeHtml(key.id)}" hx-confirm="\u30AD\u30FC\u300C${escapeHtml(key.name)}\u300D\u3092\u5931\u52B9\u3055\u305B\u307E\u3059\u304B?" hx-include="#keys-list">\u5931\u52B9</button>
+`;
+      }
+      html2 += `    </div>
+`;
+      html2 += `    <div class="muted">
+`;
+      html2 += `      \u4F5C\u6210 ${new Date(key.created_at).toLocaleString()}
+`;
+      if (key.last_used_at) {
+        html2 += `      \u30FB\u6700\u7D42\u4F7F\u7528 ${new Date(key.last_used_at).toLocaleString()}
+`;
+      } else {
+        html2 += `      \u30FB\u672A\u4F7F\u7528
+`;
+      }
+      html2 += `    </div>
+`;
+      html2 += `  </li>
+`;
+    }
+    if (result2.results.length === 0) {
+      html2 += '  <li class="muted">\u767A\u884C\u6E08\u307F\u306E\u30AD\u30FC\u306F\u3042\u308A\u307E\u305B\u3093\u3002</li>\n';
+    }
+    html2 += "</ul>\n";
+    return c.html(html2);
+  }
   const result = await c.env.DB.prepare(
     `SELECT ${PUBLIC_COLUMNS} FROM api_keys ORDER BY created_at DESC`
   ).all();
@@ -26677,7 +32009,16 @@ apiKeysRoute.get("/", async (c) => {
 });
 apiKeysRoute.post("/", async (c) => {
   try {
-    const body = await c.req.json();
+    const contentType = c.req.header("Content-Type") || "";
+    let body;
+    if (contentType.includes("application/json")) {
+      body = await c.req.json();
+    } else {
+      body = await c.req.parseBody({ all: true });
+      if (body.scopes && !Array.isArray(body.scopes)) {
+        body.scopes = [body.scopes];
+      }
+    }
     const parsed = createKeySchema.parse(body);
     const id = generateId6("key");
     const rawKey = generateApiKey();
@@ -26699,6 +32040,19 @@ apiKeysRoute.post("/", async (c) => {
     const key = await c.env.DB.prepare(
       `SELECT ${PUBLIC_COLUMNS} FROM api_keys WHERE id = ?`
     ).bind(id).first();
+    const accept = c.req.header("Accept") || "";
+    if (accept.includes("text/html")) {
+      let html2 = `
+        <div class="doc-meta-card" style="border-color:var(--accent); background:var(--accent-subtle); margin-top:var(--space-4)">
+          <strong style="font-size:var(--text-xs); color:var(--accent)">RAW KEY (COPY NOW, THIS WILL NOT BE SHOWN AGAIN)</strong>
+          <div class="keybox" style="margin: var(--space-2) 0">${rawKey}</div>
+          <button class="btn-primary btn-sm" onclick="copyKey('${rawKey}')">Copy to Clipboard</button>
+        </div>
+        <script>document.getElementById('created-key-section').style.display = 'block';<\/script>
+        <div hx-get="/api-keys" hx-trigger="load" hx-target="#keys-list" hx-swap="innerHTML"></div>
+      `;
+      return c.html(html2);
+    }
     return c.json({ ...key, key: rawKey }, 201);
   } catch (error51) {
     if (error51.name === "ZodError") {
@@ -26762,11 +32116,61 @@ apiKeysRoute.patch("/:id", async (c) => {
 });
 apiKeysRoute.delete("/:id", async (c) => {
   const id = c.req.param("id");
+  const accept = c.req.header("Accept") || "";
   const existing = await c.env.DB.prepare("SELECT id FROM api_keys WHERE id = ?").bind(id).first();
   if (!existing) {
     return c.json({ error: { code: "KEY_NOT_FOUND", message: "API key not found" } }, 404);
   }
   await c.env.DB.prepare("UPDATE api_keys SET is_active = 0 WHERE id = ?").bind(id).run();
+  if (accept.includes("text/html")) {
+    const result = await c.env.DB.prepare(
+      `SELECT ${PUBLIC_COLUMNS} FROM api_keys ORDER BY created_at DESC`
+    ).all();
+    let html2 = '<ul class="plain">\n';
+    for (const key of result.results) {
+      const scopes = JSON.parse(key.scopes);
+      html2 += `  <li>
+`;
+      html2 += `    <div class="row">
+`;
+      html2 += `      <strong>${escapeHtml(key.name)}</strong>
+`;
+      html2 += `      <span class="tag">${escapeHtml(scopes.join(", "))}</span>
+`;
+      if (!key.is_active) {
+        html2 += `      <span class="tag" style="color:#dc2626">\u5931\u52B9\u6E08\u307F</span>
+`;
+      }
+      html2 += `      <span class="spacer" style="flex:1"></span>
+`;
+      if (key.is_active) {
+        html2 += `      <button class="danger" hx-delete="/api-keys/${escapeHtml(key.id)}" hx-confirm="\u30AD\u30FC\u300C${escapeHtml(key.name)}\u300D\u3092\u5931\u52B9\u3055\u305B\u307E\u3059\u304B?" hx-include="#keys-list">\u5931\u52B9</button>
+`;
+      }
+      html2 += `    </div>
+`;
+      html2 += `    <div class="muted">
+`;
+      html2 += `      \u4F5C\u6210 ${new Date(key.created_at).toLocaleString()}
+`;
+      if (key.last_used_at) {
+        html2 += `      \u30FB\u6700\u7D42\u4F7F\u7528 ${new Date(key.last_used_at).toLocaleString()}
+`;
+      } else {
+        html2 += `      \u30FB\u672A\u4F7F\u7528
+`;
+      }
+      html2 += `    </div>
+`;
+      html2 += `  </li>
+`;
+    }
+    if (result.results.length === 0) {
+      html2 += '  <li class="muted">\u767A\u884C\u6E08\u307F\u306E\u30AD\u30FC\u306F\u3042\u308A\u307E\u305B\u3093\u3002</li>\n';
+    }
+    html2 += "</ul>\n";
+    return c.html(html2);
+  }
   return c.json({ success: true, id });
 });
 
@@ -26787,9 +32191,1035 @@ meRoute.get("/entrypoint", async (c) => {
   return c.json(doc);
 });
 
+// src/routes/ui.ts
+var uiRoute = new Hono2();
+uiRoute.get("/inbox", async (c) => c.html(await renderInboxList(c)));
+uiRoute.get("/files", async (c) => c.html(await renderFilesList(c)));
+var generateId7 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
+var fmtDate = /* @__PURE__ */ __name((ts) => new Intl.DateTimeFormat("sv-SE", {
+  timeZone: "Asia/Tokyo",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit"
+}).format(new Date(ts)), "fmtDate");
+var notify = /* @__PURE__ */ __name((c, message, treeRefresh = true) => {
+  const events = { sysline: message };
+  if (treeRefresh) events["tree-refresh"] = true;
+  const json3 = JSON.stringify(events).replace(
+    /[\u0080-\uffff]/g,
+    (ch) => "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0")
+  );
+  c.header("HX-Trigger", json3);
+}, "notify");
+var docLink = /* @__PURE__ */ __name((id, title, extraClass = "", suffix = "") => `<a class="tree-item ${extraClass}" data-doc-id="${escapeHtml(id)}" href="/?doc=${escapeHtml(id)}"
+      hx-get="/ui/doc/${escapeHtml(id)}" hx-target="#doc-view" hx-push-url="/?doc=${escapeHtml(id)}">${escapeHtml(title)}${suffix}</a>`, "docLink");
+var renderTree = /* @__PURE__ */ __name(async (c) => {
+  const auth = c.get("auth");
+  const [colsResult, docsResult] = await Promise.all([
+    c.env.DB.prepare("SELECT id, name, parent_id FROM collections ORDER BY name").all(),
+    c.env.DB.prepare(`
+      SELECT id, title, collection_id, parent_id, priority
+      FROM documents WHERE status = 'published'
+      ORDER BY updated_at DESC
+    `).all()
+  ]);
+  const collections = colsResult.results.filter((col) => isCollectionAllowed(auth, col.id));
+  const docsByParent = /* @__PURE__ */ new Map();
+  for (const doc of docsResult.results) {
+    if (!docsByParent.has(doc.collection_id)) docsByParent.set(doc.collection_id, /* @__PURE__ */ new Map());
+    const parentMap = docsByParent.get(doc.collection_id);
+    const pid = doc.parent_id || null;
+    if (!parentMap.has(pid)) parentMap.set(pid, []);
+    parentMap.get(pid).push(doc);
+  }
+  const renderDocs = /* @__PURE__ */ __name((collectionId, parentId, docDepth) => {
+    if (docDepth > 20) return "";
+    const parentMap = docsByParent.get(collectionId);
+    if (!parentMap) return "";
+    const docs = parentMap.get(parentId) ?? [];
+    const sorted = [
+      ...docs.filter((d) => d.priority === "high"),
+      ...docs.filter((d) => d.priority === "normal"),
+      ...docs.filter((d) => d.priority === "archive")
+    ];
+    let html3 = "";
+    for (const doc of sorted) {
+      const cls = doc.priority === "archive" ? "is-archive" : "";
+      const mark = doc.priority === "high" ? '<span class="pri" title="priority: high">\u25CF</span>' : "";
+      html3 += `<div class="tree-doc-item" style="--doc-depth:${docDepth}">
+        ${docLink(doc.id, doc.title, cls, mark)}
+        <button class="doc-add-btn" type="button" title="\u5B50\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u3092\u8FFD\u52A0"
+                hx-get="/ui/doc/${escapeHtml(doc.id)}/new-child" hx-target="#doc-view">\uFF0B</button>
+      </div>
+`;
+      html3 += renderDocs(collectionId, doc.id, docDepth + 1);
+    }
+    return html3;
+  }, "renderDocs");
+  const renderGroup = /* @__PURE__ */ __name((parentId, depth) => {
+    let html3 = "";
+    for (const col of collections.filter((x) => x.parent_id === parentId)) {
+      html3 += `<section class="tree-group" data-col-id="${escapeHtml(col.id)}" style="--depth:${depth}">
+        <div class="tree-head">
+          <a class="tree-col-name" href="/?view=collections"
+             hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">${escapeHtml(col.name)}</a>
+          <button class="tree-toggle" type="button" aria-label="\u6298\u308A\u305F\u305F\u307F">\u25BE</button>
+        </div>
+        <div class="tree-children">
+`;
+      html3 += renderDocs(col.id, null, 0);
+      html3 += `<details class="tree-new tree-new-doc">
+        <summary>\uFF0B \u30E1\u30E2\u3092\u8FFD\u52A0</summary>
+        <form hx-post="/ui/docs" hx-target="#doc-view">
+          <input type="hidden" name="collection_id" value="${escapeHtml(col.id)}">
+          <input class="input" name="title" placeholder="\u30BF\u30A4\u30C8\u30EB" required autocomplete="off">
+          <button class="btn btn-sm" type="submit">\u4F5C\u6210</button>
+        </form>
+      </details>
+`;
+      html3 += renderGroup(col.id, depth + 1);
+      html3 += "</div></section>\n";
+    }
+    return html3;
+  }, "renderGroup");
+  let html2 = '<nav class="tree" aria-label="\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u30C4\u30EA\u30FC">\n';
+  html2 += renderGroup(null, 0);
+  if (collections.length === 0) {
+    html2 += '<p class="tree-empty">\u307E\u305A\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u3092\u4F5C\u6210\u3057\u3066\u304F\u3060\u3055\u3044</p>\n';
+  }
+  html2 += `<details class="tree-new tree-new-col">
+    <summary>\uFF0B \u30B3\u30EC\u30AF\u30B7\u30E7\u30F3</summary>
+    <form hx-post="/ui/collections" hx-target="#tree-area">
+      <input class="input" name="name" placeholder="\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u540D" required autocomplete="off">
+      <button class="btn btn-sm" type="submit">\u4F5C\u6210</button>
+    </form>
+  </details>
+`;
+  html2 += "</nav>\n";
+  return html2;
+}, "renderTree");
+var colHead = /* @__PURE__ */ __name((col, count, editing = false) => {
+  if (editing) {
+    return `<div class="col-head" id="col-head-${escapeHtml(col.id)}">
+      <form hx-post="/ui/collections/${escapeHtml(col.id)}/rename" hx-target="#doc-view">
+        <input class="input col-name-input" name="name" value="${escapeHtml(col.name)}" required autofocus>
+        <button class="btn btn-sm" type="submit">\u4FDD\u5B58</button>
+        <button class="btn-quiet btn-sm" type="button"
+                hx-get="/ui/collections/${escapeHtml(col.id)}/head" hx-target="#col-head-${escapeHtml(col.id)}" hx-swap="outerHTML">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
+      </form>
+    </div>`;
+  }
+  return `<div class="col-head" id="col-head-${escapeHtml(col.id)}">
+    <h2 class="col-title">${escapeHtml(col.name)}</h2>
+    <span class="muted col-count">${count}\u4EF6</span>
+    <button class="btn-quiet btn-sm" type="button"
+            hx-get="/ui/collections/${escapeHtml(col.id)}/head?edit=1" hx-target="#col-head-${escapeHtml(col.id)}" hx-swap="outerHTML">\u540D\u524D\u3092\u5909\u66F4</button>
+    <button class="btn-quiet danger-link btn-sm" type="button"
+            hx-post="/ui/collections/${escapeHtml(col.id)}/delete" hx-target="#doc-view"
+            hx-confirm="\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u300C${escapeHtml(col.name)}\u300D\u3092\u524A\u9664\u3057\u307E\u3059\u304B?">\u524A\u9664</button>
+  </div>`;
+}, "colHead");
+var renderCollectionsPage = /* @__PURE__ */ __name(async (c, errorMessage) => {
+  const auth = c.get("auth");
+  const [colsResult, docsResult] = await Promise.all([
+    c.env.DB.prepare("SELECT id, name, parent_id FROM collections ORDER BY name").all(),
+    c.env.DB.prepare(`
+      SELECT id, title, collection_id, parent_id FROM documents
+      WHERE status = 'published' ORDER BY updated_at DESC
+    `).all()
+  ]);
+  const collections = colsResult.results.filter((col) => isCollectionAllowed(auth, col.id));
+  const docsByCollection = /* @__PURE__ */ new Map();
+  for (const doc of docsResult.results) {
+    if (!docsByCollection.has(doc.collection_id)) docsByCollection.set(doc.collection_id, /* @__PURE__ */ new Map());
+    const parentMap = docsByCollection.get(doc.collection_id);
+    const pid = doc.parent_id || null;
+    if (!parentMap.has(pid)) parentMap.set(pid, []);
+    parentMap.get(pid).push(doc);
+  }
+  const renderDocTree = /* @__PURE__ */ __name((collectionId, parentId, depth) => {
+    if (depth > 20) return "";
+    const parentMap = docsByCollection.get(collectionId);
+    if (!parentMap) return "";
+    const docs = parentMap.get(parentId) ?? [];
+    let html2 = "";
+    for (const doc of docs) {
+      html2 += `<div style="padding-left: ${depth * 16}px;">${docLink(doc.id, doc.title)}</div>
+`;
+      html2 += renderDocTree(collectionId, doc.id, depth + 1);
+    }
+    return html2;
+  }, "renderDocTree");
+  const countDocs = /* @__PURE__ */ __name((collectionId) => {
+    const parentMap = docsByCollection.get(collectionId);
+    if (!parentMap) return 0;
+    return Array.from(parentMap.values()).reduce((s2, a) => s2 + a.length, 0);
+  }, "countDocs");
+  const blocks = /* @__PURE__ */ __name((parentId, depth) => {
+    let html2 = "";
+    for (const col of collections.filter((x) => x.parent_id === parentId)) {
+      const docCount = countDocs(col.id);
+      html2 += `<section class="col-block" style="--depth:${depth}">
+        ${colHead(col, docCount)}
+        <nav class="tree col-docs">
+          ${renderDocTree(col.id, null, 0)}
+          ${docCount === 0 ? '<p class="tree-empty">\u307E\u3060\u30E1\u30E2\u304C\u3042\u308A\u307E\u305B\u3093</p>' : ""}
+        </nav>
+      </section>
+`;
+      html2 += blocks(col.id, depth + 1);
+    }
+    return html2;
+  }, "blocks");
+  return `
+<div id="doc-view-inner" data-doc-title="\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3">
+  <div class="doc-head"><h1 class="doc-title">\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3</h1></div>
+  <p class="meta-line">${collections.length}\u500B\u306E\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3</p>
+  ${errorMessage ? `<p class="error">${escapeHtml(errorMessage)}</p>` : ""}
+  ${blocks(null, 0)}
+  <form class="col-new" hx-post="/ui/collections" hx-target="#doc-view">
+    <input type="hidden" name="view" value="page">
+    <input class="input" name="name" placeholder="\u65B0\u3057\u3044\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u540D" required autocomplete="off">
+    <button class="btn-primary" type="submit">\u8FFD\u52A0</button>
+  </form>
+</div>`;
+}, "renderCollectionsPage");
+var renderDoc = /* @__PURE__ */ __name(async (c, id) => {
+  const auth = c.get("auth");
+  const doc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
+  if (!doc) return { error: "\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093", status: 404 };
+  if (!isCollectionAllowed(auth, doc.collection_id)) return { error: "\u3053\u306E\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u3078\u306E\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093", status: 403 };
+  const [collection, lastRev, linksResult, backlinksResult] = await Promise.all([
+    c.env.DB.prepare("SELECT name FROM collections WHERE id = ?").bind(doc.collection_id).first(),
+    c.env.DB.prepare("SELECT author_type, api_key_name FROM document_revisions WHERE document_id = ? ORDER BY created_at DESC LIMIT 1").bind(id).first(),
+    c.env.DB.prepare(`
+      SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.to_doc_id
+      WHERE l.from_doc_id = ? ORDER BY d.title
+    `).bind(id).all(),
+    c.env.DB.prepare(`
+      SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.from_doc_id
+      WHERE l.to_doc_id = ? ORDER BY d.title
+    `).bind(id).all()
+  ]);
+  const linkTitles = new Map(linksResult.results.map((r) => [r.id, r.title]));
+  const body = renderMarkdown(doc.content, linkTitles);
+  const sections = parseSections(doc.content);
+  let tocSidebar = "";
+  let tocMobile = "";
+  if (sections.length >= 2) {
+    const items = sections.map((s2) => `<a href="#${escapeHtml(s2.slug)}" style="--toc-depth:${s2.level - 1}">${escapeHtml(s2.title)}</a>`).join("\n");
+    tocSidebar = `<nav class="doc-toc" aria-label="\u76EE\u6B21">${items}</nav>`;
+    tocMobile = `<details class="doc-toc-mobile"><summary>\u76EE\u6B21</summary><div>${items}</div></details>`;
+  }
+  const author = lastRev ? lastRev.author_type === "ai" ? `<span class="author-tag">ai${lastRev.api_key_name ? `:${escapeHtml(lastRev.api_key_name)}` : ""}</span>` : '<span class="author-tag is-human">human</span>' : "";
+  let foot = "";
+  const backlinks = backlinksResult.results;
+  if (backlinks.length > 0) {
+    foot += `<section class="doc-backlinks">
+      <h2>\u3053\u306E\u30DA\u30FC\u30B8\u3092\u53C2\u7167\u3057\u3066\u3044\u308B\u30DA\u30FC\u30B8</h2>
+      ${backlinks.map((b) => docLink(b.id, b.title)).join("\n")}
+    </section>
+`;
+  }
+  let breadcrumb = `<a class="crumb" href="/?view=collections"
+      hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3</a> / ${escapeHtml(collection?.name ?? "")}`;
+  if (doc.parent_id) {
+    const ancestorRows = await c.env.DB.prepare(`
+      WITH RECURSIVE anc(id, title, parent_id, depth) AS (
+        SELECT id, title, parent_id, 0 FROM documents WHERE id = ?
+        UNION ALL
+        SELECT d.id, d.title, d.parent_id, a.depth + 1
+        FROM documents d JOIN anc a ON d.id = a.parent_id
+        WHERE a.depth < 20
+      )
+      SELECT id, title, depth FROM anc WHERE id != ? ORDER BY depth DESC
+    `).bind(doc.id, doc.id).all();
+    const ancestors = ancestorRows.results;
+    if (ancestors.length > 0) {
+      breadcrumb += " / " + ancestors.map(
+        (p) => `<a class="crumb" href="/?doc=${escapeHtml(p.id)}"
+        hx-get="/ui/doc/${escapeHtml(p.id)}" hx-target="#doc-view" hx-push-url="/?doc=${escapeHtml(p.id)}">${escapeHtml(p.title)}</a>`
+      ).join(" / ");
+    }
+  }
+  const html2 = `
+<div id="doc-view-inner" data-doc-id="${escapeHtml(doc.id)}" data-doc-title="${escapeHtml(doc.title)}">
+  <div class="doc-head">
+    <h1 class="doc-title">${escapeHtml(doc.title)}</h1>
+    <button class="btn-quiet" hx-get="/ui/doc/${escapeHtml(doc.id)}/edit" hx-target="#doc-view">\u270E \u7DE8\u96C6</button>
+  </div>
+  <p class="meta-line">${breadcrumb} \u30FB ${fmtDate(doc.updated_at)}${author ? ` \u30FB ${author}` : ""}</p>
+  ${tocMobile}
+  <div class="doc-columns">
+    <article class="prose">${body}</article>
+    ${tocSidebar}
+  </div>
+  ${foot}
+  <form class="append-box" hx-post="/ui/doc/${escapeHtml(doc.id)}/append" hx-target="#doc-view">
+    <textarea class="textarea" name="content" rows="2" placeholder="\u3053\u3053\u306B\u8FFD\u8A18\u2026(\u305D\u306E\u307E\u307E\u672B\u5C3E\u306B\u8DB3\u3055\u308C\u307E\u3059)" required></textarea>
+    <button class="btn-primary" type="submit">\u8FFD\u8A18</button>
+  </form>
+</div>`;
+  return { html: html2 };
+}, "renderDoc");
+var renderWelcome = /* @__PURE__ */ __name(async (c) => {
+  const auth = c.get("auth");
+  const result = await c.env.DB.prepare(`
+    SELECT id, title, collection_id, updated_at FROM documents
+    WHERE status = 'published' ORDER BY updated_at DESC LIMIT 10
+  `).all();
+  const docs = result.results.filter((d) => isCollectionAllowed(auth, d.collection_id));
+  let html2 = '<div id="doc-view-inner"><div class="doc-head"><h1 class="doc-title">\u6700\u8FD1\u306E\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8</h1></div>\n';
+  if (docs.length === 0) {
+    html2 += '<p class="muted">\u307E\u3060\u4F55\u3082\u3042\u308A\u307E\u305B\u3093\u3002\u5DE6\u306E\u30C4\u30EA\u30FC\u304B\u3089\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u3068\u30E1\u30E2\u3092\u4F5C\u6210\u3057\u3066\u304F\u3060\u3055\u3044\u3002</p>';
+  } else {
+    html2 += '<nav class="tree">' + docs.map((d) => docLink(d.id, d.title)).join("\n") + "</nav>";
+  }
+  html2 += "</div>";
+  return html2;
+}, "renderWelcome");
+var errorFragment = /* @__PURE__ */ __name((message) => `<p class="error">${escapeHtml(message)}</p>`, "errorFragment");
+uiRoute.get("/tree", async (c) => c.html(await renderTree(c)));
+uiRoute.get("/search", async (c) => {
+  const auth = c.get("auth");
+  const q = (c.req.query("q") ?? "").trim();
+  if (q === "") return c.html(await renderTree(c));
+  let result;
+  if ([...q].length < 3) {
+    const like = `%${q}%`;
+    result = await c.env.DB.prepare(`
+      SELECT id, title, content, collection_id FROM documents
+      WHERE status = 'published' AND (title LIKE ? OR content LIKE ?)
+      ORDER BY updated_at DESC LIMIT 15
+    `).bind(like, like).all();
+  } else {
+    const escaped = q.replace(/["\]]/g, "");
+    result = await c.env.DB.prepare(`
+      SELECT d.id, d.title, d.content, d.collection_id
+      FROM documents_fts JOIN documents d ON documents_fts.rowid = d.rowid
+      WHERE documents_fts MATCH ? AND d.status = 'published'
+      LIMIT 15
+    `).bind(escaped).all().catch(() => ({ results: [] }));
+  }
+  const hits = result.results.filter((r) => isCollectionAllowed(auth, r.collection_id));
+  let html2 = '<nav class="tree" aria-label="\u691C\u7D22\u7D50\u679C">\n';
+  if (hits.length === 0) {
+    html2 += '<p class="tree-empty">\u898B\u3064\u304B\u308A\u307E\u305B\u3093\u3067\u3057\u305F</p>';
+  }
+  for (const hit of hits) {
+    const lines = hit.content.split("\n");
+    const line = lines.find((l) => l.toLowerCase().includes(q.toLowerCase())) ?? lines[0] ?? "";
+    const snippet = line.slice(0, 80);
+    html2 += `<a class="tree-item search-hit" data-doc-id="${escapeHtml(hit.id)}" href="/?doc=${escapeHtml(hit.id)}"
+        hx-get="/ui/doc/${escapeHtml(hit.id)}" hx-target="#doc-view" hx-push-url="/?doc=${escapeHtml(hit.id)}">
+        <span class="search-hit-title">${escapeHtml(hit.title)}</span>
+        <span class="search-hit-snippet">${escapeHtml(snippet)}</span></a>
+`;
+  }
+  html2 += "</nav>";
+  return c.html(html2);
+});
+uiRoute.get("/welcome", async (c) => c.html(await renderWelcome(c)));
+uiRoute.get("/doc/:id", async (c) => {
+  const result = await renderDoc(c, c.req.param("id"));
+  if ("error" in result) return c.html(errorFragment(result.error), result.status);
+  return c.html(result.html);
+});
+uiRoute.get("/doc/:id/edit", async (c) => {
+  const auth = c.get("auth");
+  const id = c.req.param("id");
+  const doc = await c.env.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
+  if (!doc) return c.html(errorFragment("\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093"), 404);
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  return c.html(`
+<div id="doc-view-inner" data-doc-id="${escapeHtml(doc.id)}" data-doc-title="${escapeHtml(doc.title)}">
+  <form hx-post="/ui/doc/${escapeHtml(doc.id)}/save" hx-target="#doc-view">
+    <div class="doc-head">
+      <input class="input doc-title-input" name="title" value="${escapeHtml(doc.title)}" required>
+      <button class="btn-quiet" type="button" hx-get="/ui/doc/${escapeHtml(doc.id)}" hx-target="#doc-view">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
+      <button class="btn-primary" type="submit">\u4FDD\u5B58</button>
+    </div>
+    <textarea class="textarea editor" name="content" placeholder="Markdown\u3067\u66F8\u304F\u3002[[doc_xxx]] \u3067\u4ED6\u306E\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u3078\u30EA\u30F3\u30AF\u3002">${escapeHtml(doc.content)}</textarea>
+  </form>
+  <p class="edit-foot">
+    <button class="btn-quiet danger-link" hx-post="/ui/doc/${escapeHtml(doc.id)}/delete" hx-target="#doc-view"
+            hx-confirm="\u3053\u306E\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u3092\u524A\u9664\u3057\u307E\u3059\u304B?(\u5909\u66F4\u5C65\u6B74\u306F\u6B8B\u308A\u307E\u3059)">\u524A\u9664\u3059\u308B</button>
+  </p>
+</div>`);
+});
+var saveDoc = /* @__PURE__ */ __name(async (c, id, title, content) => {
+  const now = Date.now();
+  await c.env.DB.prepare("UPDATE documents SET title = ?, content = ?, updated_at = ? WHERE id = ?").bind(title, content, now, id).run();
+  await createRevision(c.env.DB, id, title, content, authorOf(c.get("auth")), now);
+  await syncDocumentLinks(c.env.DB, id, content);
+}, "saveDoc");
+uiRoute.post("/doc/:id/save", async (c) => {
+  const auth = c.get("auth");
+  const id = c.req.param("id");
+  const doc = await c.env.DB.prepare("SELECT collection_id FROM documents WHERE id = ?").bind(id).first();
+  if (!doc) return c.html(errorFragment("\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093"), 404);
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  const body = await c.req.parseBody();
+  const title = String(body.title ?? "").trim();
+  const content = String(body.content ?? "");
+  if (!title) return c.html(errorFragment("\u30BF\u30A4\u30C8\u30EB\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044"), 400);
+  await saveDoc(c, id, title, content);
+  const result = await renderDoc(c, id);
+  notify(c, "\u4FDD\u5B58\u3057\u307E\u3057\u305F");
+  return c.html("error" in result ? errorFragment(result.error) : result.html);
+});
+uiRoute.post("/doc/:id/append", async (c) => {
+  const auth = c.get("auth");
+  const id = c.req.param("id");
+  const doc = await c.env.DB.prepare("SELECT title, content, collection_id FROM documents WHERE id = ?").bind(id).first();
+  if (!doc) return c.html(errorFragment("\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093"), 404);
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  const body = await c.req.parseBody();
+  const content = String(body.content ?? "").trim();
+  if (!content) return c.html(errorFragment("\u5185\u5BB9\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044"), 400);
+  const separator = doc.content === "" || doc.content.endsWith("\n\n") ? "" : doc.content.endsWith("\n") ? "\n" : "\n\n";
+  await saveDoc(c, id, doc.title, doc.content + separator + content);
+  const result = await renderDoc(c, id);
+  notify(c, "\u8FFD\u8A18\u3057\u307E\u3057\u305F");
+  return c.html("error" in result ? errorFragment(result.error) : result.html);
+});
+uiRoute.post("/doc/:id/delete", async (c) => {
+  const auth = c.get("auth");
+  const id = c.req.param("id");
+  const doc = await c.env.DB.prepare("SELECT collection_id FROM documents WHERE id = ?").bind(id).first();
+  if (!doc) return c.html(errorFragment("\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093"), 404);
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  await c.env.DB.batch([
+    c.env.DB.prepare("DELETE FROM document_links WHERE from_doc_id = ? OR to_doc_id = ?").bind(id, id),
+    c.env.DB.prepare("DELETE FROM documents WHERE id = ?").bind(id)
+  ]);
+  notify(c, "\u524A\u9664\u3057\u307E\u3057\u305F(\u5C65\u6B74\u306F\u6B8B\u308A\u307E\u3059)");
+  c.header("HX-Push-Url", "/");
+  return c.html(await renderWelcome(c));
+});
+uiRoute.get("/doc/:id/new-child", async (c) => {
+  const auth = c.get("auth");
+  const id = c.req.param("id");
+  const doc = await c.env.DB.prepare("SELECT id, title, collection_id FROM documents WHERE id = ?").bind(id).first();
+  if (!doc) return c.html(errorFragment("\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093"), 404);
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  return c.html(`
+<div id="doc-view-inner" data-doc-title="\u5B50\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u4F5C\u6210">
+  <div class="doc-head"><h1 class="doc-title">\u5B50\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u4F5C\u6210</h1></div>
+  <p class="meta-line">\u89AA: <a class="crumb" href="/?doc=${escapeHtml(doc.id)}"
+      hx-get="/ui/doc/${escapeHtml(doc.id)}" hx-target="#doc-view" hx-push-url="/?doc=${escapeHtml(doc.id)}">${escapeHtml(doc.title)}</a></p>
+  <form hx-post="/ui/docs" hx-target="#doc-view">
+    <input type="hidden" name="collection_id" value="${escapeHtml(doc.collection_id)}">
+    <input type="hidden" name="parent_id" value="${escapeHtml(doc.id)}">
+    <input class="input doc-title-input" name="title" placeholder="\u30BF\u30A4\u30C8\u30EB" required autofocus autocomplete="off">
+    <button class="btn-primary" type="submit">\u4F5C\u6210</button>
+    <button class="btn-quiet" type="button" hx-get="/ui/doc/${escapeHtml(doc.id)}" hx-target="#doc-view">\u30AD\u30E3\u30F3\u30BB\u30EB</button>
+  </form>
+</div>`);
+});
+uiRoute.post("/docs", async (c) => {
+  const auth = c.get("auth");
+  const body = await c.req.parseBody();
+  const title = String(body.title ?? "").trim();
+  const collectionId = String(body.collection_id ?? "");
+  const parentId = String(body.parent_id ?? "").trim() || null;
+  if (!title || !collectionId) return c.html(errorFragment("\u30BF\u30A4\u30C8\u30EB\u304C\u5FC5\u8981\u3067\u3059"), 400);
+  if (!isCollectionAllowed(auth, collectionId)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  const author = authorOf(auth);
+  const id = generateId7("doc");
+  const now = Date.now();
+  let path;
+  if (parentId) {
+    const parent = await c.env.DB.prepare("SELECT collection_id, path FROM documents WHERE id = ?").bind(parentId).first();
+    if (!parent) return c.html(errorFragment("\u89AA\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093"), 404);
+    if (parent.collection_id !== collectionId) return c.html(errorFragment("\u89AA\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u7570\u306A\u308B\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u3067\u3059"), 400);
+    path = `${parent.path}/${id}`;
+  } else {
+    path = `/${collectionId}/${id}`;
+  }
+  await c.env.DB.prepare(`
+    INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
+    VALUES (?, ?, '', ?, ?, ?, 'normal', 'published', ?, ?, ?, ?)
+  `).bind(id, title, collectionId, parentId, path, author.authorType, author.apiKeyId, now, now).run();
+  await createRevision(c.env.DB, id, title, "", author, now);
+  const result = await renderDoc(c, id);
+  notify(c, "\u4F5C\u6210\u3057\u307E\u3057\u305F");
+  c.header("HX-Push-Url", `/?doc=${id}`);
+  return c.html("error" in result ? errorFragment(result.error) : result.html);
+});
+uiRoute.get("/collections", async (c) => c.html(await renderCollectionsPage(c)));
+uiRoute.post("/collections", async (c) => {
+  const auth = c.get("auth");
+  if (auth.authorType === "ai" && auth.allowedCollections !== null) {
+    return c.html(errorFragment("\u3053\u306E\u30AD\u30FC\u3067\u306F\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u3092\u4F5C\u6210\u3067\u304D\u307E\u305B\u3093"), 403);
+  }
+  const body = await c.req.parseBody();
+  const name = String(body.name ?? "").trim();
+  if (!name) return c.html(errorFragment("\u540D\u524D\u304C\u5FC5\u8981\u3067\u3059"), 400);
+  const author = authorOf(auth);
+  const now = Date.now();
+  await c.env.DB.prepare(`
+    INSERT INTO collections (id, name, parent_id, description, is_system, entrypoint_doc_id,
+      created_by_type, created_by_key_id, updated_by_type, updated_by_key_id, created_at, updated_at)
+    VALUES (?, ?, NULL, NULL, 0, NULL, ?, ?, ?, ?, ?, ?)
+  `).bind(generateId7("col"), name, author.authorType, author.apiKeyId, author.authorType, author.apiKeyId, now, now).run();
+  if (String(body.view ?? "") === "page") {
+    notify(c, "\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u3092\u8FFD\u52A0\u3057\u307E\u3057\u305F");
+    return c.html(await renderCollectionsPage(c));
+  }
+  notify(c, "\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u3092\u8FFD\u52A0\u3057\u307E\u3057\u305F", false);
+  return c.html(await renderTree(c));
+});
+uiRoute.get("/collections/:id/head", async (c) => {
+  const auth = c.get("auth");
+  const id = c.req.param("id");
+  if (!isCollectionAllowed(auth, id)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  const col = await c.env.DB.prepare("SELECT id, name FROM collections WHERE id = ?").bind(id).first();
+  if (!col) return c.html(errorFragment("\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093"), 404);
+  const count = await c.env.DB.prepare(
+    `SELECT COUNT(*) AS n FROM documents WHERE collection_id = ? AND status = 'published'`
+  ).bind(id).first();
+  return c.html(colHead(col, count.n, c.req.query("edit") === "1"));
+});
+uiRoute.post("/collections/:id/rename", async (c) => {
+  const auth = c.get("auth");
+  const id = c.req.param("id");
+  if (!isCollectionAllowed(auth, id)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  const body = await c.req.parseBody();
+  const name = String(body.name ?? "").trim();
+  if (!name) return c.html(await renderCollectionsPage(c, "\u540D\u524D\u3092\u5165\u529B\u3057\u3066\u304F\u3060\u3055\u3044"));
+  const existing = await c.env.DB.prepare("SELECT id FROM collections WHERE id = ?").bind(id).first();
+  if (!existing) return c.html(await renderCollectionsPage(c, "\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093"));
+  const author = authorOf(auth);
+  await c.env.DB.prepare("UPDATE collections SET name = ?, updated_at = ?, updated_by_type = ?, updated_by_key_id = ? WHERE id = ?").bind(name, Date.now(), author.authorType, author.apiKeyId, id).run();
+  notify(c, "\u540D\u524D\u3092\u5909\u66F4\u3057\u307E\u3057\u305F");
+  return c.html(await renderCollectionsPage(c));
+});
+uiRoute.post("/collections/:id/delete", async (c) => {
+  const auth = c.get("auth");
+  const id = c.req.param("id");
+  if (!isCollectionAllowed(auth, id)) return c.html(errorFragment("\u30A2\u30AF\u30BB\u30B9\u6A29\u304C\u3042\u308A\u307E\u305B\u3093"), 403);
+  const [docsCount, childrenCount] = await Promise.all([
+    c.env.DB.prepare("SELECT COUNT(*) AS n FROM documents WHERE collection_id = ?").bind(id).first(),
+    c.env.DB.prepare("SELECT COUNT(*) AS n FROM collections WHERE parent_id = ?").bind(id).first()
+  ]);
+  if (docsCount.n > 0) {
+    return c.html(await renderCollectionsPage(c, "\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u304C\u6B8B\u3063\u3066\u3044\u308B\u305F\u3081\u524A\u9664\u3067\u304D\u307E\u305B\u3093(\u5148\u306B\u30C9\u30AD\u30E5\u30E1\u30F3\u30C8\u3092\u524A\u9664\u307E\u305F\u306F\u79FB\u52D5\u3057\u3066\u304F\u3060\u3055\u3044)"));
+  }
+  if (childrenCount.n > 0) {
+    return c.html(await renderCollectionsPage(c, "\u30B5\u30D6\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u304C\u3042\u308B\u305F\u3081\u524A\u9664\u3067\u304D\u307E\u305B\u3093"));
+  }
+  await c.env.DB.prepare("DELETE FROM collections WHERE id = ?").bind(id).run();
+  notify(c, "\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u3092\u524A\u9664\u3057\u307E\u3057\u305F");
+  return c.html(await renderCollectionsPage(c));
+});
+
+// src/mcp/handler.ts
+import { WorkerEntrypoint as WorkerEntrypoint2 } from "cloudflare:workers";
+
+// src/mcp/server.ts
+var toolDefinitions = {
+  search_docs: {
+    description: "Search documents by keyword with full-text search",
+    inputSchema: {
+      type: "object",
+      properties: {
+        q: { type: "string", description: "Search query" },
+        scope: { type: "string", description: 'Optional scope (e.g., "collection:col_abc")' },
+        limit: { type: "number", description: "Max results (default: 10)" }
+      },
+      required: ["q"]
+    }
+  },
+  get_doc: {
+    description: "Get a document with optional view mode (meta, outline, or full)",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Document ID" },
+        view: { type: "string", description: "View mode: meta, outline, or full (default: full)" }
+      },
+      required: ["id"]
+    }
+  },
+  write_doc: {
+    description: "Create or update a document. When creating, specify parent_id to create as a child document.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Document ID (omit to create new)" },
+        title: { type: "string", description: "Document title" },
+        content: { type: "string", description: "Document content (markdown)" },
+        collection_id: { type: "string", description: "Collection ID" },
+        parent_id: { type: "string", description: "Parent document ID (optional, for creating child documents)" }
+      },
+      required: ["title", "content", "collection_id"]
+    }
+  },
+  append_doc: {
+    description: "Append content to the end of a document",
+    inputSchema: {
+      type: "object",
+      properties: {
+        id: { type: "string", description: "Document ID" },
+        content: { type: "string", description: "Content to append" }
+      },
+      required: ["id", "content"]
+    }
+  },
+  list_collections: {
+    description: "List all collections as a tree structure with nested children",
+    inputSchema: {
+      type: "object",
+      properties: {}
+    }
+  },
+  get_entrypoint: {
+    description: "Get entry point document(s) for navigation",
+    inputSchema: {
+      type: "object",
+      properties: {
+        collection_id: { type: "string", description: "Optional collection ID to get specific entry point" }
+      }
+    }
+  }
+};
+
+// src/mcp/tools.ts
+var generateId8 = /* @__PURE__ */ __name((prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, "generateId");
+var ok2 = /* @__PURE__ */ __name((data) => ({
+  content: [{ type: "text", text: JSON.stringify(data, null, 2) }]
+}), "ok");
+var err2 = /* @__PURE__ */ __name((message) => ({
+  content: [{ type: "text", text: `Error: ${message}` }],
+  isError: true
+}), "err");
+var extractSnippet2 = /* @__PURE__ */ __name((content, query, contextLines = 3) => {
+  const lines = content.split("\n");
+  const q = query.toLowerCase();
+  for (let i = 0; i < lines.length; i++) {
+    if (lines[i].toLowerCase().includes(q)) {
+      return lines.slice(Math.max(0, i - contextLines), Math.min(lines.length, i + contextLines + 1)).join("\n");
+    }
+  }
+  return lines.slice(0, contextLines * 2).join("\n");
+}, "extractSnippet");
+async function searchDocs(env2, auth, params) {
+  const { q, scope = "", limit = 10 } = params;
+  if (!q) return err2('Query parameter "q" is required');
+  let collectionId = null;
+  if (scope.startsWith("collection:")) collectionId = scope.slice("collection:".length);
+  let sql;
+  const sqlParams = [];
+  if ([...q].length < 3) {
+    sql = `SELECT d.id, d.title, d.content, d.collection_id, d.priority
+           FROM documents d WHERE d.status = 'published' AND (d.title LIKE ? OR d.content LIKE ?)`;
+    sqlParams.push(`%${q}%`, `%${q}%`);
+  } else {
+    sql = `SELECT d.id, d.title, d.content, d.collection_id, d.priority
+           FROM documents_fts JOIN documents d ON documents_fts.rowid = d.rowid
+           WHERE documents_fts MATCH ? AND d.status = 'published'`;
+    sqlParams.push(q.replace(/["\]]/g, ""));
+  }
+  if (collectionId) {
+    if (!isCollectionAllowed(auth, collectionId)) return err2("Collection not allowed for this key");
+    sql += " AND d.collection_id = ?";
+    sqlParams.push(collectionId);
+  } else if (auth.allowedCollections !== null) {
+    if (auth.allowedCollections.length === 0) return ok2({ data: [] });
+    sql += ` AND d.collection_id IN (${auth.allowedCollections.map(() => "?").join(", ")})`;
+    sqlParams.push(...auth.allowedCollections);
+  }
+  sql += " LIMIT ?";
+  sqlParams.push(limit);
+  const result = await env2.DB.prepare(sql).bind(...sqlParams).all();
+  const data = result.results.map((r) => ({
+    id: r.id,
+    title: r.title,
+    snippet: extractSnippet2(r.content, q),
+    collection_id: r.collection_id,
+    priority: r.priority
+  }));
+  return ok2({ data });
+}
+__name(searchDocs, "searchDocs");
+async function getDoc(env2, auth, params) {
+  const { id, view = "full" } = params;
+  const doc = await env2.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
+  if (!doc) return err2("Document not found");
+  if (!isCollectionAllowed(auth, doc.collection_id)) return err2("Collection not allowed for this key");
+  if (view === "meta") {
+    const sections = parseSections(doc.content).map((s2) => ({ slug: s2.slug, title: s2.title, level: s2.level }));
+    return ok2({
+      id: doc.id,
+      title: doc.title,
+      collection_id: doc.collection_id,
+      parent_id: doc.parent_id,
+      path: doc.path,
+      priority: doc.priority,
+      status: doc.status,
+      sections,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at
+    });
+  }
+  if (view === "outline") {
+    return ok2({ outline: parseSections(doc.content).map((s2) => ({ slug: s2.slug, title: s2.title, level: s2.level })) });
+  }
+  return ok2(doc);
+}
+__name(getDoc, "getDoc");
+async function writeDoc(env2, auth, params) {
+  const { id, title, content, collection_id, parent_id } = params;
+  const now = Date.now();
+  const author = authorOf(auth);
+  if (id) {
+    const existing = await env2.DB.prepare("SELECT collection_id FROM documents WHERE id = ?").bind(id).first();
+    if (!existing) return err2("Document not found");
+    if (!isCollectionAllowed(auth, existing.collection_id)) return err2("Collection not allowed for this key");
+    await env2.DB.prepare("UPDATE documents SET title = ?, content = ?, updated_at = ? WHERE id = ?").bind(title, content, now, id).run();
+    await createRevision(env2.DB, id, title, content, author, now);
+    await syncDocumentLinks(env2.DB, id, content);
+    const updated = await env2.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
+    return ok2(updated);
+  }
+  if (auth.allowedCollections !== null && !isCollectionAllowed(auth, collection_id)) {
+    return err2("Collection not allowed for this key");
+  }
+  const collection = await env2.DB.prepare("SELECT id FROM collections WHERE id = ?").bind(collection_id).first();
+  if (!collection) return err2("Collection not found");
+  let parentId = null;
+  let path;
+  const docId = generateId8("doc");
+  if (parent_id) {
+    const parent = await env2.DB.prepare("SELECT id, collection_id, path FROM documents WHERE id = ?").bind(parent_id).first();
+    if (!parent) return err2("Parent document not found");
+    if (parent.collection_id !== collection_id) return err2("Parent document must be in the same collection");
+    parentId = parent_id;
+    path = `${parent.path}/${docId}`;
+  } else {
+    path = `/${collection_id}/${docId}`;
+  }
+  await env2.DB.prepare(`
+    INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, 'normal', 'published', ?, ?, ?, ?)
+  `).bind(docId, title, content, collection_id, parentId, path, author.authorType, author.apiKeyId, now, now).run();
+  await createRevision(env2.DB, docId, title, content, author, now);
+  await syncDocumentLinks(env2.DB, docId, content);
+  const doc = await env2.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(docId).first();
+  return ok2(doc);
+}
+__name(writeDoc, "writeDoc");
+async function appendDoc(env2, auth, params) {
+  const { id, content } = params;
+  const existing = await env2.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
+  if (!existing) return err2("Document not found");
+  if (!isCollectionAllowed(auth, existing.collection_id)) return err2("Collection not allowed for this key");
+  const sep = existing.content === "" || existing.content.endsWith("\n\n") ? "" : existing.content.endsWith("\n") ? "\n" : "\n\n";
+  const newContent = existing.content + sep + content;
+  const now = Date.now();
+  await env2.DB.prepare("UPDATE documents SET content = ?, updated_at = ? WHERE id = ?").bind(newContent, now, id).run();
+  await createRevision(env2.DB, id, existing.title, newContent, authorOf(auth), now);
+  await syncDocumentLinks(env2.DB, id, newContent);
+  const updated = await env2.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(id).first();
+  return ok2(updated);
+}
+__name(appendDoc, "appendDoc");
+async function listCollections(env2, auth) {
+  const result = await env2.DB.prepare(`
+    SELECT id, name, parent_id, description, is_system, entrypoint_doc_id,
+           created_by_type, updated_by_type, created_at, updated_at
+    FROM collections ORDER BY name
+  `).all();
+  const visible = result.results.filter((c) => isCollectionAllowed(auth, c.id));
+  if (auth.allowedCollections !== null) {
+    return ok2(visible.map((c) => ({ ...c, children: [] })));
+  }
+  return ok2(buildTree(visible));
+}
+__name(listCollections, "listCollections");
+async function getEntrypoint(env2, auth, params) {
+  const { collection_id } = params;
+  if (collection_id) {
+    if (!isCollectionAllowed(auth, collection_id)) return err2("Collection not allowed for this key");
+    const collection = await env2.DB.prepare("SELECT entrypoint_doc_id FROM collections WHERE id = ?").bind(collection_id).first();
+    if (!collection || !collection.entrypoint_doc_id) return err2("No entry point document set for this collection");
+    const doc = await env2.DB.prepare("SELECT * FROM documents WHERE id = ?").bind(collection.entrypoint_doc_id).first();
+    return ok2(doc);
+  }
+  const result = await env2.DB.prepare(`
+    SELECT c.id, c.name, c.entrypoint_doc_id, d.title as entry_doc_title
+    FROM collections c LEFT JOIN documents d ON c.entrypoint_doc_id = d.id
+    ORDER BY c.name
+  `).all();
+  const visible = result.results.filter((c) => isCollectionAllowed(auth, c.id));
+  return ok2(visible);
+}
+__name(getEntrypoint, "getEntrypoint");
+
+// src/mcp/handler.ts
+var TOOL_SCOPE = {
+  search_docs: "read",
+  get_doc: "read",
+  list_collections: "read",
+  get_entrypoint: "read",
+  write_doc: "write",
+  append_doc: "write"
+};
+var json2 = /* @__PURE__ */ __name((data, status = 200) => new Response(JSON.stringify(data), { status, headers: { "Content-Type": "application/json" } }), "json");
+var rpcError = /* @__PURE__ */ __name((code, message, status, id) => json2({ jsonrpc: "2.0", error: { code, message }, id }, status), "rpcError");
+var McpApiHandler = class extends WorkerEntrypoint2 {
+  static {
+    __name(this, "McpApiHandler");
+  }
+  async fetch(request) {
+    const props = this.ctx.props;
+    if (!props) return rpcError(-32001, "Unauthorized", 401);
+    const auth = {
+      authorType: "ai",
+      keyId: `oauth_${props.userId}`,
+      keyName: props.keyName,
+      scopes: props.scopes ?? [],
+      allowedCollections: props.allowedCollections ?? null,
+      entryDocId: null
+    };
+    if (request.method === "GET") {
+      return json2({ name: "context-mixer", version: "0.1.0", transport: "http", capabilities: { tools: {} } });
+    }
+    if (request.method !== "POST") {
+      return rpcError(-32600, "Method not allowed", 405);
+    }
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return rpcError(-32700, "Parse error", 400, null);
+    }
+    const { jsonrpc, method, params, id } = body;
+    if (jsonrpc !== "2.0") return rpcError(-32600, "Invalid JSON-RPC version", 400, id);
+    try {
+      switch (method) {
+        case "initialize":
+          return json2({
+            jsonrpc: "2.0",
+            result: {
+              protocolVersion: params?.protocolVersion ?? "2025-06-18",
+              capabilities: { tools: {} },
+              serverInfo: { name: "context-mixer", version: "0.1.0" }
+            },
+            id
+          });
+        case "ping":
+          return json2({ jsonrpc: "2.0", result: {}, id });
+        case "tools/list":
+          return json2({
+            jsonrpc: "2.0",
+            result: {
+              tools: Object.entries(toolDefinitions).map(([name, def2]) => ({
+                name,
+                description: def2.description,
+                inputSchema: def2.inputSchema
+              }))
+            },
+            id
+          });
+        case "tools/call": {
+          const toolName = params?.name;
+          const required2 = TOOL_SCOPE[toolName];
+          if (!required2) return rpcError(-32602, `Unknown tool: ${toolName}`, 400, id);
+          if (!auth.scopes.includes(required2)) {
+            return rpcError(-32003, `This grant lacks the "${required2}" scope`, 403, id);
+          }
+          const result = await callTool(this.env, auth, toolName, params?.arguments ?? {});
+          return json2({ jsonrpc: "2.0", result, id });
+        }
+        default:
+          if (typeof method === "string" && method.startsWith("notifications/")) {
+            return new Response(null, { status: 204 });
+          }
+          return rpcError(-32601, `Method not found: ${method}`, 404, id);
+      }
+    } catch (error51) {
+      console.error("MCP error:", error51);
+      return rpcError(-32603, "Internal error", 500, id);
+    }
+  }
+};
+function callTool(env2, auth, name, args) {
+  switch (name) {
+    case "search_docs":
+      return searchDocs(env2, auth, args);
+    case "get_doc":
+      return getDoc(env2, auth, args);
+    case "write_doc":
+      return writeDoc(env2, auth, args);
+    case "append_doc":
+      return appendDoc(env2, auth, args);
+    case "list_collections":
+      return listCollections(env2, auth);
+    case "get_entrypoint":
+      return getEntrypoint(env2, auth, args);
+    default:
+      return Promise.resolve({ content: [{ type: "text", text: `Error: Unknown tool "${name}"` }], isError: true });
+  }
+}
+__name(callTool, "callTool");
+
+// src/mcp/oauth-handler.ts
+var oauthRoute = new Hono2();
+oauthRoute.use("*", clerkSession);
+var CSRF_COOKIE = "cm_oauth_txn";
+var TXN_TTL = 600;
+var newTxn = /* @__PURE__ */ __name(() => crypto.randomUUID().replace(/-/g, ""), "newTxn");
+var isHttps = /* @__PURE__ */ __name((url2) => new URL(url2).protocol === "https:", "isHttps");
+var page = /* @__PURE__ */ __name((title, body) => `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(title)} - Context Mixer</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="main-content">
+    <div style="max-width: 640px; margin: var(--space-7) auto">
+      ${body}
+    </div>
+  </main>
+</body>
+</html>`, "page");
+var errorPage = /* @__PURE__ */ __name((message) => page("\u8A8D\u53EF\u30A8\u30E9\u30FC", `<h1>\u8A8D\u53EF\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F</h1><p class="muted">${escapeHtml(message)}</p>`), "errorPage");
+oauthRoute.get("/authorize", async (c) => {
+  let oauthReq;
+  try {
+    oauthReq = await c.env.OAUTH_PROVIDER.parseAuthRequest(c.req.raw);
+  } catch {
+    return c.html(errorPage("OAuth \u30EA\u30AF\u30A8\u30B9\u30C8\u306E\u5F62\u5F0F\u304C\u4E0D\u6B63\u3067\u3059\u3002"), 400);
+  }
+  if (!oauthReq.clientId) {
+    return c.html(errorPage("client_id \u304C\u3042\u308A\u307E\u305B\u3093\u3002"), 400);
+  }
+  const userId = verifySession(c);
+  if (!userId) {
+    const back = encodeURIComponent(c.req.url);
+    return c.redirect(`${c.env.CLERK_SIGN_IN_URL}?redirect_url=${back}`);
+  }
+  const txn = newTxn();
+  await c.env.OAUTH_KV.put(`consent:${txn}`, JSON.stringify(oauthReq), { expirationTtl: TXN_TTL });
+  setCookie(c, CSRF_COOKIE, txn, {
+    httpOnly: true,
+    secure: isHttps(c.req.url),
+    sameSite: "Lax",
+    path: "/",
+    maxAge: TXN_TTL
+  });
+  const client = await c.env.OAUTH_PROVIDER.lookupClient(oauthReq.clientId).catch(() => null);
+  const clientLabel = client?.clientName || oauthReq.clientId;
+  const cols = await c.env.DB.prepare("SELECT id, name FROM collections ORDER BY name").all();
+  const collections = cols.results ?? [];
+  const collectionChoices = collections.map(
+    (col) => `<label class="consent-row">
+        <input type="checkbox" name="collections" value="${escapeHtml(col.id)}">
+        <span>${escapeHtml(col.name)}</span>
+        <code class="mono muted">${escapeHtml(col.id)}</code>
+      </label>`
+  ).join("\n");
+  const body = `
+    <h1>\u63A5\u7D9A\u3092\u8A31\u53EF</h1>
+    <p class="muted">
+      <strong>${escapeHtml(clientLabel)}</strong> \u304C Context Mixer \u3078\u306E\u63A5\u7D9A\u3092\u8981\u6C42\u3057\u3066\u3044\u307E\u3059\u3002
+      \u4ED8\u4E0E\u3059\u308B\u6A29\u9650\u3068\u5BFE\u8C61\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u3092\u9078\u3093\u3067\u304F\u3060\u3055\u3044\u3002
+    </p>
+    <form method="POST" action="/oauth/authorize">
+      <input type="hidden" name="txn" value="${escapeHtml(txn)}">
+
+      <div class="doc-meta-card" style="margin:var(--space-6) 0">
+        <h3>\u6A29\u9650</h3>
+        <label class="consent-row"><input type="checkbox" name="scopes" value="read" checked> <span>READ\uFF08\u691C\u7D22\u30FB\u95B2\u89A7\uFF09</span></label>
+        <label class="consent-row"><input type="checkbox" name="scopes" value="write"> <span>WRITE\uFF08\u4F5C\u6210\u30FB\u66F4\u65B0\u30FB\u8FFD\u8A18\uFF09</span></label>
+      </div>
+
+      <div class="doc-meta-card" style="margin:var(--space-6) 0">
+        <h3>\u5BFE\u8C61\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3</h3>
+        <label class="consent-row"><input type="checkbox" name="all_collections" value="1" checked> <span>\u3059\u3079\u3066\u306E\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3</span></label>
+        <details style="margin-top:var(--space-3)">
+          <summary class="muted" style="cursor:pointer">\u7279\u5B9A\u306E\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u306B\u9650\u5B9A\u3059\u308B</summary>
+          <p class="muted" style="font-size:var(--text-xs); margin:var(--space-2) 0">
+            \u300C\u3059\u3079\u3066\u306E\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u300D\u3092\u5916\u3057\u3001\u8A31\u53EF\u3059\u308B\u3082\u306E\u3092\u9078\u629E\u3057\u3066\u304F\u3060\u3055\u3044\u3002
+          </p>
+          ${collectionChoices || '<p class="muted">\u30B3\u30EC\u30AF\u30B7\u30E7\u30F3\u304C\u3042\u308A\u307E\u305B\u3093\u3002</p>'}
+        </details>
+      </div>
+
+      <div class="form-row" style="gap:var(--space-3)">
+        <button type="submit" name="decision" value="approve" class="btn-primary">\u8A31\u53EF\u3059\u308B</button>
+        <button type="submit" name="decision" value="deny" class="btn-quiet">\u62D2\u5426</button>
+      </div>
+    </form>`;
+  return c.html(page("\u63A5\u7D9A\u3092\u8A31\u53EF", body));
+});
+oauthRoute.post("/authorize", async (c) => {
+  const userId = verifySession(c);
+  if (!userId) return c.html(errorPage("\u30BB\u30C3\u30B7\u30E7\u30F3\u304C\u5207\u308C\u3066\u3044\u307E\u3059\u3002\u6700\u521D\u304B\u3089\u3084\u308A\u76F4\u3057\u3066\u304F\u3060\u3055\u3044\u3002"), 401);
+  const form = await c.req.parseBody({ all: true });
+  const txn = typeof form.txn === "string" ? form.txn : "";
+  const cookieTxn = getCookie(c, CSRF_COOKIE);
+  if (!txn || !cookieTxn || txn !== cookieTxn) {
+    return c.html(errorPage("\u30EA\u30AF\u30A8\u30B9\u30C8\u306E\u691C\u8A3C\u306B\u5931\u6557\u3057\u307E\u3057\u305F\uFF08CSRF\uFF09\u3002\u3084\u308A\u76F4\u3057\u3066\u304F\u3060\u3055\u3044\u3002"), 403);
+  }
+  const stored = await c.env.OAUTH_KV.get(`consent:${txn}`);
+  if (!stored) {
+    return c.html(errorPage("\u8A8D\u53EF\u30BB\u30C3\u30B7\u30E7\u30F3\u306E\u6709\u52B9\u671F\u9650\u304C\u5207\u308C\u3066\u3044\u307E\u3059\u3002\u3084\u308A\u76F4\u3057\u3066\u304F\u3060\u3055\u3044\u3002"), 400);
+  }
+  const oauthReq = JSON.parse(stored);
+  await c.env.OAUTH_KV.delete(`consent:${txn}`);
+  deleteCookie(c, CSRF_COOKIE, { path: "/" });
+  const decision = typeof form.decision === "string" ? form.decision : "";
+  if (decision === "deny") {
+    const redirect = new URL(oauthReq.redirectUri);
+    redirect.searchParams.set("error", "access_denied");
+    if (oauthReq.state) redirect.searchParams.set("state", oauthReq.state);
+    return c.redirect(redirect.toString());
+  }
+  const asArray = /* @__PURE__ */ __name((v) => Array.isArray(v) ? v.map(String) : v == null ? [] : [String(v)], "asArray");
+  const requestedScopes = asArray(form.scopes).filter((s2) => s2 === "read" || s2 === "write");
+  const scopes = requestedScopes.length ? requestedScopes : ["read"];
+  let allowedCollections = null;
+  if (!form.all_collections) {
+    const chosen = asArray(form.collections);
+    if (chosen.length) {
+      const rows = await c.env.DB.prepare("SELECT id FROM collections").all();
+      const valid = new Set(rows.results.map((r) => r.id));
+      allowedCollections = chosen.filter((id) => valid.has(id));
+    } else {
+      allowedCollections = [];
+    }
+  }
+  let email3 = "";
+  try {
+    const clerk = c.get("clerk");
+    const user = await clerk.users.getUser(userId);
+    email3 = user.primaryEmailAddress?.emailAddress ?? user.emailAddresses?.[0]?.emailAddress ?? "";
+  } catch {
+  }
+  const keyName = `oauth:${email3 || userId}`;
+  const { redirectTo } = await c.env.OAUTH_PROVIDER.completeAuthorization({
+    request: oauthReq,
+    userId,
+    scope: scopes,
+    metadata: { keyName },
+    props: { userId, keyName, scopes, allowedCollections }
+  });
+  return c.redirect(redirectTo);
+});
+
 // src/index.ts
 var app = new Hono2();
 app.use("*", cors());
+app.use("*", rateLimit);
 app.use("*", authMiddleware);
 app.route("/auth", authRoute);
 app.route("/", healthRoute);
@@ -26801,14 +33231,24 @@ app.route("/files", filesRoute);
 app.route("/inbox", inboxRoute);
 app.route("/api-keys", apiKeysRoute);
 app.route("/me", meRoute);
+app.route("/ui", uiRoute);
+app.route("/oauth", oauthRoute);
 app.notFound((c) => {
   return c.json({ error: { code: "NOT_FOUND", message: "Not found" } }, 404);
 });
-app.onError((err, c) => {
-  console.error("Error:", err);
+app.onError((err3, c) => {
+  console.error("Error:", err3);
   return c.json({ error: { code: "INTERNAL_ERROR", message: "Internal server error" } }, 500);
 });
-var src_default = app;
+var src_default = new OAuthProvider({
+  apiRoute: "/mcp",
+  apiHandler: McpApiHandler,
+  defaultHandler: app,
+  authorizeEndpoint: "/oauth/authorize",
+  tokenEndpoint: "/oauth/token",
+  clientRegistrationEndpoint: "/oauth/register",
+  scopesSupported: ["read", "write"]
+});
 
 // node_modules/wrangler/templates/middleware/middleware-ensure-req-body-drained.ts
 var drainBody = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx) => {
@@ -26851,7 +33291,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-mzpjer/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-EovuP5/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -26883,7 +33323,7 @@ function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-mzpjer/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-EovuP5/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

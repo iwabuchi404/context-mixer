@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import type { AppEnv } from './auth/adapter'
+import { OAuthProvider } from '@cloudflare/workers-oauth-provider'
+import type { AppEnv, Env } from './auth/adapter'
 import { authMiddleware } from './auth/middleware'
 import { rateLimit } from './auth/rate-limit'
 import { healthRoute } from './routes/health'
@@ -14,7 +15,8 @@ import { inboxRoute } from './routes/inbox'
 import { apiKeysRoute } from './routes/api-keys'
 import { meRoute } from './routes/me'
 import { uiRoute } from './routes/ui'
-import { mcpRoute } from './mcp/handler'
+import { McpApiHandler } from './mcp/handler'
+import { oauthRoute } from './mcp/oauth-handler'
 
 const app = new Hono<AppEnv>()
 
@@ -46,9 +48,9 @@ app.route('/me', meRoute)
 // Web UI fragments (HTMX)
 app.route('/ui', uiRoute)
 
-// MCP endpoint (JSON-RPC). Auth = existing API keys (Bearer kb_...),
-// verified inside the handler with per-tool scope + collection enforcement.
-app.route('/mcp', mcpRoute)
+// MCP OAuth consent UI. token/register/metadata + token validation are handled
+// by the OAuthProvider wrapper below; only the consent screen lives in the app.
+app.route('/oauth', oauthRoute)
 
 // 404 handler
 app.notFound((c) => {
@@ -61,4 +63,17 @@ app.onError((err, c) => {
   return c.json({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }, 500)
 })
 
-export default app
+// Wrap the whole app in the OAuth provider. Requests to /mcp (apiRoute) are
+// gated by access-token validation and forwarded to McpApiHandler with the
+// granted props; everything else (UI, REST, /oauth/authorize consent, the
+// .well-known metadata) flows through the Hono app as the defaultHandler.
+// token/register endpoints are served by the provider itself.
+export default new OAuthProvider({
+  apiRoute: '/mcp',
+  apiHandler: McpApiHandler as any,
+  defaultHandler: app as unknown as ExportedHandler<Env>,
+  authorizeEndpoint: '/oauth/authorize',
+  tokenEndpoint: '/oauth/token',
+  clientRegistrationEndpoint: '/oauth/register',
+  scopesSupported: ['read', 'write'],
+})

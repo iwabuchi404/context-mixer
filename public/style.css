@@ -130,6 +130,40 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   padding: 0 var(--space-2);
 }
 
+/* ============================================================
+   ドキュメント階層表示
+   ============================================================ */
+
+.tree-doc-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding-left: calc(var(--doc-depth, 0) * 16px);
+}
+
+.tree-doc-item .tree-item {
+  flex: 1;
+  min-width: 0;
+}
+
+/* ホバー時の追加ボタン */
+.doc-add-btn {
+  position: absolute;
+  right: 4px;
+  opacity: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease);
+}
+
+.tree-doc-item:hover .doc-add-btn { opacity: 1; }
+.doc-add-btn:hover { background: var(--surface-dim); color: var(--accent); }
+
 .tree-item { font-size: var(--text-sm); }
 .tree-item.is-archive { color: var(--text-muted); }
 .tree-item .pri { margin-left: auto; color: var(--accent); font-size: 8px; }

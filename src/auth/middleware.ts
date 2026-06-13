@@ -10,10 +10,10 @@ import { clerkSession, ensureUser, verifySession } from './clerk'
 const isPublic = (method: string, path: string): boolean => {
   if (path === '/health' || path === '/' || path === '/config' || path === '/favicon.svg') return true
   if (path.startsWith('/auth/') || path.startsWith('/public/')) return true
-  // /mcp skips the shared middleware and verifies the API key itself, so it can
-  // apply per-tool scope (this gate's GET=read/POST=write rule is too coarse for
-  // JSON-RPC, where a POST may be a read). The handler rejects missing/invalid keys.
-  if (path.startsWith('/mcp')) return true
+  // OAuth consent screen. /mcp, /oauth/token, /oauth/register and the .well-known
+  // metadata are handled by the OAuthProvider wrapper and never reach this app;
+  // /oauth/authorize does, and runs its own Clerk-session check internally.
+  if (path.startsWith('/oauth/')) return true
   // External submission endpoint only. NOT /inbox/tokens (auth-required management).
   if (method === 'POST' && /^\/inbox\/[^/]+$/.test(path) && path !== '/inbox/tokens') return true
   return false

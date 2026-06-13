@@ -5,7 +5,7 @@ var __export = (target, all) => {
     __defProp(target, name, { get: all[name], enumerable: true });
 };
 
-// .wrangler/tmp/bundle-hU4rXp/checked-fetch.js
+// .wrangler/tmp/bundle-NKgJP3/checked-fetch.js
 var urls = /* @__PURE__ */ new Set();
 function checkURL(request, init) {
   const url2 = request instanceof URL ? request : new URL(
@@ -29001,7 +29001,7 @@ apiKeysRoute.post("/", async (c) => {
     if (contentType.includes("application/json")) {
       body = await c.req.json();
     } else {
-      body = await c.req.parseBody();
+      body = await c.req.parseBody({ all: true });
       if (body.scopes && !Array.isArray(body.scopes)) {
         body.scopes = [body.scopes];
       }
@@ -30005,7 +30005,7 @@ var jsonError = /* @__PURE__ */ __name(async (request, env2, _ctx, middlewareCtx
 }, "jsonError");
 var middleware_miniflare3_json_error_default = jsonError;
 
-// .wrangler/tmp/bundle-hU4rXp/middleware-insertion-facade.js
+// .wrangler/tmp/bundle-NKgJP3/middleware-insertion-facade.js
 var __INTERNAL_WRANGLER_MIDDLEWARE__ = [
   middleware_ensure_req_body_drained_default,
   middleware_miniflare3_json_error_default
@@ -30037,7 +30037,7 @@ function __facade_invoke__(request, env2, ctx, dispatch, finalMiddleware) {
 }
 __name(__facade_invoke__, "__facade_invoke__");
 
-// .wrangler/tmp/bundle-hU4rXp/middleware-loader.entry.ts
+// .wrangler/tmp/bundle-NKgJP3/middleware-loader.entry.ts
 var __Facade_ScheduledController__ = class ___Facade_ScheduledController__ {
   constructor(scheduledTime, cron, noRetry) {
     this.scheduledTime = scheduledTime;

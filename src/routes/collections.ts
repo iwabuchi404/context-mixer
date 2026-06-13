@@ -25,7 +25,7 @@ export const collectionsRoute = new Hono<AppEnv>()
 const generateId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
 // Helper: Build tree structure from flat list
-const buildTree = (collections: any[], parentId: string | null = null): any[] => {
+export const buildTree = (collections: any[], parentId: string | null = null): any[] => {
   return collections
     .filter((c: any) => c.parent_id === parentId)
     .map((c: any) => ({

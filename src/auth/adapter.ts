@@ -2,6 +2,8 @@
 // Keeps the session provider (Clerk) behind an interface so it can be
 // swapped without touching routes. See docs/design-doc.md "アダプターパターン".
 
+import type { OAuthHelpers } from '@cloudflare/workers-oauth-provider'
+
 export type HumanAuth = {
   authorType: 'human'
   userId: string
@@ -25,6 +27,18 @@ export type Env = {
   CLERK_SECRET_KEY: string
   CLERK_FRONTEND_API: string
   CLERK_SIGN_IN_URL: string
+  // MCP OAuth (workers-oauth-provider): KV stores grants/tokens; OAUTH_PROVIDER
+  // is the helper API the provider injects for parseAuthRequest/completeAuthorization.
+  OAUTH_KV: KVNamespace
+  OAUTH_PROVIDER: OAuthHelpers
+}
+
+// Props injected by the OAuth provider into McpApiHandler via ctx.props
+export type McpProps = {
+  userId: string
+  keyName: string
+  scopes: string[]
+  allowedCollections: string[] | null
 }
 
 export type AppEnv = {
