@@ -88,8 +88,10 @@ apiKeysRoute.post('/', async (c) => {
     if (contentType.includes('application/json')) {
       body = await c.req.json()
     } else {
-      body = await c.req.parseBody()
-      // HTMX/Form can send single value as string, Zod expects array
+      // all:true keeps every same-named field (e.g. both scopes checkboxes);
+      // without it parseBody returns only the last value, dropping "read".
+      body = await c.req.parseBody({ all: true })
+      // A single checkbox still arrives as a string — Zod expects an array
       if (body.scopes && !Array.isArray(body.scopes)) {
         body.scopes = [body.scopes]
       }
