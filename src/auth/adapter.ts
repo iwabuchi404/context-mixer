@@ -11,7 +11,9 @@ export type HumanAuth = {
 
 export type AiAuth = {
   authorType: 'ai'
-  keyId: string
+  // FK into api_keys(id). null for grants with no persisted key row (MCP OAuth),
+  // where attribution lives in keyName instead. See authorOf / created_by_key_id.
+  keyId: string | null
   keyName: string
   scopes: string[] // e.g. ["read", "write"]
   allowedCollections: string[] | null // null = all collections allowed

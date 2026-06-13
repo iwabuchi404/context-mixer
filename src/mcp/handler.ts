@@ -35,7 +35,9 @@ export class McpApiHandler extends WorkerEntrypoint<Env> {
     // Reconstruct the AiAuth context from the granted props
     const auth: AiAuth = {
       authorType: 'ai',
-      keyId: `oauth_${props.userId}`,
+      // No persisted api_keys row for OAuth grants — created_by_key_id (FK to
+      // api_keys) must stay null; the keyName ('oauth:email') carries attribution.
+      keyId: null,
       keyName: props.keyName,
       scopes: props.scopes ?? [],
       allowedCollections: props.allowedCollections ?? null,
