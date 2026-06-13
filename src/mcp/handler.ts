@@ -45,6 +45,21 @@ mcpRoute.post('/', async (c) => {
     if (jsonrpc !== '2.0') return rpcError(c, -32600, 'Invalid JSON-RPC version', 400, id)
 
     switch (method) {
+      case 'initialize':
+        // Echo the client's protocol version for max compatibility
+        return c.json({
+          jsonrpc: '2.0',
+          result: {
+            protocolVersion: params?.protocolVersion ?? '2025-06-18',
+            capabilities: { tools: {} },
+            serverInfo: { name: 'context-mixer', version: '0.1.0' },
+          },
+          id,
+        })
+
+      case 'ping':
+        return c.json({ jsonrpc: '2.0', result: {}, id })
+
       case 'tools/list':
         return c.json({
           jsonrpc: '2.0',
@@ -68,6 +83,10 @@ mcpRoute.post('/', async (c) => {
       }
 
       default:
+        // Notifications (no id, no response expected) — ack with 204
+        if (typeof method === 'string' && method.startsWith('notifications/')) {
+          return c.body(null, 204)
+        }
         return rpcError(c, -32601, `Method not found: ${method}`, 404, id)
     }
   } catch (error: any) {
