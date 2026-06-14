@@ -32,6 +32,29 @@ const rpcError = (code: number, message: string, status: number, id?: unknown) =
 export class McpApiHandler extends WorkerEntrypoint<Env> {
   async fetch(request: Request): Promise<Response> {
     const props = (this.ctx as any).props as McpProps | undefined
+
+    // TEMP DEBUG: log every request to diagnose ChatGPT (remove after fix).
+    // Shows whether tools/call arrives at all and what props the grant carries.
+    let rpcMethod = ''
+    if (request.method === 'POST') {
+      try {
+        const peek = request.clone()
+        const parsed: any = await peek.json()
+        rpcMethod = parsed?.method ?? ''
+      } catch { /* not JSON */ }
+    }
+    console.log('[MCP-DEBUG]', JSON.stringify({
+      http: request.method,
+      path: new URL(request.url).pathname,
+      rpc: rpcMethod,
+      hasProps: !!props,
+      scopes: props?.scopes ?? null,
+      allowedCollections: props?.allowedCollections ?? null,
+      keyName: props?.keyName ?? null,
+      mcpSessionId: request.headers.get('Mcp-Session-Id'),
+      accept: request.headers.get('Accept'),
+    }))
+
     if (!props) return rpcError(-32001, 'Unauthorized', 401)
 
     // Reconstruct the AiAuth context from the granted props
