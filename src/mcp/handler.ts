@@ -19,6 +19,8 @@ const TOOL_SCOPE: Record<string, 'read' | 'write'> = {
   get_entrypoint: 'read',
   write_doc: 'write',
   append_doc: 'write',
+  delete_doc: 'write',
+  create_collection: 'write',
 }
 
 const json = (data: unknown, status = 200) =>
@@ -120,6 +122,8 @@ function callTool(env: Env, auth: AiAuth, name: string, args: any) {
     case 'append_doc': return tools.appendDoc(env, auth, args)
     case 'list_collections': return tools.listCollections(env, auth)
     case 'get_entrypoint': return tools.getEntrypoint(env, auth, args)
+    case 'delete_doc': return tools.deleteDoc(env, auth, args)
+    case 'create_collection': return tools.createCollection(env, auth, args)
     default:
       return Promise.resolve({ content: [{ type: 'text', text: `Error: Unknown tool "${name}"` }], isError: true })
   }

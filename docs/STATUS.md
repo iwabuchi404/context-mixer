@@ -48,7 +48,7 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 ### 注意・既知の判断
 - **MCP接続はOAuthに一本化**。段階1のAPIキーBearer方式のMCP接続(Claude Code向け)は廃止。Claude Code もOAuthフローで繋ぐ。REST APIのAPIキーは従来どおり有効
 - `export default` の構造変更はアプリ全体の入口。デプロイ後に**UI/REST/Clerkログインの回帰確認**を必ず行う
-- 本番のClerk値(pk_live・accounts.flog404.work)はダッシュボード側で管理されている。wrangler.toml の `[vars]` はローカル用の開発キー(pk_test)のまま — これは正常(ローカルは開発インスタンス)
+- **【重要・2026-06-14修正】Clerk値は wrangler.toml の `[vars]` に書かない**。`[vars]`(平文)はデプロイのたびに本番ダッシュボードを上書き/削除するため、dev値(pk_test)を置くと毎デプロイで本番(pk_live)を壊していた。現在: ローカル=`.dev.vars`(CLERK_SECRET_KEY/PUBLISHABLE_KEY/FRONTEND_API/SIGN_IN_URL の dev値)、本番=ダッシュボード **Secret**(デプロイで永続)。詳細は永続メモリ [[wrangler-vars-overwrite-prod]]
 
 ## 他に保留中のもの(優先度低)
 - observability(`[observability] enabled=true`)未追加、compatibility_date が `2024-01-01` と古い

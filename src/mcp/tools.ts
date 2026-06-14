@@ -229,3 +229,64 @@ export async function getEntrypoint(
   const visible = (result.results as any[]).filter((c) => isCollectionAllowed(auth, c.id))
   return ok(visible)
 }
+
+// Tool: delete_doc (write)
+export async function deleteDoc(
+  env: Env,
+  auth: AiAuth,
+  params: { id: string }
+): Promise<CallToolResult> {
+  const { id } = params
+
+  const existing = await env.DB.prepare('SELECT id, collection_id FROM documents WHERE id = ?').bind(id).first() as any
+  if (!existing) return err('Document not found')
+  if (!isCollectionAllowed(auth, existing.collection_id)) return err('Collection not allowed for this key')
+
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM document_links WHERE from_doc_id = ? OR to_doc_id = ?').bind(id, id),
+    env.DB.prepare('DELETE FROM documents WHERE id = ?').bind(id),
+  ])
+
+  return ok({ success: true, id })
+}
+
+// Tool: create_collection (write)
+export async function createCollection(
+  env: Env,
+  auth: AiAuth,
+  params: { name: string; description?: string; parent_id?: string }
+): Promise<CallToolResult> {
+  const { name, description, parent_id } = params
+
+  // Collection-restricted API keys cannot create new collections
+  if (auth.authorType === 'ai' && auth.allowedCollections !== null) {
+    return err('This API key cannot create collections')
+  }
+
+  const author = authorOf(auth)
+  const id = generateId('col')
+  const now = Date.now()
+
+  await env.DB.prepare(`
+    INSERT INTO collections (
+      id, name, parent_id, description, is_system, entrypoint_doc_id,
+      created_by_type, created_by_key_id, updated_by_type, updated_by_key_id, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(
+    id,
+    name,
+    parent_id || null,
+    description || null,
+    0, // is_system
+    null, // entrypoint_doc_id
+    author.authorType,
+    author.apiKeyId,
+    author.authorType,
+    author.apiKeyId,
+    now,
+    now
+  ).run()
+
+  const collection = await env.DB.prepare('SELECT * FROM collections WHERE id = ?').bind(id).first()
+  return ok(collection)
+}

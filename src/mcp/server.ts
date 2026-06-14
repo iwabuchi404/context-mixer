@@ -65,6 +65,28 @@ export const toolDefinitions = {
         collection_id: { type: 'string', description: 'Optional collection ID to get specific entry point' }
       }
     }
+  },
+  delete_doc: {
+    description: 'Delete a document permanently',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        id: { type: 'string', description: 'Document ID to delete' }
+      },
+      required: ['id']
+    }
+  },
+  create_collection: {
+    description: 'Create a new collection',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        name: { type: 'string', description: 'Collection name' },
+        description: { type: 'string', description: 'Optional description' },
+        parent_id: { type: 'string', description: 'Optional parent collection ID for nesting' }
+      },
+      required: ['name']
+    }
   }
 }
 
