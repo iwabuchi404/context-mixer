@@ -218,6 +218,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  flex-wrap: wrap;
 }
 
 .doc-title {
@@ -235,18 +236,63 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   min-width: 0;
 }
 
+/* パンくずリンクのスタイル改善 */
 .meta-line {
   color: var(--text-muted);
   font-family: var(--font-mono); /* 機械の事実(日時・パス・作者)は等幅 */
   font-size: var(--text-xs);
   letter-spacing: -0.02em;
   margin: var(--space-2) 0 var(--space-5);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
 }
 .meta-line .crumb {
   color: var(--text-muted);
   text-decoration: none;
+  padding: 2px var(--space-1);
+  border-radius: var(--radius-sm);
+  transition: background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
-.meta-line .crumb:hover { color: var(--accent); text-decoration: underline; }
+.meta-line .crumb:hover {
+  background: var(--surface-dim);
+  color: var(--accent);
+  text-decoration: none;
+}
+
+/* コードブロックのコピーボタン: ホバーで現れる、右上の静かなピル */
+.prose pre.has-copy { position: relative; }
+.copy-btn {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  font-family: var(--font-mono); /* UIクロームは等幅 */
+  font-size: var(--text-xs);
+  padding: 2px var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease), background var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
+}
+.prose pre:hover .copy-btn { opacity: 0.7; }
+.copy-btn:hover { opacity: 1; background: var(--surface-dim); color: var(--text); }
+.copy-btn.is-done { opacity: 1; color: var(--accent); border-color: var(--accent); }
+
+/* 記事ヘッダーのコピーボタン */
+.article-copy-btn { font-size: var(--text-xs); }
+.article-copy-btn.is-done { color: var(--accent); }
+
+.editor {
+  min-height: 60vh;
+  margin-top: var(--space-4);
+  flex: 1;
+  font-family: var(--font-mono);
+  line-height: 1.5;
+}
 
 /* コレクション一覧ページ */
 .col-block {

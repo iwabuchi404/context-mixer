@@ -20,7 +20,7 @@ Chatツール（Claude.ai含む）からContextMixerへ自然にアクセスで�
 
 Cloudflare公式が明示：「MCPサーバーをフルAPIのラッパーにするな。特定のユーザーゴールに最適化したツールを作れ。少数のよく設計されたツールの方が、多数の細粒度ツールより優れる」。
 
-ContextMixerのAPIエンドポイントを全部ツール化せず、以下の5〜6ツールに絞る：
+ContextMixerのAPIエンドポイントを全部ツール化せず、以下のツールに絞る：
 
 | ツール | 役割 | 内部呼び出し |
 | --- | --- | --- |
@@ -28,8 +28,10 @@ ContextMixerのAPIエンドポイントを全部ツール化せず、以下の5�
 | `get_doc` | 粒度指定（meta/outline/full/section）で取得 | services.documents.get |
 | `write_doc` | 新規作成・全文更新 | services.documents.create/update |
 | `append_doc` | 末尾追記 | services.documents.append |
+| `delete_doc` | ドキュメント削除 | services.documents.delete |
 | `get_entrypoint` | エントリーポイント取得 | services.entrypoint |
 | `list_collections` | コレクション一覧（ツリー） | services.collections.list |
+| `create_collection` | コレクション作成 | services.collections.create |
 
 ---
 

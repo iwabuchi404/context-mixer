@@ -165,6 +165,7 @@ function setupDocView() {
       document.getElementById('sidebar')?.classList.remove('open')
       e.detail.target.scrollTop = 0
       document.querySelector('.main-content')?.scrollTo(0, 0)
+      addCopyButtons()
     }
     if (e.detail.target.id === 'tree-area') {
       applyCollapsedState()
@@ -196,6 +197,68 @@ function markCurrent(docId) {
   document.querySelectorAll('.tree-item[aria-current]').forEach((el) => el.removeAttribute('aria-current'))
   if (!docId) return
   document.querySelectorAll(`.tree-item[data-doc-id="${docId}"]`).forEach((el) => el.setAttribute('aria-current', 'page'))
+}
+
+// --- copy to clipboard ---
+// Adds a copy button to each code block and a "copy article" button to the
+// doc header. Idempotent — skips elements that already have a button so it
+// can run after every HTMX swap.
+const flashCopyBtn = (btn, okText, errText, revert) => {
+  btn.textContent = okText
+  btn.classList.add('is-done')
+  setTimeout(() => {
+    btn.textContent = revert
+    btn.classList.remove('is-done')
+  }, 1500)
+}
+
+function addCopyButtons() {
+  const docView = document.getElementById('doc-view-inner')
+  if (!docView) return
+
+  // Code blocks: a quiet "copy" pill in the top-right corner
+  docView.querySelectorAll('.prose pre').forEach((pre) => {
+    if (pre.querySelector('.copy-btn')) return
+    pre.classList.add('has-copy')
+    const btn = document.createElement('button')
+    btn.className = 'copy-btn'
+    btn.type = 'button'
+    btn.textContent = 'コピー'
+    btn.setAttribute('aria-label', 'コードをコピー')
+    btn.addEventListener('click', async () => {
+      const code = pre.querySelector('code')
+      const text = code ? code.textContent : pre.textContent
+      try {
+        await navigator.clipboard.writeText(text || '')
+        flashCopyBtn(btn, '✓', 'コピー', 'コピー')
+      } catch {
+        flashCopyBtn(btn, '✗', 'コピー', 'コピー')
+      }
+    })
+    pre.appendChild(btn)
+  })
+
+  // Article header: copy the entire rendered prose as plain text
+  const head = docView.querySelector('.doc-head')
+  if (head && !head.querySelector('.article-copy-btn')) {
+    const article = docView.querySelector('.prose')
+    if (article) {
+      const copyBtn = document.createElement('button')
+      copyBtn.className = 'btn-quiet btn-sm article-copy-btn'
+      copyBtn.type = 'button'
+      copyBtn.textContent = '記事をコピー'
+      copyBtn.setAttribute('aria-label', '記事全体をコピー')
+      copyBtn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(article.textContent || '')
+          flashCopyBtn(copyBtn, '✓ コピー済み', 'コピー', '記事をコピー')
+        } catch {
+          flashCopyBtn(copyBtn, '✗', 'コピー', '記事をコピー')
+        }
+      })
+      head.appendChild(copyBtn)
+    }
+  }
 }
 
 init().catch((err) => {

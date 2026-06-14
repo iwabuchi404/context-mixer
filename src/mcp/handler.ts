@@ -41,7 +41,10 @@ export class McpApiHandler extends WorkerEntrypoint<Env> {
       // api_keys) must stay null; the keyName ('oauth:email') carries attribution.
       keyId: null,
       keyName: props.keyName,
-      scopes: props.scopes ?? [],
+      // Fallback: props.scopes can arrive empty for ChatGPT's OAuth grant (the
+      // consent UI defaults read on, so this matches intended behavior and keeps
+      // read tools callable). TODO: find why props.scopes is empty for ChatGPT.
+      scopes: props.scopes?.length ? props.scopes : ['read'],
       allowedCollections: props.allowedCollections ?? null,
       entryDocId: null,
     }

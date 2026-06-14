@@ -13,6 +13,14 @@
 - セキュリティ対策(済): 全HTML出力のエスケープ、レート制限([rate-limit.ts](../src/auth/rate-limit.ts):inbox20/auth30/その他600 per min)、inbox本文10万字・ファイル10MB上限、inbox-token認証バイパス修正、ルート/アセット衝突修正(inbox/filesフラグメントを `/ui/*` へ)
 - APIキーのreadスコープ取りこぼし修正(parseBody `all:true`)
 
+## 完成して本番稼働中のもの（追加）
+
+- MCP (Model Context Protocol) リモートサーバー: OAuth 2.1 + Streamable HTTP、8ツール対応
+  - ツール: `search_docs`, `get_doc`, `write_doc`, `append_doc`, `delete_doc`, `get_entrypoint`, `list_collections`, `create_collection`
+  - 認証: Cloudflare `workers-oauth-provider` + Clerk OAuth 2.1
+  - スコープ: read/write権限分離、コレクションアクセス制限対応
+  - Claude.ai / Claude Code / MCP Inspector から接続確認済み（2026-06-14）
+
 ## 進行中: MCP の OAuth 実装(claude.ai 対応) ← ここから再開
 
 ### 背景
@@ -49,6 +57,25 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 - **MCP接続はOAuthに一本化**。段階1のAPIキーBearer方式のMCP接続(Claude Code向け)は廃止。Claude Code もOAuthフローで繋ぐ。REST APIのAPIキーは従来どおり有効
 - `export default` の構造変更はアプリ全体の入口。デプロイ後に**UI/REST/Clerkログインの回帰確認**を必ず行う
 - **【重要・2026-06-14修正】Clerk値は wrangler.toml の `[vars]` に書かない**。`[vars]`(平文)はデプロイのたびに本番ダッシュボードを上書き/削除するため、dev値(pk_test)を置くと毎デプロイで本番(pk_live)を壊していた。現在: ローカル=`.dev.vars`(CLERK_SECRET_KEY/PUBLISHABLE_KEY/FRONTEND_API/SIGN_IN_URL の dev値)、本番=ダッシュボード **Secret**(デプロイで永続)。詳細は永続メモリ [[wrangler-vars-overwrite-prod]]
+
+## 保留中のUI改善（フェーズ2）
+
+以下のUI改善は計画済みで未実装。設計・仕様は固まっているが、実装の優先度は低い。
+
+| 機能 | 内容 | 状態 |
+| --- | --- | --- |
+| 階層・コレクション間移動UI | パンくずリンクの改善、ナビゲーション向上 | 計画 |
+| アクションボタンのスタイル | 編集・削除ボタンのブラッシュアップ | 計画 |
+| 固定ヘッダー | 記事ページスクロール時にタイトル・パンくず・更新日・編集ボタンを固定 | 計画 |
+| コピーボタン | コードブロック・記事全体のクリップボードコピー | 計画 |
+| 行番号表示 | 編集モード時の行番号表示 | 計画 |
+| スニペット入力ボタン | 編集モード時のテンプレート挿入ボタン（メモ・アイデア・リンク等） | 計画 |
+
+**実装方針**:
+- HTMX + Vanilla JS で実装（Vueなし）
+- CSSは既存の「台所」v0.3 デザインシステムに準拠
+- 固定ヘッダーは `position: sticky` で実装
+- コピー機能は `navigator.clipboard` API 使用
 
 ## 他に保留中のもの(優先度低)
 - observability(`[observability] enabled=true`)未追加、compatibility_date が `2024-01-01` と古い
