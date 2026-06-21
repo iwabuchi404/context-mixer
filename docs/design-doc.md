@@ -1,3 +1,24 @@
+## 2026-06-21 現行実装確認
+
+この追補は `D:\work\context-mixer` のローカル実装を確認した結果。下の既存本文には古い状態が残っているため、現時点の判断ではこの追補を優先する。
+
+### 現在地
+
+- 実装済み: D1スキーマ、コレクション/ドキュメントCRUD、セクションAPI、append、履歴API、ドキュメントリンク、FTS5検索、Clerkセッション認証、APIキー認証、APIキー管理、`/me/entrypoint`、ワークスペース `/entrypoint`、files/R2、inbox承認フロー、HTMXベースWeb UI、JSON-RPC MCP endpoint。
+- 未実装: `GET /collections/:id/export` は `501 NOT_IMPLEMENTED` を返す。
+- 検索修正: FTS5 の `MATCH` に渡す検索語は空白区切りで phrase quote する。`context-mixer` のようなハイフン入り語を FTS 構文として誤解釈しないため。
+- フロントエンド実態: README/古いspecの「Vue MPA」ではなく、`public/index.html` + `public/app.js` + `/ui/*` fragments による HTMX 構成。
+- MCP実態: ローカルコードは `/mcp` JSON-RPC endpoint を APIキー（`Bearer kb_...`）で認証する。OAuthProviderベースのリモートMCP計画とは差分がある。
+
+### ドキュメント上の古い記述
+
+- 直下の「現在地」には `files(R2)`, `inbox`, `GET /entrypoint`, `MCP server` が未実装とあるが、ローカルコードでは実装済み。
+- ContextMixer上の一部ドキュメントには OAuth/8ツール完了の記述があるが、ローカル実装確認では APIキー認証/6ツールの JSON-RPC 実装として扱う。
+- `docs/STATUS.md` 参照はローカルには該当ファイルがない。
+- `src/mcp/tools.ts` の外部 `CallToolResult` 型importはローカル型に置換済み。`npm run type-check` は通過する。
+
+---
+
 ## 現在地
 
 実装フェーズ1〜2の途中（2026-06-12時点）。

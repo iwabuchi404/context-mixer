@@ -6,6 +6,15 @@ AI-accessible knowledge base service.
 
 A personal knowledge base service co-managed by humans and AI. Designed as a Notion alternative with AI-first optimization for efficient exploration and access.
 
+## Current Status
+
+As of 2026-06-21, the local implementation is past the initial skeleton stage.
+
+- Implemented: D1 schema, collection/document CRUD, section API, append, history, document links, FTS search, Clerk session auth, API key auth, API key management, `/me/entrypoint`, workspace `/entrypoint`, files/R2, inbox approval flow, HTMX-based Web UI, and JSON-RPC MCP endpoint.
+- Not implemented: collection export (`GET /collections/:id/export` currently returns `501`).
+- Search fix note: FTS5 search terms are phrase-quoted before `MATCH` so symbols such as `-` are treated as text, not FTS syntax.
+- Local development note: Wrangler state is persisted to `%USERPROFILE%/.context-mixer/wrangler-state` to avoid D1/SQLite issues on SMB/shared folders.
+
 ## Stack
 
 | Component | Choice | Reason |
@@ -13,8 +22,8 @@ A personal knowledge base service co-managed by humans and AI. Designed as a Not
 | Runtime | Hono on Cloudflare Workers | Free, lightweight, edge |
 | DB | D1 (SQLite-compatible) | Free, Workers integrated |
 | Storage | R2 | Free transfer, image storage |
-| Frontend | Vue MPA (same server) | Familiar, single server |
-| Auth | Clerk | Multi-device management, API key management |
+| Frontend | HTMX + static assets on Workers Assets | Small runtime, server-rendered fragments, same server |
+| Auth | Clerk session + API keys | Human session auth and AI/REST API access |
 
 ## Setup
 
@@ -85,7 +94,6 @@ npm run deploy
 - `GET /health` - Health check
 - `GET /` - API info
 
-### (Planned)
 - `GET /auth/login` - Clerk auth redirect
 - `GET /collections` - List collections
 - `GET /docs` - List documents
@@ -93,6 +101,8 @@ npm run deploy
 - `GET /search?q=` - Search documents
 - `POST /files` - Upload file
 - `POST /inbox/:token` - Submit to inbox
+- `GET /entrypoint` - Workspace entry point
+- `POST /mcp` - JSON-RPC MCP endpoint using API key auth
 
 See [docs/design-doc.md](./docs/design-doc.md) for full API specification.
 

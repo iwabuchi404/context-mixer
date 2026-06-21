@@ -10,9 +10,12 @@ import { createRevision } from '../routes/documents'
 import { buildTree } from '../routes/collections'
 import { parseSections } from '../services/sections'
 import { syncDocumentLinks } from '../services/links'
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js'
 
 type Env = AppEnv['Bindings']
+type CallToolResult = {
+  content: Array<{ type: 'text'; text: string }>
+  isError?: boolean
+}
 
 const generateId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
@@ -34,6 +37,11 @@ const extractSnippet = (content: string, query: string, contextLines = 3): strin
   }
   return lines.slice(0, contextLines * 2).join('\n')
 }
+
+const toFtsQuery = (query: string): string =>
+  query.trim().split(/\s+/).filter(Boolean)
+    .map((part) => `"${part.replace(/"/g, '""')}"`)
+    .join(' ')
 
 // Tool: search_docs (read)
 export async function searchDocs(
@@ -78,7 +86,7 @@ export async function searchDocs(
                       JOIN documents d ON documents_fts.rowid = d.rowid
                       WHERE documents_fts MATCH ? AND d.status = 'published'
                       ${collectionClause} LIMIT ?`
-      result = await env.DB.prepare(ftsSql).bind(q.replace(/["\]]/g, ''), ...collectionParams, limit).all()
+      result = await env.DB.prepare(ftsSql).bind(toFtsQuery(q), ...collectionParams, limit).all()
     } catch {
       result = await env.DB.prepare(likeSql).bind(...likeParams).all()
     }

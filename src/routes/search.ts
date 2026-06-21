@@ -21,6 +21,11 @@ const extractSnippet = (content: string, query: string, contextLines: number = 3
   return lines.slice(0, contextLines * 2).join('\n')
 }
 
+const toFtsQuery = (query: string): string =>
+  query.trim().split(/\s+/).filter(Boolean)
+    .map((part) => `"${part.replace(/"/g, '""')}"`)
+    .join(' ')
+
 // GET /search - Full-text search
 searchRoute.get('/', async (c) => {
   try {
@@ -61,7 +66,7 @@ searchRoute.get('/', async (c) => {
         JOIN documents d ON documents_fts.rowid = d.rowid
         WHERE documents_fts MATCH ? AND d.status = 'published'
       `
-      params.push(query.replace(/["\]]/g, ''))
+      params.push(toFtsQuery(query))
     }
 
     const auth = c.get('auth')
