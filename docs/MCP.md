@@ -1,5 +1,21 @@
 > ContextMixerをリモートMCPサーバー化し、Claude.ai等のMCP対応クライアントから直接利用できるようにするための実装プラン。
-> 
+>
+
+## 2026-06-21 ローカル実装確認
+
+このファイルの下部には OAuth 2.1 / `workers-oauth-provider` 前提の計画が残っているが、`D:\work\context-mixer` の現行ローカル実装は次の状態。
+
+- `/mcp` は `src/mcp/handler.ts` に実装済みの JSON-RPC endpoint。
+- 認証は OAuth ではなく、既存APIキー `Authorization: Bearer kb_...` を流用する。
+- `authMiddleware` は `/mcp` を共有認証から除外し、MCP handler 内で APIキーを検証する。
+- 実装済みツールは `search_docs`, `get_doc`, `write_doc`, `append_doc`, `list_collections`, `get_entrypoint` の6個。
+- 書き込みツールは `createRevision` と `syncDocumentLinks` を呼び、REST/UIと同じ署名・リンク同期の経路を通る。
+- `src/mcp/tools.ts` は外部 `CallToolResult` 型importを使わず、ローカルの最小型で返却形を表す。これにより `npm run type-check` は通る。
+- MCP `search_docs` も REST/UI と同じく、FTS5 の `MATCH` に渡す検索語を phrase quote する。`context-mixer` のようなハイフン入り語を FTS構文として誤解釈しないため。
+
+下記は元の実装計画として保持する。OAuth対応を再開する場合は、この現行実装との差分を先に整理する。
+
+---
 
 ## 目的
 

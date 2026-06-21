@@ -38,6 +38,11 @@ const notify = (c: any, message: string, treeRefresh = true) => {
   c.header('HX-Trigger', json)
 }
 
+const toFtsQuery = (query: string): string =>
+  query.trim().split(/\s+/).filter(Boolean)
+    .map((part) => `"${part.replace(/"/g, '""')}"`)
+    .join(' ')
+
 // ---------------------------------------------------------------
 // Shared renderers
 // ---------------------------------------------------------------
@@ -306,13 +311,12 @@ uiRoute.get('/search', async (c) => {
       ORDER BY updated_at DESC LIMIT 15
     `).bind(like, like).all()
   } else {
-    const escaped = q.replace(/["\]]/g, '')
     result = await c.env.DB.prepare(`
       SELECT d.id, d.title, d.content, d.collection_id
       FROM documents_fts JOIN documents d ON documents_fts.rowid = d.rowid
       WHERE documents_fts MATCH ? AND d.status = 'published'
       LIMIT 15
-    `).bind(escaped).all().catch(() => ({ results: [] }))
+    `).bind(toFtsQuery(q)).all().catch(() => ({ results: [] }))
   }
 
   const hits = (result.results as any[]).filter((r) => isCollectionAllowed(auth, r.collection_id))
