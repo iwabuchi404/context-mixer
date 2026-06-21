@@ -69,7 +69,9 @@ const renderTree = async (c: any): Promise<string> => {
     parentMap.get(pid)!.push(doc)
   }
 
-  // Render documents recursively with hierarchy support (depth cap guards against parent_id cycles)
+  // Render documents recursively with hierarchy support (depth cap guards against parent_id cycles).
+  // Documents with children get a toggle (▾) and wrap their descendants in a
+  // .tree-doc-children container so the client can collapse them.
   const renderDocs = (collectionId: string, parentId: string | null, docDepth: number): string => {
     if (docDepth > 20) return ''
     const parentMap = docsByParent.get(collectionId)
@@ -85,13 +87,21 @@ const renderTree = async (c: any): Promise<string> => {
     for (const doc of sorted) {
       const cls = doc.priority === 'archive' ? 'is-archive' : ''
       const mark = doc.priority === 'high' ? '<span class="pri" title="priority: high">●</span>' : ''
-      html += `<div class="tree-doc-item" style="--doc-depth:${docDepth}">
+      const children = renderDocs(collectionId, doc.id, docDepth + 1)
+      const hasChildren = children.length > 0
+      // Spacer keeps the link x-position aligned between docs with/without children
+      const toggle = hasChildren
+        ? '<button class="tree-toggle tree-toggle-doc" type="button" aria-label="折りたたみ"><span class="tree-toggle-icon">▾</span></button>'
+        : '<span class="tree-toggle-spacer" aria-hidden="true"></span>'
+      html += `<div class="tree-doc-item${hasChildren ? ' has-children' : ''}" data-doc-id="${esc(doc.id)}" style="--doc-depth:${docDepth}">
+        ${toggle}
         ${docLink(doc.id, doc.title, cls, mark)}
         <button class="doc-add-btn" type="button" title="子ドキュメントを追加"
                 hx-get="/ui/doc/${esc(doc.id)}/new-child" hx-target="#doc-view">＋</button>
       </div>\n`
-      // Render children recursively
-      html += renderDocs(collectionId, doc.id, docDepth + 1)
+      if (hasChildren) {
+        html += `<div class="tree-doc-children">${children}</div>\n`
+      }
     }
     return html
   }
@@ -103,9 +113,9 @@ const renderTree = async (c: any): Promise<string> => {
       // (separate, on the right) collapses the group (state kept client-side)
       html += `<section class="tree-group" data-col-id="${esc(col.id)}" style="--depth:${depth}">
         <div class="tree-head">
-          <a class="tree-col-name" href="/?view=collections"
-             hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">${esc(col.name)}</a>
-          <button class="tree-toggle" type="button" aria-label="折りたたみ">▾</button>
+          <button class="tree-toggle" type="button" aria-label="折りたたみ"><span class="tree-toggle-icon">▾</span></button>
+          <a class="tree-col-name" href="/?col=${esc(col.id)}"
+             hx-get="/ui/collections/${esc(col.id)}" hx-target="#doc-view" hx-push-url="/?col=${esc(col.id)}">${esc(col.name)}</a>
         </div>
         <div class="tree-children">\n`
       // Render documents with hierarchy (root docs only, parent_id=null)
@@ -234,6 +244,62 @@ const renderCollectionsPage = async (c: any, errorMessage?: string): Promise<str
 </div>`
 }
 
+// Single collection page: the collection's document list + create form + edit/delete.
+// Reached from the tree's collection name link and the document breadcrumb.
+const renderCollectionPage = async (c: any, collectionId: string): Promise<string> => {
+  const auth: AuthContext = c.get('auth')
+  if (!isCollectionAllowed(auth, collectionId)) return errorFragment('このコレクションへのアクセス権がありません')
+
+  const [col, docsResult] = await Promise.all([
+    c.env.DB.prepare('SELECT id, name, description FROM collections WHERE id = ?').bind(collectionId).first(),
+    c.env.DB.prepare(`
+      SELECT id, title, parent_id, priority, updated_at FROM documents
+      WHERE collection_id = ? AND status = 'published'
+    `).bind(collectionId).all(),
+  ])
+  const collection = col as any
+  if (!collection) return errorFragment('コレクションが見つかりません')
+
+  // Group by parent for hierarchical render (depth cap guards against cycles)
+  const docsByParent = new Map<string | null, any[]>()
+  for (const doc of docsResult.results as any[]) {
+    const pid = doc.parent_id || null
+    if (!docsByParent.has(pid)) docsByParent.set(pid, [])
+    docsByParent.get(pid)!.push(doc)
+  }
+  const renderDocTree = (parentId: string | null, depth: number): string => {
+    if (depth > 20) return ''
+    const docs = docsByParent.get(parentId) ?? []
+    const sorted = [
+      ...docs.filter((d) => d.priority === 'high'),
+      ...docs.filter((d) => d.priority === 'normal'),
+      ...docs.filter((d) => d.priority === 'archive'),
+    ]
+    return sorted.map((doc) => {
+      const cls = doc.priority === 'archive' ? 'is-archive' : ''
+      const mark = doc.priority === 'high' ? ' <span class="pri">●</span>' : ''
+      return `<div style="padding-left: ${depth * 16}px;">${docLink(doc.id, doc.title, cls, mark)}</div>\n` +
+        renderDocTree(doc.id, depth + 1)
+    }).join('')
+  }
+
+  const docCount = (docsResult.results as any[]).length
+
+  return `
+<div id="doc-view-inner" data-doc-title="${esc(collection.name)}">
+  ${colHead(collection, docCount)}
+  ${collection.description ? `<p class="muted" style="margin: var(--space-3) 0">${esc(collection.description)}</p>` : ''}
+  <nav class="tree col-docs">
+    ${renderDocTree(null, 0) || '<p class="tree-empty">まだメモがありません</p>'}
+  </nav>
+  <form class="col-new" hx-post="/ui/docs" hx-target="#doc-view">
+    <input type="hidden" name="collection_id" value="${esc(collectionId)}">
+    <input class="input" name="title" placeholder="新しいメモのタイトル" required autocomplete="off">
+    <button class="btn-primary" type="submit">作成</button>
+  </form>
+</div>`
+}
+
 const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error: string; status: 404 | 403 }> => {
   const auth: AuthContext = c.get('auth')
   const doc = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first() as any
@@ -282,9 +348,15 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
     </section>\n`
   }
 
-  // Build breadcrumb: collection > grandparent > ... > parent (single CTE query, depth-capped at 20)
+  // Build breadcrumb: コレクション(全体) > collection(this doc) > ancestors > parent
+  // The collection name links to the single-collection page; "コレクション" to the management page.
+  const colName = (collection as any)?.name ?? ''
+  const colCrumb = doc.collection_id
+    ? `<a class="crumb" href="/?col=${esc(doc.collection_id)}"
+        hx-get="/ui/collections/${esc(doc.collection_id)}" hx-target="#doc-view" hx-push-url="/?col=${esc(doc.collection_id)}">${esc(colName)}</a>`
+    : esc(colName)
   let breadcrumb = `<a class="crumb" href="/?view=collections"
-      hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">コレクション</a> / ${esc((collection as any)?.name ?? '')}`
+      hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">コレクション</a> / ${colCrumb}`
 
   if (doc.parent_id) {
     const ancestorRows = await c.env.DB.prepare(`
@@ -402,9 +474,17 @@ uiRoute.get('/search', async (c) => {
 // GET /ui/welcome - Empty state (recent documents)
 uiRoute.get('/welcome', async (c) => c.html(await renderWelcome(c)))
 
-// GET /ui/doc/:id - Reading view
+// GET /ui/doc/:id - Reading view (?raw=1 → JSON of title+content for clipboard)
 uiRoute.get('/doc/:id', async (c) => {
-  const result = await renderDoc(c, c.req.param('id'))
+  const id = c.req.param('id')
+  if (c.req.query('raw') === '1') {
+    const auth = c.get('auth')
+    const doc = await c.env.DB.prepare('SELECT title, content, collection_id FROM documents WHERE id = ?').bind(id).first() as any
+    if (!doc) return c.json({ error: 'Not found' }, 404)
+    if (!isCollectionAllowed(auth, doc.collection_id)) return c.json({ error: 'Forbidden' }, 403)
+    return c.json({ title: doc.title, content: doc.content })
+  }
+  const result = await renderDoc(c, id)
   if ('error' in result) return c.html(errorFragment(result.error), result.status)
   return c.html(result.html)
 })
@@ -563,6 +643,9 @@ uiRoute.post('/docs', async (c) => {
 
 // GET /ui/collections - Collection management page
 uiRoute.get('/collections', async (c) => c.html(await renderCollectionsPage(c)))
+
+// GET /ui/collections/:id - Single collection page (document list)
+uiRoute.get('/collections/:id', async (c) => c.html(await renderCollectionPage(c, c.req.param('id'))))
 
 // POST /ui/collections - Create collection
 // view=page → returns the management page; otherwise the tree (sidebar form)

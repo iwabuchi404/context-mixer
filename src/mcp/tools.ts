@@ -47,34 +47,43 @@ export async function searchDocs(
   let collectionId: string | null = null
   if (scope.startsWith('collection:')) collectionId = scope.slice('collection:'.length)
 
-  let sql: string
-  const sqlParams: any[] = []
-  if ([...q].length < 3) {
-    sql = `SELECT d.id, d.title, d.content, d.collection_id, d.priority
-           FROM documents d WHERE d.status = 'published' AND (d.title LIKE ? OR d.content LIKE ?)`
-    sqlParams.push(`%${q}%`, `%${q}%`)
-  } else {
-    sql = `SELECT d.id, d.title, d.content, d.collection_id, d.priority
-           FROM documents_fts JOIN documents d ON documents_fts.rowid = d.rowid
-           WHERE documents_fts MATCH ? AND d.status = 'published'`
-    sqlParams.push(q.replace(/["\]]/g, ''))
-  }
-
-  // Collection access: explicit scope must be allowed; otherwise restrict to allowed set
+  // Build the collection WHERE clause + params (shared by FTS5 and LIKE paths)
+  let collectionClause = ''
+  const collectionParams: any[] = []
   if (collectionId) {
     if (!isCollectionAllowed(auth, collectionId)) return err('Collection not allowed for this key')
-    sql += ' AND d.collection_id = ?'
-    sqlParams.push(collectionId)
+    collectionClause = ' AND d.collection_id = ?'
+    collectionParams.push(collectionId)
   } else if (auth.allowedCollections !== null) {
     if (auth.allowedCollections.length === 0) return ok({ data: [] })
-    sql += ` AND d.collection_id IN (${auth.allowedCollections.map(() => '?').join(', ')})`
-    sqlParams.push(...auth.allowedCollections)
+    collectionClause = ` AND d.collection_id IN (${auth.allowedCollections.map(() => '?').join(', ')})`
+    collectionParams.push(...auth.allowedCollections)
   }
 
-  sql += ' LIMIT ?'
-  sqlParams.push(limit)
+  const selectCols = 'd.id, d.title, d.content, d.collection_id, d.priority'
+  const likeSql = `SELECT ${selectCols} FROM documents d
+                   WHERE d.status = 'published' AND (d.title LIKE ? OR d.content LIKE ?)
+                   ${collectionClause} LIMIT ?`
+  const likeParams = [`%${q}%`, `%${q}%`, ...collectionParams, limit]
 
-  const result = await env.DB.prepare(sql).bind(...sqlParams).all()
+  // FTS5 (3+ chars) with LIKE fallback — the documents_fts table or trigram
+  // tokenizer may be unavailable on a given D1 (e.g. migration not applied),
+  // which otherwise surfaces as a 5xx to the MCP client.
+  let result
+  if ([...q].length < 3) {
+    result = await env.DB.prepare(likeSql).bind(...likeParams).all()
+  } else {
+    try {
+      const ftsSql = `SELECT ${selectCols} FROM documents_fts
+                      JOIN documents d ON documents_fts.rowid = d.rowid
+                      WHERE documents_fts MATCH ? AND d.status = 'published'
+                      ${collectionClause} LIMIT ?`
+      result = await env.DB.prepare(ftsSql).bind(q.replace(/["\]]/g, ''), ...collectionParams, limit).all()
+    } catch {
+      result = await env.DB.prepare(likeSql).bind(...likeParams).all()
+    }
+  }
+
   const data = (result.results as any[]).map((r) => ({
     id: r.id, title: r.title, snippet: extractSnippet(r.content, q),
     collection_id: r.collection_id, priority: r.priority,
@@ -203,6 +212,36 @@ export async function listCollections(env: Env, auth: AiAuth): Promise<CallToolR
   }
 
   return ok(buildTree(visible))
+}
+
+// Tool: list_docs (read) — documents in a collection, for AI navigation.
+// Lightweight (no content) so the AI can pick targets before fetching full text.
+export async function listDocs(
+  env: Env,
+  auth: AiAuth,
+  params: { collection_id: string; parent_id?: string }
+): Promise<CallToolResult> {
+  const { collection_id, parent_id } = params
+  if (!collection_id) return err('collection_id is required')
+  if (!isCollectionAllowed(auth, collection_id)) return err('Collection not allowed for this key')
+
+  let sql = `SELECT id, title, parent_id, priority, updated_at
+             FROM documents
+             WHERE collection_id = ? AND status = 'published'`
+  const sqlParams: any[] = [collection_id]
+
+  if (parent_id === 'root') {
+    sql += ' AND parent_id IS NULL'
+  } else if (parent_id) {
+    sql += ' AND parent_id = ?'
+    sqlParams.push(parent_id)
+  }
+
+  // high → normal → archive, then most recent first
+  sql += ` ORDER BY CASE priority WHEN 'high' THEN 0 WHEN 'normal' THEN 1 ELSE 2 END, updated_at DESC`
+
+  const result = await env.DB.prepare(sql).bind(...sqlParams).all()
+  return ok({ data: result.results })
 }
 
 // Tool: get_entrypoint (read)

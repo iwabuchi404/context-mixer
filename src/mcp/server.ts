@@ -57,6 +57,17 @@ export const toolDefinitions = {
       properties: {}
     }
   },
+  list_docs: {
+    description: 'List documents in a collection for navigation. Returns id, title, parent_id, priority, updated_at (lightweight — no content). Use this to discover documents before calling get_doc. Set parent_id="root" for top-level only, or a doc id to list its children.',
+    inputSchema: {
+      type: 'object' as const,
+      properties: {
+        collection_id: { type: 'string', description: 'Collection ID (required)' },
+        parent_id: { type: 'string', description: 'Optional: "root" for top-level docs only, or a document id to list its direct children. Omit to list all documents in the collection.' }
+      },
+      required: ['collection_id']
+    }
+  },
   get_entrypoint: {
     description: 'Get entry point document(s) for navigation',
     inputSchema: {

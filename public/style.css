@@ -93,7 +93,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  padding: 0 var(--space-1) 0 var(--space-2);
+  padding: 0 var(--space-1) 0 0;
 }
 
 .tree-col-name {
@@ -114,14 +114,26 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   border: none;
   cursor: pointer;
   color: var(--text-muted);
-  font-size: 9px;
+  font-size: 18px;
+  line-height: 1;
   padding: var(--space-1) var(--space-2);
   border-radius: var(--radius-sm);
   transition: transform var(--dur-fast) var(--ease);
 }
 .tree-toggle:hover { background: var(--surface-dim); color: var(--text); }
-.tree-group.collapsed .tree-toggle { transform: rotate(-90deg); }
+.tree-toggle-icon { display: inline-block; transition: transform var(--dur-fast) var(--ease); }
+.tree-group.collapsed .tree-toggle-icon { transform: rotate(-90deg); }
 .tree-group.collapsed .tree-children { display: none; }
+
+/* ドキュメントの開閉トグル: 子があるドキュメントのみ表示。スペーサーでリンク位置を揃える */
+.tree-doc-item .tree-toggle-doc {
+  display: none;
+  margin-left: 0;
+}
+.tree-doc-item.has-children .tree-toggle-doc { display: inline-block; }
+.tree-toggle-spacer { display: inline-block; width: calc(var(--space-2) * 2 + 0.5em); }
+.tree-doc-item.collapsed + .tree-doc-children { display: none; }
+.tree-doc-item.collapsed > .tree-toggle-doc .tree-toggle-icon { transform: rotate(-90deg); }
 
 .tree-empty {
   color: var(--text-muted);
@@ -138,7 +150,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   position: relative;
   display: flex;
   align-items: center;
-  padding-left: calc(var(--doc-depth, 0) * 16px);
+  padding-left: calc((var(--doc-depth, 0) + 1) * 16px);
 }
 
 .tree-doc-item .tree-item {
@@ -164,9 +176,21 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 .tree-doc-item:hover .doc-add-btn { opacity: 1; }
 .doc-add-btn:hover { background: var(--surface-dim); color: var(--accent); }
 
+/* タッチデバイス (hover 無し) では追加ボタンを常時表示 */
+@media (hover: none) {
+  .doc-add-btn { opacity: 0.55; }
+  .copy-btn { opacity: 0.7; }
+}
+
 .tree-item { font-size: var(--text-sm); }
 .tree-item.is-archive { color: var(--text-muted); }
 .tree-item .pri { margin-left: auto; color: var(--accent); font-size: 8px; }
+
+/* 現在表示中のドキュメント: アクセント色＋太字で視認 */
+.tree-item[aria-current="page"] {
+  color: var(--accent);
+  font-weight: 600;
+}
 
 .tree-new summary {
   cursor: pointer;

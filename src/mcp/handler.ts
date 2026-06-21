@@ -16,6 +16,7 @@ const TOOL_SCOPE: Record<string, 'read' | 'write'> = {
   search_docs: 'read',
   get_doc: 'read',
   list_collections: 'read',
+  list_docs: 'read',
   get_entrypoint: 'read',
   write_doc: 'write',
   append_doc: 'write',
@@ -147,6 +148,7 @@ function callTool(env: Env, auth: AiAuth, name: string, args: any) {
     case 'write_doc': return tools.writeDoc(env, auth, args)
     case 'append_doc': return tools.appendDoc(env, auth, args)
     case 'list_collections': return tools.listCollections(env, auth)
+    case 'list_docs': return tools.listDocs(env, auth, args)
     case 'get_entrypoint': return tools.getEntrypoint(env, auth, args)
     case 'delete_doc': return tools.deleteDoc(env, auth, args)
     case 'create_collection': return tools.createCollection(env, auth, args)

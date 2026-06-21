@@ -50,6 +50,11 @@ function loadInitial() {
     htmx.ajax('GET', '/ui/collections', { target: '#doc-view' })
     return
   }
+  const colId = params.get('col')
+  if (colId) {
+    htmx.ajax('GET', `/ui/collections/${colId}`, { target: '#doc-view' })
+    return
+  }
   const docId = params.get('doc') || localStorage.getItem('lastDoc')
   htmx.ajax('GET', docId ? `/ui/doc/${docId}` : '/ui/welcome', { target: '#doc-view' })
 }
@@ -173,11 +178,28 @@ function setupDocView() {
     }
   })
 
-  // Collection collapse toggle (the icon next to the name) — persisted per collection id
+  // Collapse toggle for collections (▾ next to the name) AND documents that
+  // have children. Both persist their collapsed ids separately.
   document.body.addEventListener('click', (e) => {
     const toggle = e.target.closest('.tree-toggle')
     if (!toggle) return
+
+    // Document toggle: collapse the .tree-doc-item and hide the sibling .tree-doc-children
+    if (toggle.classList.contains('tree-toggle-doc')) {
+      const item = toggle.closest('.tree-doc-item')
+      if (!item) return
+      item.classList.toggle('collapsed')
+      const docId = item.dataset.docId
+      const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedDocs') || '[]'))
+      if (item.classList.contains('collapsed')) collapsed.add(docId)
+      else collapsed.delete(docId)
+      localStorage.setItem('collapsedDocs', JSON.stringify([...collapsed]))
+      return
+    }
+
+    // Collection toggle
     const group = toggle.closest('.tree-group')
+    if (!group) return
     group.classList.toggle('collapsed')
     const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
     if (group.classList.contains('collapsed')) collapsed.add(group.dataset.colId)
@@ -187,9 +209,29 @@ function setupDocView() {
 }
 
 function applyCollapsedState() {
-  const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
+  // First-ever load (no saved state): collapse every collection by default,
+  // EXCEPT the one containing the currently-open document (so the user can
+  // see where they are). Once the user touches a toggle, their choice sticks.
+  if (localStorage.getItem('collapsedCols') === null) {
+    const activeDocId = new URLSearchParams(location.search).get('doc')
+      || document.getElementById('doc-view-inner')?.dataset.docId
+      || null
+    const activeColId = activeDocId
+      ? document.querySelector(`.tree-item[data-doc-id="${activeDocId}"]`)?.closest('.tree-group')?.dataset.colId
+      : null
+    const allCols = [...document.querySelectorAll('.tree-group')]
+      .map((g) => g.dataset.colId)
+      .filter((id) => id && id !== activeColId)
+    localStorage.setItem('collapsedCols', JSON.stringify(allCols))
+  }
+
+  const collapsedCols = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
+  const collapsedDocs = new Set(JSON.parse(localStorage.getItem('collapsedDocs') || '[]'))
   document.querySelectorAll('.tree-group').forEach((group) => {
-    if (collapsed.has(group.dataset.colId)) group.classList.add('collapsed')
+    if (collapsedCols.has(group.dataset.colId)) group.classList.add('collapsed')
+  })
+  document.querySelectorAll('.tree-doc-item[data-doc-id]').forEach((item) => {
+    if (collapsedDocs.has(item.dataset.docId)) item.classList.add('collapsed')
   })
 }
 
@@ -238,7 +280,9 @@ function addCopyButtons() {
     pre.appendChild(btn)
   })
 
-  // Article header: copy the entire rendered prose as plain text
+  // Article header: copy the document as Markdown source (title + body).
+  // Fetches the raw Markdown so tables, code blocks, and [[doc_xxx]] links
+  // survive the copy — much better for AI context ingestion than rendered text.
   const head = docView.querySelector('.doc-head')
   if (head && !head.querySelector('.article-copy-btn')) {
     const article = docView.querySelector('.prose')
@@ -247,10 +291,22 @@ function addCopyButtons() {
       copyBtn.className = 'btn-quiet btn-sm article-copy-btn'
       copyBtn.type = 'button'
       copyBtn.textContent = '記事をコピー'
-      copyBtn.setAttribute('aria-label', '記事全体をコピー')
+      copyBtn.setAttribute('aria-label', '記事をMarkdownでコピー')
       copyBtn.addEventListener('click', async () => {
+        const docId = docView.dataset.docId
         try {
-          await navigator.clipboard.writeText(article.textContent || '')
+          if (docId) {
+            const res = await fetch(`/ui/doc/${docId}?raw=1`)
+            if (res.ok) {
+              const data = await res.json()
+              await navigator.clipboard.writeText(`# ${data.title}\n\n${data.content}`)
+              flashCopyBtn(copyBtn, '✓ コピー済み', 'コピー', '記事をコピー')
+              return
+            }
+          }
+          // Fallback: rendered title + prose text
+          const title = docView.querySelector('.doc-title')?.textContent?.trim() || ''
+          await navigator.clipboard.writeText(`${title}\n\n${article.textContent || ''}`.trim())
           flashCopyBtn(copyBtn, '✓ コピー済み', 'コピー', '記事をコピー')
         } catch {
           flashCopyBtn(copyBtn, '✗', 'コピー', '記事をコピー')
