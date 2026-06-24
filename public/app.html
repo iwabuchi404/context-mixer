@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Context Mixer</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/htmx.min.js"></script>
+</head>
+<body>
+  <header>
+    <button class="menu-toggle" aria-label="メニュー">☰</button>
+    <a class="brand" href="/app.html">Context Mixer</a>
+    <span class="spacer"></span>
+    <nav>
+      <a href="/keys.html">キー</a>
+      <a href="/inbox.html">受信箱</a>
+      <a href="/files.html">ファイル</a>
+    </nav>
+    <button id="signout" class="btn-quiet">サインアウト</button>
+  </header>
+
+  <main class="app-layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-search">
+        <input id="q" name="q" class="input" type="search" placeholder="検索"
+               autocomplete="off"
+               hx-get="/ui/search" hx-trigger="input changed delay:300ms, search" hx-target="#tree-area">
+      </div>
+      <div id="tree-area"></div>
+    </aside>
+
+    <div class="main-content">
+      <div id="doc-view"></div>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>

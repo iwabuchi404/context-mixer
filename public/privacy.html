@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>プライバシーポリシー — Context Mixer</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    .legal {
+      max-width: 42rem;
+      margin: 0 auto;
+      padding: var(--space-7) var(--space-4) var(--space-8);
+      line-height: var(--leading-prose);
+    }
+    .legal h1 {
+      font-size: 1.8rem;
+      margin: 0 0 var(--space-5);
+    }
+    .legal h2 {
+      font-size: 1.15rem;
+      margin: var(--space-6) 0 var(--space-3);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--border);
+    }
+    .legal p {
+      margin: 0 0 var(--space-3);
+    }
+    .legal ul {
+      padding-left: var(--space-5);
+      margin: var(--space-2) 0 var(--space-3);
+    }
+    .legal li {
+      margin: var(--space-1) 0;
+    }
+    .legal-back {
+      margin-top: var(--space-7);
+      padding-top: var(--space-5);
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+    .legal-back a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/">Context Mixer</a>
+    <span class="spacer"></span>
+    <nav>
+      <a href="/terms.html">利用規約</a>
+      <a href="/privacy.html">プライバシー</a>
+    </nav>
+  </header>
+
+  <main class="legal">
+    <h1>プライバシーポリシー</h1>
+    <p>最終更新日: 2026年6月24日</p>
+
+    <h2>1. はじめに</h2>
+    <p>Context Mixer（以下「本サービス」）は、ユーザーのプライバシーを尊重します。本ポリシーは、本サービスが収集・利用する情報とその取り扱いについて説明します。</p>
+
+    <h2>2. 収集する情報</h2>
+    <h3>2.1 認証情報</h3>
+    <p>本サービスは認証に Clerk を利用します。Clerk を通じて以下の情報を取得します:</p>
+    <ul>
+      <li>メールアドレス（アカウント識別用）</li>
+      <li>ユーザーID（Clerkが発行する一意識別子）</li>
+    </ul>
+    <h3>2.2 コンテンツ</h3>
+    <p>ユーザーが作成・保存するドキュメント・ファイル等のコンテンツは、Cloudflare D1（データベース）および R2（オブジェクトストレージ）に保存されます。</p>
+    <h3>2.3 自動収集情報</h3>
+    <ul>
+      <li>アクセスログ（IPアドレス・リクエスト時刻・パス）— Cloudflare が自動的に記録</li>
+      <li>ブラウザ情報（User-Agent）— 認証・セキュリティ目的</li>
+    </ul>
+
+    <h2>3. 情報の利用目的</h2>
+    <ul>
+      <li>本サービスの提供・運営</li>
+      <li>認証・アクセス制御</li>
+      <li>不正利用の防止・セキュリティの維持</li>
+      <li>サービス改善のための集計分析（個人を特定しない形）</li>
+    </ul>
+
+    <h2>4. 情報の保存先</h2>
+    <ul>
+      <li><strong>認証データ</strong> — Clerk（米国・EUのデータセンター）</li>
+      <li><strong>コンテンツ</strong> — Cloudflare D1 / R2（ユーザーが指定したリージョン）</li>
+      <li><strong>ログ</strong> — Cloudflare のエッジネットワーク</li>
+    </ul>
+
+    <h2>5. 第三者への提供</h2>
+    <p>以下の場合を除き、ユーザーのコンテンツまたは個人情報を第三者に提供しません:</p>
+    <ul>
+      <li>法令に基づく要請があった場合</li>
+      <li>ユーザーの同意があった場合</li>
+      <li>認証・決済等の外部サービスに必要最小限の情報を渡す場合（Clerk等）</li>
+    </ul>
+
+    <h2>6. AIツールによるアクセス</h2>
+    <p>ユーザーがAPIキーまたはMCPプロトコルを通じてAIツールにアクセスを許可した場合、AIツールの提供者（Anthropic等）にコンテンツが送信される可能性があります。これはユーザー自身の操作に基づくものであり、本サービスが能動的にコンテンツをAI提供者に送信することはありません。</p>
+
+    <h2>7. データの削除</h2>
+    <p>ユーザーは本サービスのWeb UIからコンテンツを削除できます。アカウントの削除を希望する場合は、Clerkのアカウント管理画面から行うか、お問い合わせください。アカウント削除後、関連するコンテンツは30日以内に削除されます。</p>
+
+    <h2>8. Cookie</h2>
+    <p>本サービスは認証のためにCookieを使用します（ClerkのセッションCookie）。トラッキング目的のCookieは使用しません。</p>
+
+    <h2>9. セキュリティ</h2>
+    <p>本サービスはCloudflareのインフラ上で運営され、TLS暗号化・アクセス制御・レート制限等のセキュリティ対策を実施しています。ただし、インターネット上の完全な安全性を保証することはできません。</p>
+
+    <h2>10. 未成年者</h2>
+    <p>本サービスは13歳未満の利用を想定していません。13歳未満の方は利用しないでください。</p>
+
+    <h2>11. ポリシーの変更</h2>
+    <p>運営者は本ポリシーを予告なく変更する場合があります。変更後のポリシーは、本ページに掲載された時点で効力を生じます。</p>
+
+    <h2>12. お問い合わせ</h2>
+    <p>プライバシーに関するお問い合わせは、本サービスの受信箱機能または運営者の連絡先までお願いします。</p>
+
+    <div class="legal-back">
+      <a href="/">← 戻る</a>
+    </div>
+  </main>
+</body>
+</html>

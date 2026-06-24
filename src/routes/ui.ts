@@ -50,7 +50,7 @@ const toFtsQuery = (query: string): string =>
 // A tree link that swaps the reading pane and pushes the URL
 const docLink = (id: string, title: string, extraClass = '', suffix = '') =>
   `<a class="tree-item ${extraClass}" data-doc-id="${esc(id)}" href="/?doc=${esc(id)}"
-      hx-get="/ui/doc/${esc(id)}" hx-target="#doc-view" hx-push-url="/?doc=${esc(id)}">${esc(title)}${suffix}</a>`
+      hx-get="/ui/doc/${esc(id)}" hx-target="#doc-view" hx-push-url="?doc=${esc(id)}">${esc(title)}${suffix}</a>`
 
 const renderTree = async (c: any): Promise<string> => {
   const auth: AuthContext = c.get('auth')
@@ -161,7 +161,7 @@ const renderTreeHtml = (
         <div class="tree-head">
           <button class="tree-toggle" type="button" aria-label="折りたたみ"${toggleAttr}><span class="tree-toggle-icon">▾</span></button>
           <a class="tree-col-name" href="/?col=${esc(col.id)}"
-             hx-get="/ui/collections/${esc(col.id)}" hx-target="#doc-view" hx-push-url="/?col=${esc(col.id)}">${esc(col.name)}</a>
+             hx-get="/ui/collections/${esc(col.id)}" hx-target="#doc-view" hx-push-url="?col=${esc(col.id)}">${esc(col.name)}</a>
         </div>
         <div class="tree-children">\n`
       if (isActive || activeColId == null) {
@@ -429,16 +429,16 @@ const renderDocFromData = (_c: any, doc: any, docExtra: any[]): string => {
   const colName = (collection as any)?.name ?? ''
   const colCrumb = doc.collection_id
     ? `<a class="crumb" href="/?col=${esc(doc.collection_id)}"
-        hx-get="/ui/collections/${esc(doc.collection_id)}" hx-target="#doc-view" hx-push-url="/?col=${esc(doc.collection_id)}">${esc(colName)}</a>`
+        hx-get="/ui/collections/${esc(doc.collection_id)}" hx-target="#doc-view" hx-push-url="?col=${esc(doc.collection_id)}">${esc(colName)}</a>`
     : esc(colName)
   let breadcrumb = `<a class="crumb" href="/?view=collections"
-      hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">コレクション</a> / ${colCrumb}`
+      hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="?view=collections">コレクション</a> / ${colCrumb}`
 
   const ancestors = (ancestorRows as any)?.results ?? []
   if (ancestors.length > 0) {
     breadcrumb += ' / ' + ancestors.map((p: any) =>
       `<a class="crumb" href="/?doc=${esc(p.id)}"
-      hx-get="/ui/doc/${esc(p.id)}" hx-target="#doc-view" hx-push-url="/?doc=${esc(p.id)}">${esc(p.title)}</a>`
+      hx-get="/ui/doc/${esc(p.id)}" hx-target="#doc-view" hx-push-url="?doc=${esc(p.id)}">${esc(p.title)}</a>`
     ).join(' / ')
   }
 
@@ -642,7 +642,7 @@ uiRoute.get('/search', async (c) => {
     const line = lines.find((l: string) => l.toLowerCase().includes(q.toLowerCase())) ?? lines[0] ?? ''
     const snippet = line.slice(0, 80)
     html += `<a class="tree-item search-hit" data-doc-id="${esc(hit.id)}" href="/?doc=${esc(hit.id)}"
-        hx-get="/ui/doc/${esc(hit.id)}" hx-target="#doc-view" hx-push-url="/?doc=${esc(hit.id)}">
+        hx-get="/ui/doc/${esc(hit.id)}" hx-target="#doc-view" hx-push-url="?doc=${esc(hit.id)}">
         <span class="search-hit-title">${esc(hit.title)}</span>
         <span class="search-hit-snippet">${esc(snippet)}</span></a>\n`
   }
@@ -798,7 +798,7 @@ uiRoute.get('/doc/:id/new-child', async (c) => {
 <div id="doc-view-inner" data-doc-title="子ドキュメント作成">
   <div class="doc-head"><h1 class="doc-title">子ドキュメント作成</h1></div>
   <p class="meta-line">親: <a class="crumb" href="/?doc=${esc(doc.id)}"
-      hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view" hx-push-url="/?doc=${esc(doc.id)}">${esc(doc.title)}</a></p>
+      hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view" hx-push-url="?doc=${esc(doc.id)}">${esc(doc.title)}</a></p>
   <form hx-post="/ui/docs" hx-target="#doc-view">
     <input type="hidden" name="collection_id" value="${esc(doc.collection_id)}">
     <input type="hidden" name="parent_id" value="${esc(doc.id)}">

@@ -3,39 +3,201 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Context Mixer</title>
+  <title>Context Mixer — AIと協業するナレッジベース</title>
+  <meta name="description" content="個人とAIが共同管理するAIファーストのナレッジベース。AIが8割書き、人間が読む・編集する。MCPプロトコル対応でClaude等のAIツールから直接読み書きできる。">
   <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="/style.css">
-  <script src="/htmx.min.js"></script>
+  <style>
+    .landing {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: var(--space-7) var(--space-4) var(--space-8);
+    }
+    .landing-hero {
+      text-align: center;
+      padding: var(--space-8) 0 var(--space-7);
+    }
+    .landing-hero h1 {
+      font-size: 2.2rem;
+      line-height: 1.3;
+      margin: 0 0 var(--space-4);
+      letter-spacing: -0.02em;
+    }
+    .landing-hero .tagline {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: var(--leading-prose);
+      max-width: 32rem;
+      margin: 0 auto var(--space-6);
+    }
+    .landing-hero .cta {
+      display: flex;
+      gap: var(--space-3);
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-landing {
+      display: inline-block;
+      padding: var(--space-3) var(--space-5);
+      font-size: var(--text-base);
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      transition: background var(--dur-fast) var(--ease);
+    }
+    .btn-landing-primary {
+      background: var(--accent);
+      color: #fff;
+      border: 1px solid var(--accent);
+    }
+    .btn-landing-primary:hover {
+      background: var(--accent-strong);
+    }
+    .btn-landing-ghost {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+    }
+    .btn-landing-ghost:hover {
+      background: var(--surface-dim);
+    }
+    .landing-section {
+      padding: var(--space-6) 0;
+    }
+    .landing-section h2 {
+      font-size: 1.3rem;
+      margin: 0 0 var(--space-4);
+      padding-bottom: var(--space-2);
+      border-bottom: 1px solid var(--border);
+    }
+    .landing-section p {
+      line-height: var(--leading-prose);
+      color: var(--text);
+    }
+    .landing-section ul {
+      list-style: none;
+      padding: 0;
+      margin: var(--space-3) 0 0;
+    }
+    .landing-section li {
+      padding: var(--space-2) 0 var(--space-2) var(--space-5);
+      position: relative;
+      line-height: var(--leading-prose);
+    }
+    .landing-section li::before {
+      content: "▸";
+      position: absolute;
+      left: var(--space-2);
+      color: var(--accent);
+      font-family: var(--font-mono);
+    }
+    .landing-tech {
+      font-family: var(--font-mono);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      margin-top: var(--space-4);
+    }
+    .landing-tech span {
+      padding: var(--space-1) var(--space-3);
+      background: var(--surface-dim);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+    }
+    .landing-footer {
+      text-align: center;
+      padding: var(--space-7) 0 var(--space-4);
+      border-top: 1px solid var(--border);
+      margin-top: var(--space-7);
+      font-size: var(--text-sm);
+      color: var(--text-muted);
+    }
+    .landing-footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      margin: 0 var(--space-2);
+    }
+    .landing-footer a:hover {
+      color: var(--accent);
+    }
+  </style>
 </head>
 <body>
   <header>
-    <button class="menu-toggle" aria-label="メニュー">☰</button>
     <a class="brand" href="/">Context Mixer</a>
     <span class="spacer"></span>
     <nav>
-      <a href="/keys.html">キー</a>
-      <a href="/inbox.html">受信箱</a>
-      <a href="/files.html">ファイル</a>
+      <a href="/terms.html">利用規約</a>
+      <a href="/privacy.html">プライバシー</a>
     </nav>
-    <button id="signout" class="btn-quiet">サインアウト</button>
   </header>
 
-  <main class="app-layout">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-search">
-        <input id="q" name="q" class="input" type="search" placeholder="検索"
-               autocomplete="off"
-               hx-get="/ui/search" hx-trigger="input changed delay:300ms, search" hx-target="#tree-area">
+  <main class="landing">
+    <section class="landing-hero">
+      <h1>AIと協業する<br>ナレッジベース</h1>
+      <p class="tagline">
+        個人とAIが共同管理する、AIファーストのナレッジベース。<br>
+        AIが8割書き、人間が読む・編集する。MCPでClaude等から直接読み書きできる。
+      </p>
+      <div class="cta">
+        <a class="btn-landing btn-landing-primary" href="/app.html">はじめる</a>
+        <a class="btn-landing btn-landing-ghost" href="#features">機能を見る</a>
       </div>
-      <div id="tree-area"></div>
-    </aside>
+    </section>
 
-    <div class="main-content">
-      <div id="doc-view"></div>
-    </div>
+    <section class="landing-section" id="features">
+      <h2>何ができるか</h2>
+      <ul>
+        <li><strong>Web UI</strong> — ツリー状のコレクション・ドキュメント管理。Markdownで書いてサーバー側でHTMLレンダリング</li>
+        <li><strong>MCPプロトコル</strong> — Claude Desktop・Claude Code等のAIツールから直接ドキュメントを読み書き</li>
+        <li><strong>APIキー</strong> — AI向けの読み取り専用・読み書き権限を発行。コレクション単位でスコープ制限</li>
+        <li><strong>受信箱</strong> — 外部からトークン経由でテキストを投稿。承認後にドキュメントに追記</li>
+        <li><strong>リビジョン管理</strong> — 全変更履歴を記録。AIが書いたか人間が書いたかを署名で追跡</li>
+        <li><strong>リンク同期</strong> — <code>[[doc_xxx]]</code>記法でドキュメント間リンクを自動管理</li>
+      </ul>
+    </section>
+
+    <section class="landing-section">
+      <h2>設計のポイント</h2>
+      <ul>
+        <li><strong>AIファースト</strong> — AIの探索コストを下げる設計。APIキー + MCPでAIが直接アクセス</li>
+        <li><strong>サーバーレス</strong> — Cloudflare Workers + D1 + R2。安く・速く・スケールする</li>
+        <li><strong>HTMX</strong> — SPA不要。軽量なサーバー側レンダリングでモバイルも快適</li>
+        <li><strong>マルチテナント</strong> — ユーザーごとにデータが分離。Clerkで認証</li>
+      </ul>
+      <div class="landing-tech">
+        <span>Cloudflare Workers</span>
+        <span>D1 (SQLite)</span>
+        <span>R2</span>
+        <span>Clerk</span>
+        <span>Hono</span>
+        <span>HTMX</span>
+        <span>MCP</span>
+        <span>OAuth 2.1</span>
+      </div>
+    </section>
+
+    <section class="landing-section">
+      <h2>使い方</h2>
+      <ul>
+        <li><strong>人間</strong> — Web UIでコレクションを作り、ドキュメントを書く・読む・編集する</li>
+        <li><strong>AI</strong> — APIキーを発行してClaude Code等に設定。MCP経由でナレッジベースを読み書き</li>
+        <li><strong>協業</strong> — AIがドキュメントを書き、人間が確認・編集。変更履歴で誰が書いたか追跡</li>
+      </ul>
+    </section>
+
+    <section class="landing-hero" style="padding: var(--space-7) 0;">
+      <a class="btn-landing btn-landing-primary" href="/app.html">アカウントを作って試す</a>
+    </section>
+
+    <footer class="landing-footer">
+      <a href="/terms.html">利用規約</a>
+      <a href="/privacy.html">プライバシーポリシー</a>
+      <br>
+      <span>Context Mixer — built with Cloudflare Workers + D1</span>
+    </footer>
   </main>
-
-  <script src="/app.js"></script>
 </body>
 </html>

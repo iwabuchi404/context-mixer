@@ -152,7 +152,7 @@ function showSysline(message, isError = false) {
 
 function setupHeader() {
   document.getElementById('signout')?.addEventListener('click', () => {
-    clerk.signOut().then(() => location.reload())
+    clerk.signOut().then(() => location.href = '/')
   })
 }
 
