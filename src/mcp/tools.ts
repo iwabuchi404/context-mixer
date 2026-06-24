@@ -5,11 +5,11 @@
 // duplicated beyond what the routes already do.
 
 import type { AppEnv, AiAuth } from '../auth/adapter'
-import { authorOf, isCollectionAllowed } from '../auth/adapter'
-import { createRevision } from '../routes/documents'
+import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
+import { createRevisionStatement } from '../routes/documents'
 import { buildTree } from '../routes/collections'
 import { parseSections } from '../services/sections'
-import { syncDocumentLinks } from '../services/links'
+import { buildLinkSyncStatements } from '../services/links'
 
 type Env = AppEnv['Bindings']
 type CallToolResult = {
@@ -56,6 +56,8 @@ export async function searchDocs(
   if (scope.startsWith('collection:')) collectionId = scope.slice('collection:'.length)
 
   // Build the collection WHERE clause + params (shared by FTS5 and LIKE paths)
+  // マルチテナント: collections 経由でオーナーフィルタを追加
+  const uid = ownerUserIdOf(auth)
   let collectionClause = ''
   const collectionParams: any[] = []
   if (collectionId) {
@@ -70,9 +72,10 @@ export async function searchDocs(
 
   const selectCols = 'd.id, d.title, d.content, d.collection_id, d.priority'
   const likeSql = `SELECT ${selectCols} FROM documents d
-                   WHERE d.status = 'published' AND (d.title LIKE ? OR d.content LIKE ?)
+                   JOIN collections col ON d.collection_id = col.id
+                   WHERE d.status = 'published' AND col.owner_user_id = ? AND (d.title LIKE ? OR d.content LIKE ?)
                    ${collectionClause} LIMIT ?`
-  const likeParams = [`%${q}%`, `%${q}%`, ...collectionParams, limit]
+  const likeParams = [uid, `%${q}%`, `%${q}%`, ...collectionParams, limit]
 
   // FTS5 (3+ chars) with LIKE fallback — the documents_fts table or trigram
   // tokenizer may be unavailable on a given D1 (e.g. migration not applied),
@@ -84,9 +87,10 @@ export async function searchDocs(
     try {
       const ftsSql = `SELECT ${selectCols} FROM documents_fts
                       JOIN documents d ON documents_fts.rowid = d.rowid
-                      WHERE documents_fts MATCH ? AND d.status = 'published'
+                      JOIN collections col ON d.collection_id = col.id
+                      WHERE documents_fts MATCH ? AND d.status = 'published' AND col.owner_user_id = ?
                       ${collectionClause} LIMIT ?`
-      result = await env.DB.prepare(ftsSql).bind(toFtsQuery(q), ...collectionParams, limit).all()
+      result = await env.DB.prepare(ftsSql).bind(toFtsQuery(q), uid, ...collectionParams, limit).all()
     } catch {
       result = await env.DB.prepare(likeSql).bind(...likeParams).all()
     }
@@ -106,7 +110,12 @@ export async function getDoc(
   params: { id: string; view?: string }
 ): Promise<CallToolResult> {
   const { id, view = 'full' } = params
-  const doc = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first() as any
+  // マルチテナント: collections 経由でオーナーチェック
+  const uid = ownerUserIdOf(auth)
+  const doc = await env.DB.prepare(`
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!doc) return err('Document not found')
   if (!isCollectionAllowed(auth, doc.collection_id)) return err('Collection not allowed for this key')
 
@@ -133,16 +142,24 @@ export async function writeDoc(
   const { id, title, content, collection_id, parent_id } = params
   const now = Date.now()
   const author = authorOf(auth)
+  const uid = ownerUserIdOf(auth)
 
   if (id) {
-    const existing = await env.DB.prepare('SELECT collection_id FROM documents WHERE id = ?').bind(id).first() as any
+    // マルチテナント: collections 経由でオーナーチェック
+    const existing = await env.DB.prepare(`
+      SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.id = ? AND c.owner_user_id = ?
+    `).bind(id, uid).first() as any
     if (!existing) return err('Document not found')
     if (!isCollectionAllowed(auth, existing.collection_id)) return err('Collection not allowed for this key')
 
-    await env.DB.prepare('UPDATE documents SET title = ?, content = ?, updated_at = ? WHERE id = ?')
-      .bind(title, content, now, id).run()
-    await createRevision(env.DB, id, title, content, author, now)
-    await syncDocumentLinks(env.DB, id, content)
+    const { statements: linkStatements } = await buildLinkSyncStatements(env.DB, id, content, auth)
+    await env.DB.batch([
+      env.DB.prepare('UPDATE documents SET title = ?, content = ?, updated_at = ? WHERE id = ?')
+        .bind(title, content, now, id),
+      createRevisionStatement(env.DB, id, title, content, author, now),
+      ...linkStatements,
+    ])
 
     const updated = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first()
     return ok(updated)
@@ -152,7 +169,9 @@ export async function writeDoc(
   if (auth.allowedCollections !== null && !isCollectionAllowed(auth, collection_id)) {
     return err('Collection not allowed for this key')
   }
-  const collection = await env.DB.prepare('SELECT id FROM collections WHERE id = ?').bind(collection_id).first()
+  // マルチテナント: collection のオーナーチェック
+  const collection = await env.DB.prepare('SELECT id FROM collections WHERE id = ? AND owner_user_id = ?')
+    .bind(collection_id, uid).first()
   if (!collection) return err('Collection not found')
 
   // Verify parent document if specified and build path in one query
@@ -160,7 +179,10 @@ export async function writeDoc(
   let path: string
   const docId = generateId('doc')
   if (parent_id) {
-    const parent = await env.DB.prepare('SELECT id, collection_id, path FROM documents WHERE id = ?').bind(parent_id).first() as any
+    const parent = await env.DB.prepare(`
+      SELECT d.id, d.collection_id, d.path FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.id = ? AND c.owner_user_id = ?
+    `).bind(parent_id, uid).first() as any
     if (!parent) return err('Parent document not found')
     if (parent.collection_id !== collection_id) return err('Parent document must be in the same collection')
     parentId = parent_id
@@ -169,12 +191,15 @@ export async function writeDoc(
     path = `/${collection_id}/${docId}`
   }
 
-  await env.DB.prepare(`
-    INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, 'normal', 'published', ?, ?, ?, ?)
-  `).bind(docId, title, content, collection_id, parentId, path, author.authorType, author.apiKeyId, now, now).run()
-  await createRevision(env.DB, docId, title, content, author, now)
-  await syncDocumentLinks(env.DB, docId, content)
+  const { statements: linkStatements } = await buildLinkSyncStatements(env.DB, docId, content, auth)
+  await env.DB.batch([
+    env.DB.prepare(`
+      INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, 'normal', 'published', ?, ?, ?, ?)
+    `).bind(docId, title, content, collection_id, parentId, path, author.authorType, author.apiKeyId, now, now),
+    createRevisionStatement(env.DB, docId, title, content, author, now),
+    ...linkStatements,
+  ])
 
   const doc = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(docId).first()
   return ok(doc)
@@ -187,7 +212,12 @@ export async function appendDoc(
   params: { id: string; content: string }
 ): Promise<CallToolResult> {
   const { id, content } = params
-  const existing = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first() as any
+  const uid = ownerUserIdOf(auth)
+  // マルチテナント: collections 経由でオーナーチェック
+  const existing = await env.DB.prepare(`
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!existing) return err('Document not found')
   if (!isCollectionAllowed(auth, existing.collection_id)) return err('Collection not allowed for this key')
 
@@ -195,10 +225,13 @@ export async function appendDoc(
   const newContent = existing.content + sep + content
   const now = Date.now()
 
-  await env.DB.prepare('UPDATE documents SET content = ?, updated_at = ? WHERE id = ?')
-    .bind(newContent, now, id).run()
-  await createRevision(env.DB, id, existing.title, newContent, authorOf(auth), now)
-  await syncDocumentLinks(env.DB, id, newContent)
+  const { statements: linkStatements } = await buildLinkSyncStatements(env.DB, id, newContent, auth)
+  await env.DB.batch([
+    env.DB.prepare('UPDATE documents SET content = ?, updated_at = ? WHERE id = ?')
+      .bind(newContent, now, id),
+    createRevisionStatement(env.DB, id, existing.title, newContent, authorOf(auth), now),
+    ...linkStatements,
+  ])
 
   const updated = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first()
   return ok(updated)
@@ -206,11 +239,12 @@ export async function appendDoc(
 
 // Tool: list_collections (read) — returns tree structure
 export async function listCollections(env: Env, auth: AiAuth): Promise<CallToolResult> {
+  const uid = ownerUserIdOf(auth)
   const result = await env.DB.prepare(`
     SELECT id, name, parent_id, description, is_system, entrypoint_doc_id,
            created_by_type, updated_by_type, created_at, updated_at
-    FROM collections ORDER BY name
-  `).all()
+    FROM collections WHERE owner_user_id = ? ORDER BY name
+  `).bind(uid).all()
   const visible = (result.results as any[]).filter((c) => isCollectionAllowed(auth, c.id))
 
   // Restricted keys may not see parent collections, so return flat list with empty children
@@ -232,6 +266,12 @@ export async function listDocs(
   const { collection_id, parent_id } = params
   if (!collection_id) return err('collection_id is required')
   if (!isCollectionAllowed(auth, collection_id)) return err('Collection not allowed for this key')
+
+  // マルチテナント: collection のオーナーチェック
+  const uid = ownerUserIdOf(auth)
+  const col = await env.DB.prepare('SELECT id FROM collections WHERE id = ? AND owner_user_id = ?')
+    .bind(collection_id, uid).first()
+  if (!col) return err('Collection not found')
 
   let sql = `SELECT id, title, parent_id, priority, updated_at
              FROM documents
@@ -259,10 +299,12 @@ export async function getEntrypoint(
   params: { collection_id?: string }
 ): Promise<CallToolResult> {
   const { collection_id } = params
+  const uid = ownerUserIdOf(auth)
 
   if (collection_id) {
     if (!isCollectionAllowed(auth, collection_id)) return err('Collection not allowed for this key')
-    const collection = await env.DB.prepare('SELECT entrypoint_doc_id FROM collections WHERE id = ?').bind(collection_id).first() as any
+    const collection = await env.DB.prepare('SELECT entrypoint_doc_id FROM collections WHERE id = ? AND owner_user_id = ?')
+      .bind(collection_id, uid).first() as any
     if (!collection || !collection.entrypoint_doc_id) return err('No entry point document set for this collection')
     const doc = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(collection.entrypoint_doc_id).first()
     return ok(doc)
@@ -271,8 +313,9 @@ export async function getEntrypoint(
   const result = await env.DB.prepare(`
     SELECT c.id, c.name, c.entrypoint_doc_id, d.title as entry_doc_title
     FROM collections c LEFT JOIN documents d ON c.entrypoint_doc_id = d.id
+    WHERE c.owner_user_id = ?
     ORDER BY c.name
-  `).all()
+  `).bind(uid).all()
   const visible = (result.results as any[]).filter((c) => isCollectionAllowed(auth, c.id))
   return ok(visible)
 }
@@ -284,12 +327,19 @@ export async function deleteDoc(
   params: { id: string }
 ): Promise<CallToolResult> {
   const { id } = params
-
-  const existing = await env.DB.prepare('SELECT id, collection_id FROM documents WHERE id = ?').bind(id).first() as any
+  const uid = ownerUserIdOf(auth)
+  // マルチテナント: collections 経由でオーナーチェック
+  const existing = await env.DB.prepare(`
+    SELECT d.id, d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!existing) return err('Document not found')
   if (!isCollectionAllowed(auth, existing.collection_id)) return err('Collection not allowed for this key')
 
   await env.DB.batch([
+    // Orphan children: keep them but detach from the deleted parent
+    // (matches ON DELETE SET NULL in schema.sql).
+    env.DB.prepare('UPDATE documents SET parent_id = NULL WHERE parent_id = ?').bind(id),
     env.DB.prepare('DELETE FROM document_links WHERE from_doc_id = ? OR to_doc_id = ?').bind(id, id),
     env.DB.prepare('DELETE FROM documents WHERE id = ?').bind(id),
   ])
@@ -311,14 +361,15 @@ export async function createCollection(
   }
 
   const author = authorOf(auth)
+  const uid = ownerUserIdOf(auth)
   const id = generateId('col')
   const now = Date.now()
 
   await env.DB.prepare(`
     INSERT INTO collections (
-      id, name, parent_id, description, is_system, entrypoint_doc_id,
+      id, name, parent_id, description, is_system, entrypoint_doc_id, owner_user_id,
       created_by_type, created_by_key_id, updated_by_type, updated_by_key_id, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).bind(
     id,
     name,
@@ -326,6 +377,7 @@ export async function createCollection(
     description || null,
     0, // is_system
     null, // entrypoint_doc_id
+    uid,
     author.authorType,
     author.apiKeyId,
     author.authorType,

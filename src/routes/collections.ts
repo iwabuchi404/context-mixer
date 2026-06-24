@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { authorOf, isCollectionAllowed } from '../auth/adapter'
-import type { AppEnv } from '../auth/adapter'
+import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
+import type { AppEnv, AuthContext } from '../auth/adapter'
 
 // Validation schemas
 const createCollectionSchema = z.object({
@@ -37,13 +37,15 @@ export const buildTree = (collections: any[], parentId: string | null = null): a
 // GET /collections - List collections (tree structure)
 collectionsRoute.get('/', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
 
   const result = await c.env.DB.prepare(`
     SELECT id, name, parent_id, description, is_system, entrypoint_doc_id,
            created_by_type, updated_by_type, created_at, updated_at
     FROM collections
+    WHERE owner_user_id = ?
     ORDER BY name
-  `).all()
+  `).bind(uid).all()
 
   // Restricted API keys only see their allowed collections (flat list, no tree)
   if (auth.authorType === 'ai' && auth.allowedCollections !== null) {
@@ -57,21 +59,26 @@ collectionsRoute.get('/', async (c) => {
   return c.json(tree)
 })
 
+// Helper: collection のオーナーチェック（DBアクセスあり）
+// returns collection row (without owner_user_id) or null when not found/not owned
+const loadOwnedCollection = async (db: D1Database, auth: AuthContext, id: string): Promise<any | null> => {
+  const uid = ownerUserIdOf(auth)
+  const col = await db.prepare('SELECT * FROM collections WHERE id = ? AND owner_user_id = ?')
+    .bind(id, uid).first() as any
+  return col ?? null
+}
+
 // GET /collections/:id - Get collection
 collectionsRoute.get('/:id', async (c) => {
   const auth = c.get('auth')
   const id = c.req.param('id')
 
-  if (!isCollectionAllowed(auth, id)) {
-    return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
-  }
-
-  const collection = await c.env.DB.prepare(`
-    SELECT * FROM collections WHERE id = ?
-  `).bind(id).first()
-
+  const collection = await loadOwnedCollection(c.env.DB, auth, id)
   if (!collection) {
     return c.json({ error: { code: 'COLLECTION_NOT_FOUND', message: 'Collection not found' } }, 404)
+  }
+  if (!isCollectionAllowed(auth, id)) {
+    return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
   }
 
   return c.json(collection)
@@ -82,16 +89,12 @@ collectionsRoute.get('/:id/entrypoint', async (c) => {
   const auth = c.get('auth')
   const id = c.req.param('id')
 
-  if (!isCollectionAllowed(auth, id)) {
-    return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
-  }
-
-  const collection = await c.env.DB.prepare(`
-    SELECT entrypoint_doc_id FROM collections WHERE id = ?
-  `).bind(id).first() as any
-
+  const collection = await loadOwnedCollection(c.env.DB, auth, id) as any
   if (!collection) {
     return c.json({ error: { code: 'COLLECTION_NOT_FOUND', message: 'Collection not found' } }, 404)
+  }
+  if (!isCollectionAllowed(auth, id)) {
+    return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
   }
 
   if (!collection.entrypoint_doc_id) {
@@ -140,14 +143,15 @@ collectionsRoute.post('/', async (c) => {
     }
 
     const author = authorOf(auth)
+    const uid = ownerUserIdOf(auth)
     const id = generateId('col')
     const now = Date.now()
 
     await c.env.DB.prepare(`
       INSERT INTO collections (
-        id, name, parent_id, description, is_system, entrypoint_doc_id,
+        id, name, parent_id, description, is_system, entrypoint_doc_id, owner_user_id,
         created_by_type, created_by_key_id, updated_by_type, updated_by_key_id, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       id,
       parsed.name,
@@ -155,6 +159,7 @@ collectionsRoute.post('/', async (c) => {
       parsed.description || null,
       parsed.is_system ? 1 : 0,
       parsed.entrypoint_doc_id || null,
+      uid,
       author.authorType,
       author.apiKeyId,
       author.authorType,
@@ -189,13 +194,12 @@ collectionsRoute.patch('/:id', async (c) => {
     const body = await c.req.json()
     const parsed = updateCollectionSchema.parse(body)
 
-    if (!isCollectionAllowed(auth, id)) {
-      return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
-    }
-
-    const existing = await c.env.DB.prepare('SELECT * FROM collections WHERE id = ?').bind(id).first()
+    const existing = await loadOwnedCollection(c.env.DB, auth, id)
     if (!existing) {
       return c.json({ error: { code: 'COLLECTION_NOT_FOUND', message: 'Collection not found' } }, 404)
+    }
+    if (!isCollectionAllowed(auth, id)) {
+      return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
     }
 
     const author = authorOf(auth)
@@ -242,6 +246,10 @@ collectionsRoute.delete('/:id', async (c) => {
   const auth = c.get('auth')
   const id = c.req.param('id')
 
+  const existing = await loadOwnedCollection(c.env.DB, auth, id)
+  if (!existing) {
+    return c.json({ error: { code: 'COLLECTION_NOT_FOUND', message: 'Collection not found' } }, 404)
+  }
   if (!isCollectionAllowed(auth, id)) {
     return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
   }
@@ -268,7 +276,8 @@ collectionsRoute.delete('/:id', async (c) => {
     }, 400)
   }
 
-  await c.env.DB.prepare('DELETE FROM collections WHERE id = ?').bind(id).run()
+  await c.env.DB.prepare('DELETE FROM collections WHERE id = ? AND owner_user_id = ?')
+    .bind(id, ownerUserIdOf(auth)).run()
 
   return c.json({ success: true, id })
 })

@@ -96,7 +96,7 @@ oauthRoute.get('/authorize', async (c) => {
   const client = await c.env.OAUTH_PROVIDER.lookupClient(oauthReq.clientId).catch(() => null)
   const clientLabel = client?.clientName || oauthReq.clientId
 
-  const cols = await c.env.DB.prepare('SELECT id, name FROM collections ORDER BY name').all()
+  const cols = await c.env.DB.prepare('SELECT id, name FROM collections WHERE owner_user_id = ? ORDER BY name').bind(userId).all()
   const collections = (cols.results as { id: string; name: string }[]) ?? []
 
   const collectionChoices = collections
@@ -192,7 +192,7 @@ oauthRoute.post('/authorize', async (c) => {
   if (!form.all_collections) {
     const chosen = asArray(form.collections)
     if (chosen.length) {
-      const rows = await c.env.DB.prepare('SELECT id FROM collections').all()
+      const rows = await c.env.DB.prepare('SELECT id FROM collections WHERE owner_user_id = ?').bind(userId).all()
       const valid = new Set((rows.results as { id: string }[]).map((r) => r.id))
       allowedCollections = chosen.filter((id) => valid.has(id))
     } else {

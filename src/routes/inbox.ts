@@ -3,9 +3,11 @@
 // Submissions must be approved before they are applied to the document.
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { authorOf, isCollectionAllowed } from '../auth/adapter'
+import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
 import { escapeHtml as esc } from '../services/markdown'
+import { createRevisionStatement } from './documents'
+import { buildLinkSyncStatements } from '../services/links'
 
 // Max bytes accepted from a single inbox submission (external, unauthenticated)
 const MAX_INBOX_CONTENT = 100_000
@@ -29,11 +31,15 @@ const updateTokenSchema = z.object({
 inboxRoute.post('/tokens', async (c) => {
   try {
     const auth = c.get('auth')
+    const uid = ownerUserIdOf(auth)
     const body = await c.req.json()
     const parsed = createTokenSchema.parse(body)
 
-    // Verify document exists and is accessible
-    const doc = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(parsed.document_id).first() as any
+    // Verify document exists and is accessible (オーナーチェック付き)
+    const doc = await c.env.DB.prepare(`
+      SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.id = ? AND c.owner_user_id = ?
+    `).bind(parsed.document_id, uid).first() as any
     if (!doc) {
       return c.json({ error: { code: 'DOC_NOT_FOUND', message: 'Document not found' } }, 404)
     }
@@ -48,9 +54,9 @@ inboxRoute.post('/tokens', async (c) => {
     const now = Date.now()
 
     await c.env.DB.prepare(`
-      INSERT INTO inbox_tokens (id, token, document_id, is_active, expires_at, created_at)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).bind(tokenId, token, parsed.document_id, 1, parsed.expires_at || null, now).run()
+      INSERT INTO inbox_tokens (id, token, document_id, owner_user_id, is_active, expires_at, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(tokenId, token, parsed.document_id, uid, 1, parsed.expires_at || null, now).run()
 
     const tokenRecord = await c.env.DB.prepare('SELECT * FROM inbox_tokens WHERE id = ?').bind(tokenId).first()
 
@@ -70,14 +76,15 @@ inboxRoute.patch('/tokens/:id', async (c) => {
     const id = c.req.param('id')
     const body = await c.req.json()
     const parsed = updateTokenSchema.parse(body)
+    const uid = ownerUserIdOf(c.get('auth'))
 
-    const token = await c.env.DB.prepare('SELECT * FROM inbox_tokens WHERE id = ?').bind(id).first() as any
+    const token = await c.env.DB.prepare('SELECT * FROM inbox_tokens WHERE id = ? AND owner_user_id = ?').bind(id, uid).first() as any
     if (!token) {
       return c.json({ error: { code: 'TOKEN_NOT_FOUND', message: 'Token not found' } }, 404)
     }
 
-    await c.env.DB.prepare('UPDATE inbox_tokens SET is_active = ? WHERE id = ?')
-      .bind(parsed.is_active ? 1 : 0, id).run()
+    await c.env.DB.prepare('UPDATE inbox_tokens SET is_active = ? WHERE id = ? AND owner_user_id = ?')
+      .bind(parsed.is_active ? 1 : 0, id, uid).run()
 
     const updated = await c.env.DB.prepare('SELECT * FROM inbox_tokens WHERE id = ?').bind(id).first()
 
@@ -95,9 +102,10 @@ inboxRoute.patch('/tokens/:id', async (c) => {
 inboxRoute.get('/tokens', async (c) => {
   const documentId = c.req.query('document_id')
   const limit = parseInt(c.req.query('limit') || '20')
+  const uid = ownerUserIdOf(c.get('auth'))
 
-  let query = 'SELECT * FROM inbox_tokens WHERE 1=1'
-  const params: any[] = []
+  let query = 'SELECT * FROM inbox_tokens WHERE owner_user_id = ?'
+  const params: any[] = [uid]
 
   if (documentId) {
     query += ' AND document_id = ?'
@@ -172,15 +180,17 @@ inboxRoute.post('/:token', async (c) => {
 export const renderInboxList = async (c: any): Promise<string> => {
   const status = c.req.query('status') || 'pending'
   const limit = parseInt(c.req.query('limit') || '20')
+  const uid = ownerUserIdOf(c.get('auth'))
 
   const result = await c.env.DB.prepare(`
     SELECT i.*, d.title as document_title
     FROM inbox_items i
+    JOIN inbox_tokens t ON i.inbox_token_id = t.id
     JOIN documents d ON i.document_id = d.id
-    WHERE i.status = ?
+    WHERE i.status = ? AND t.owner_user_id = ?
     ORDER BY i.submitted_at DESC
     LIMIT ?
-  `).bind(status, limit).all()
+  `).bind(status, uid, limit).all()
 
   let html = '<div style="display:flex; flex-direction:column; gap:var(--space-4)">\n'
   for (const item of result.results as any[]) {
@@ -207,15 +217,17 @@ export const renderInboxList = async (c: any): Promise<string> => {
 inboxRoute.get('/', async (c) => {
   const status = c.req.query('status') || 'pending'
   const limit = parseInt(c.req.query('limit') || '20')
+  const uid = ownerUserIdOf(c.get('auth'))
 
   const result = await c.env.DB.prepare(`
     SELECT i.*, d.title as document_title
     FROM inbox_items i
+    JOIN inbox_tokens t ON i.inbox_token_id = t.id
     JOIN documents d ON i.document_id = d.id
-    WHERE i.status = ?
+    WHERE i.status = ? AND t.owner_user_id = ?
     ORDER BY i.submitted_at DESC
     LIMIT ?
-  `).bind(status, limit).all()
+  `).bind(status, uid, limit).all()
 
   return c.json({ data: result.results })
 })
@@ -225,8 +237,15 @@ inboxRoute.post('/:id/approve', async (c) => {
   try {
     const id = c.req.param('id')
     const accept = c.req.header('Accept') || ''
+    const auth = c.get('auth')
+    const uid = ownerUserIdOf(auth)
 
-    const item = await c.env.DB.prepare('SELECT * FROM inbox_items WHERE id = ?').bind(id).first() as any
+    // inbox_items を inbox_tokens 経由でオーナーチェック
+    const item = await c.env.DB.prepare(`
+      SELECT i.* FROM inbox_items i
+      JOIN inbox_tokens t ON i.inbox_token_id = t.id
+      WHERE i.id = ? AND t.owner_user_id = ?
+    `).bind(id, uid).first() as any
     if (!item) {
       return c.json({ error: { code: 'ITEM_NOT_FOUND', message: 'Item not found' } }, 404)
     }
@@ -235,12 +254,14 @@ inboxRoute.post('/:id/approve', async (c) => {
       return c.json({ error: { code: 'INVALID_STATUS', message: 'Item is not pending' } }, 400)
     }
 
-    const auth = c.get('auth')
     const author = authorOf(auth)
     const now = Date.now()
 
-    // Get current document
-    const doc = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(item.document_id).first() as any
+    // Get current document (オーナーチェック付き)
+    const doc = await c.env.DB.prepare(`
+      SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.id = ? AND c.owner_user_id = ?
+    `).bind(item.document_id, uid).first() as any
 
     if (!doc) {
       return c.json({ error: { code: 'DOC_NOT_FOUND', message: 'Document not found' } }, 404)
@@ -254,19 +275,16 @@ inboxRoute.post('/:id/approve', async (c) => {
     const separator = doc.content === '' || doc.content.endsWith('\n\n') ? '' : doc.content.endsWith('\n') ? '\n' : '\n\n'
     const newContent = doc.content + separator + item.content
 
-    // Update document
-    await c.env.DB.prepare('UPDATE documents SET content = ?, updated_at = ? WHERE id = ?')
-      .bind(newContent, now, doc.id).run()
-
-    // Create revision
-    await c.env.DB.prepare(`
-      INSERT INTO document_revisions (id, document_id, title, content, author_type, api_key_id, api_key_name, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    `).bind(generateId('rev'), doc.id, doc.title, newContent, author.authorType, author.apiKeyId, author.apiKeyName, now).run()
-
-    // Update item status
-    await c.env.DB.prepare('UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?')
-      .bind('approved', now, id).run()
+    // Update document + revision + links + item status atomically
+    const { statements: linkStatements } = await buildLinkSyncStatements(c.env.DB, doc.id, newContent, auth)
+    await c.env.DB.batch([
+      c.env.DB.prepare('UPDATE documents SET content = ?, updated_at = ? WHERE id = ?')
+        .bind(newContent, now, doc.id),
+      createRevisionStatement(c.env.DB, doc.id, doc.title, newContent, author, now),
+      ...linkStatements,
+      c.env.DB.prepare('UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?')
+        .bind('approved', now, id),
+    ])
 
     if (accept.includes('text/html')) {
       return c.html(await renderInboxList(c))
@@ -284,8 +302,14 @@ inboxRoute.post('/:id/reject', async (c) => {
   try {
     const id = c.req.param('id')
     const accept = c.req.header('Accept') || ''
+    const uid = ownerUserIdOf(c.get('auth'))
 
-    const item = await c.env.DB.prepare('SELECT * FROM inbox_items WHERE id = ?').bind(id).first() as any
+    // inbox_items を inbox_tokens 経由でオーナーチェック
+    const item = await c.env.DB.prepare(`
+      SELECT i.* FROM inbox_items i
+      JOIN inbox_tokens t ON i.inbox_token_id = t.id
+      WHERE i.id = ? AND t.owner_user_id = ?
+    `).bind(id, uid).first() as any
     if (!item) {
       return c.json({ error: { code: 'ITEM_NOT_FOUND', message: 'Item not found' } }, 404)
     }

@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
 
 export const meRoute = new Hono<AppEnv>()
@@ -15,7 +16,12 @@ meRoute.get('/entrypoint', async (c) => {
     return c.json({ error: { code: 'NO_ENTRYPOINT', message: 'No entry point document set for this key' } }, 404)
   }
 
-  const doc = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(auth.entryDocId).first()
+  // マルチテナント: collections 経由でオーナーチェック
+  const uid = ownerUserIdOf(auth)
+  const doc = await c.env.DB.prepare(`
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(auth.entryDocId, uid).first()
   if (!doc) {
     return c.json({ error: { code: 'DOC_NOT_FOUND', message: 'Entry point document not found' } }, 404)
   }

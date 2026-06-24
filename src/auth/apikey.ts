@@ -25,6 +25,7 @@ type ApiKeyRow = {
   scopes: string
   collection_ids: string | null
   entry_doc_id: string | null
+  owner_user_id: string
   expires_at: number | null
   is_active: number
 }
@@ -45,7 +46,7 @@ export const verifyApiKey = async (db: D1Database, raw: string): Promise<AiAuth 
 
   const keyHash = await hashApiKey(raw)
   const row = await db.prepare(
-    'SELECT id, name, scopes, collection_ids, entry_doc_id, expires_at, is_active FROM api_keys WHERE key_hash = ?'
+    'SELECT id, name, scopes, collection_ids, entry_doc_id, owner_user_id, expires_at, is_active FROM api_keys WHERE key_hash = ?'
   ).bind(keyHash).first() as ApiKeyRow | null
 
   if (!row || !row.is_active) return null
@@ -63,5 +64,6 @@ export const verifyApiKey = async (db: D1Database, raw: string): Promise<AiAuth 
     scopes: parseJsonArray(row.scopes) ?? [],
     allowedCollections: parseJsonArray(row.collection_ids),
     entryDocId: row.entry_doc_id,
+    ownerUserId: row.owner_user_id,
   }
 }

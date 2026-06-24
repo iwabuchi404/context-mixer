@@ -1,6 +1,6 @@
 // File upload/download endpoints using R2 storage.
 import { Hono } from 'hono'
-import { authorOf, isCollectionAllowed } from '../auth/adapter'
+import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
 import { escapeHtml as esc } from '../services/markdown'
 
@@ -36,9 +36,15 @@ const getExtension = (filename: string, mimeType: string): string => {
 // Renders the files grid as an HTML fragment (served via /ui/files).
 export const renderFilesList = async (c: any): Promise<string> => {
   const limit = parseInt(c.req.query('limit') || '50')
+  const uid = ownerUserIdOf(c.get('auth'))
+  // files は documents → collections 経由でオーナー判定。document_id が NULL のファイルは表示しない
   const result = await c.env.DB.prepare(`
-    SELECT * FROM files ORDER BY created_at DESC LIMIT ?
-  `).bind(limit).all()
+    SELECT f.* FROM files f
+    JOIN documents d ON f.document_id = d.id
+    JOIN collections c ON d.collection_id = c.id
+    WHERE c.owner_user_id = ?
+    ORDER BY f.created_at DESC LIMIT ?
+  `).bind(uid, limit).all()
 
   let html = '<div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); gap:var(--space-4)">\n'
   for (const file of result.results as any[]) {
@@ -67,9 +73,14 @@ export const renderFilesList = async (c: any): Promise<string> => {
 // GET /files - List files (JSON API; the HTML fragment is /ui/files)
 filesRoute.get('/', async (c) => {
   const limit = parseInt(c.req.query('limit') || '50')
+  const uid = ownerUserIdOf(c.get('auth'))
   const result = await c.env.DB.prepare(`
-    SELECT * FROM files ORDER BY created_at DESC LIMIT ?
-  `).bind(limit).all()
+    SELECT f.* FROM files f
+    JOIN documents d ON f.document_id = d.id
+    JOIN collections c ON d.collection_id = c.id
+    WHERE c.owner_user_id = ?
+    ORDER BY f.created_at DESC LIMIT ?
+  `).bind(uid, limit).all()
   return c.json({ data: result.results })
 })
 
@@ -91,7 +102,19 @@ filesRoute.post('/', async (c) => {
 
     const documentId = body.document_id as string | undefined
     const author = authorOf(auth)
+    const uid = ownerUserIdOf(auth)
     const now = Date.now()
+
+    // document_id が指定された場合、オーナーチェック
+    if (documentId) {
+      const doc = await c.env.DB.prepare(`
+        SELECT d.id FROM documents d JOIN collections c ON d.collection_id = c.id
+        WHERE d.id = ? AND c.owner_user_id = ?
+      `).bind(documentId, uid).first()
+      if (!doc) {
+        return c.json({ error: { code: 'DOC_NOT_FOUND', message: 'Document not found or not owned' } }, 404)
+      }
+    }
 
     // Generate file ID and R2 key
     const fileId = generateId('file')
@@ -141,16 +164,23 @@ filesRoute.post('/', async (c) => {
 filesRoute.delete('/:id', async (c) => {
   const id = c.req.param('id')
   const accept = c.req.header('Accept') || ''
+  const uid = ownerUserIdOf(c.get('auth'))
 
   const file = await c.env.DB.prepare('SELECT * FROM files WHERE id = ?').bind(id).first() as any
   if (!file) {
     return c.json({ error: { code: 'FILE_NOT_FOUND', message: 'File not found' } }, 404)
   }
 
-  // If file is linked to a document, check collection access
+  // If file is linked to a document, check collection access + ownership
   if (file.document_id) {
-    const doc = await c.env.DB.prepare('SELECT collection_id FROM documents WHERE id = ?').bind(file.document_id).first() as any
-    if (doc && !isCollectionAllowed(c.get('auth'), doc.collection_id)) {
+    const doc = await c.env.DB.prepare(`
+      SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.id = ? AND c.owner_user_id = ?
+    `).bind(file.document_id, uid).first() as any
+    if (!doc) {
+      return c.json({ error: { code: 'FORBIDDEN', message: 'File not owned by this user' } }, 403)
+    }
+    if (!isCollectionAllowed(c.get('auth'), doc.collection_id)) {
       return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
     }
   }

@@ -1,7 +1,7 @@
 // Entrypoint endpoints.
 // Returns a structured overview for AI agents to start exploring.
 import { Hono } from 'hono'
-import { isCollectionAllowed } from '../auth/adapter'
+import { isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
 
 export const entrypointRoute = new Hono<AppEnv>()
@@ -10,8 +10,9 @@ export const entrypointRoute = new Hono<AppEnv>()
 // Returns a structured overview of the workspace for AI agents
 entrypointRoute.get('/', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
 
-  // Get all collections this auth context can access
+  // Get all collections this auth context can access (オーナーフィルタ付き)
   let collections: any[] = []
 
   if (auth.authorType === 'ai' && auth.allowedCollections !== null) {
@@ -21,9 +22,9 @@ entrypointRoute.get('/', async (c) => {
       const result = await c.env.DB.prepare(`
         SELECT id, name, description, parent_id, entrypoint_doc_id
         FROM collections
-        WHERE id IN (${placeholders})
+        WHERE owner_user_id = ? AND id IN (${placeholders})
         ORDER BY name
-      `).bind(...auth.allowedCollections).all()
+      `).bind(uid, ...auth.allowedCollections).all()
       collections = result.results
     }
   } else {
@@ -31,8 +32,9 @@ entrypointRoute.get('/', async (c) => {
     const result = await c.env.DB.prepare(`
       SELECT id, name, description, parent_id, entrypoint_doc_id
       FROM collections
+      WHERE owner_user_id = ?
       ORDER BY name
-    `).all()
+    `).bind(uid).all()
     collections = result.results
   }
 
@@ -48,29 +50,29 @@ entrypointRoute.get('/', async (c) => {
 
   const tree = buildTree(null)
 
-  // Get recent documents (up to 10)
+  // Get recent documents (up to 10) — collections 経由でオーナーフィルタ
   let recentDocs: any[] = []
 
   if (auth.authorType === 'ai' && auth.allowedCollections !== null) {
     if (auth.allowedCollections.length > 0) {
       const placeholders = auth.allowedCollections.map(() => '?').join(', ')
       const result = await c.env.DB.prepare(`
-        SELECT id, title, collection_id, updated_at
-        FROM documents
-        WHERE status = 'published' AND collection_id IN (${placeholders})
-        ORDER BY updated_at DESC
+        SELECT d.id, d.title, d.collection_id, d.updated_at
+        FROM documents d JOIN collections c ON d.collection_id = c.id
+        WHERE d.status = 'published' AND c.owner_user_id = ? AND d.collection_id IN (${placeholders})
+        ORDER BY d.updated_at DESC
         LIMIT 10
-      `).bind(...auth.allowedCollections).all()
+      `).bind(uid, ...auth.allowedCollections).all()
       recentDocs = result.results
     }
   } else {
     const result = await c.env.DB.prepare(`
-      SELECT id, title, collection_id, updated_at
-      FROM documents
-      WHERE status = 'published'
-      ORDER BY updated_at DESC
+      SELECT d.id, d.title, d.collection_id, d.updated_at
+      FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.status = 'published' AND c.owner_user_id = ?
+      ORDER BY d.updated_at DESC
       LIMIT 10
-    `).all()
+    `).bind(uid).all()
     recentDocs = result.results
   }
 
@@ -84,15 +86,17 @@ entrypointRoute.get('/', async (c) => {
 // Returns the entry point document for a collection
 entrypointRoute.get('/collections/:id', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const collectionId = c.req.param('id')
 
-  // Check collection access
+  // Check collection access + ownership
   if (!isCollectionAllowed(auth, collectionId)) {
     return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
   }
 
-  // Get collection
-  const collection = await c.env.DB.prepare('SELECT * FROM collections WHERE id = ?').bind(collectionId).first() as any
+  // Get collection (オーナーフィルタ付き)
+  const collection = await c.env.DB.prepare('SELECT * FROM collections WHERE id = ? AND owner_user_id = ?')
+    .bind(collectionId, uid).first() as any
   if (!collection) {
     return c.json({ error: { code: 'COLLECTION_NOT_FOUND', message: 'Collection not found' } }, 404)
   }
@@ -105,13 +109,13 @@ entrypointRoute.get('/collections/:id', async (c) => {
 
   // If no entry point is set, return a basic overview
   if (!entrypointDoc) {
-    // Get child collections
+    // Get child collections (同じオーナー)
     const childCollections = await c.env.DB.prepare(`
       SELECT id, name, description
       FROM collections
-      WHERE parent_id = ?
+      WHERE parent_id = ? AND owner_user_id = ?
       ORDER BY name
-    `).bind(collectionId).all()
+    `).bind(collectionId, uid).all()
 
     // Get recent documents in this collection
     const recentDocs = await c.env.DB.prepare(`

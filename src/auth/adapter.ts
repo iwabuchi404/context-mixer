@@ -7,6 +7,7 @@ import type { OAuthHelpers } from '@cloudflare/workers-oauth-provider'
 export type HumanAuth = {
   authorType: 'human'
   userId: string
+  // マルチテナント: human の ownerUserId は自身の userId と同じ
 }
 
 export type AiAuth = {
@@ -18,6 +19,7 @@ export type AiAuth = {
   scopes: string[] // e.g. ["read", "write"]
   allowedCollections: string[] | null // null = all collections allowed
   entryDocId: string | null
+  ownerUserId: string // マルチテナント: このAIキー/OAuth grantの所有者
 }
 
 export type AuthContext = HumanAuth | AiAuth
@@ -50,8 +52,12 @@ export type AppEnv = {
   }
 }
 
+// Returns the owner user ID for this auth context (human = own userId, ai = ownerUserId).
+export const ownerUserIdOf = (auth: AuthContext): string =>
+  auth.authorType === 'human' ? auth.userId : auth.ownerUserId
+
 // Returns true if the given collection is accessible with this auth context.
-// Humans and unrestricted AI keys can access everything.
+// Humans and unrestricted AI keys can access everything (within their own tenant).
 export const isCollectionAllowed = (auth: AuthContext, collectionId: string): boolean => {
   if (auth.authorType === 'human') return true
   if (auth.allowedCollections === null) return true

@@ -2,7 +2,7 @@
 // All dynamic values are escaped — content here is written by AI agents and
 // external services, so nothing is trusted.
 import { Hono } from 'hono'
-import { authorOf, isCollectionAllowed } from '../auth/adapter'
+import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv, AuthContext } from '../auth/adapter'
 import { escapeHtml as esc, renderMarkdown } from '../services/markdown'
 import { parseSections } from '../services/sections'
@@ -54,14 +54,16 @@ const docLink = (id: string, title: string, extraClass = '', suffix = '') =>
 
 const renderTree = async (c: any): Promise<string> => {
   const auth: AuthContext = c.get('auth')
+  const uid = ownerUserIdOf(auth)
 
   const [colsResult, docsResult] = await Promise.all([
-    c.env.DB.prepare('SELECT id, name, parent_id FROM collections ORDER BY name').all(),
+    c.env.DB.prepare('SELECT id, name, parent_id FROM collections WHERE owner_user_id = ? ORDER BY name').bind(uid).all(),
     c.env.DB.prepare(`
-      SELECT id, title, collection_id, parent_id, priority
-      FROM documents WHERE status = 'published'
-      ORDER BY updated_at DESC
-    `).all(),
+      SELECT d.id, d.title, d.collection_id, d.parent_id, d.priority
+      FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.status = 'published' AND c.owner_user_id = ?
+      ORDER BY d.updated_at DESC
+    `).bind(uid).all(),
   ])
 
   const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
@@ -183,12 +185,14 @@ const colHead = (col: { id: string; name: string }, count: number, editing = fal
 // Collection management page (rendered into the reading pane)
 const renderCollectionsPage = async (c: any, errorMessage?: string): Promise<string> => {
   const auth: AuthContext = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const [colsResult, docsResult] = await Promise.all([
-    c.env.DB.prepare('SELECT id, name, parent_id FROM collections ORDER BY name').all(),
+    c.env.DB.prepare('SELECT id, name, parent_id FROM collections WHERE owner_user_id = ? ORDER BY name').bind(uid).all(),
     c.env.DB.prepare(`
-      SELECT id, title, collection_id, parent_id FROM documents
-      WHERE status = 'published' ORDER BY updated_at DESC
-    `).all(),
+      SELECT d.id, d.title, d.collection_id, d.parent_id FROM documents d
+      JOIN collections c ON d.collection_id = c.id
+      WHERE d.status = 'published' AND c.owner_user_id = ? ORDER BY d.updated_at DESC
+    `).bind(uid).all(),
   ])
   const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
   const docsByCollection = new Map<string, Map<string | null, any[]>>()
@@ -253,10 +257,11 @@ const renderCollectionsPage = async (c: any, errorMessage?: string): Promise<str
 // Reached from the tree's collection name link and the document breadcrumb.
 const renderCollectionPage = async (c: any, collectionId: string): Promise<string> => {
   const auth: AuthContext = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   if (!isCollectionAllowed(auth, collectionId)) return errorFragment('このコレクションへのアクセス権がありません')
 
   const [col, docsResult] = await Promise.all([
-    c.env.DB.prepare('SELECT id, name, description FROM collections WHERE id = ?').bind(collectionId).first(),
+    c.env.DB.prepare('SELECT id, name, description FROM collections WHERE id = ? AND owner_user_id = ?').bind(collectionId, uid).first(),
     c.env.DB.prepare(`
       SELECT id, title, parent_id, priority, updated_at FROM documents
       WHERE collection_id = ? AND status = 'published'
@@ -307,12 +312,17 @@ const renderCollectionPage = async (c: any, collectionId: string): Promise<strin
 
 const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error: string; status: 404 | 403 }> => {
   const auth: AuthContext = c.get('auth')
-  const doc = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first() as any
+  const uid = ownerUserIdOf(auth)
+  // マルチテナント: collections 経由でオーナーチェック
+  const doc = await c.env.DB.prepare(`
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!doc) return { error: 'ドキュメントが見つかりません', status: 404 }
   if (!isCollectionAllowed(auth, doc.collection_id)) return { error: 'このドキュメントへのアクセス権がありません', status: 403 }
 
   const [collection, lastRev, linksResult, backlinksResult] = await Promise.all([
-    c.env.DB.prepare('SELECT name FROM collections WHERE id = ?').bind(doc.collection_id).first(),
+    c.env.DB.prepare('SELECT name FROM collections WHERE id = ? AND owner_user_id = ?').bind(doc.collection_id, uid).first(),
     c.env.DB.prepare('SELECT author_type, api_key_name FROM document_revisions WHERE document_id = ? ORDER BY created_at DESC LIMIT 1').bind(id).first(),
     c.env.DB.prepare(`
       SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.to_doc_id
@@ -406,10 +416,13 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
 
 const renderWelcome = async (c: any): Promise<string> => {
   const auth: AuthContext = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const result = await c.env.DB.prepare(`
-    SELECT id, title, collection_id, updated_at FROM documents
-    WHERE status = 'published' ORDER BY updated_at DESC LIMIT 10
-  `).all()
+    SELECT d.id, d.title, d.collection_id, d.updated_at FROM documents d
+    JOIN collections c ON d.collection_id = c.id
+    WHERE d.status = 'published' AND c.owner_user_id = ?
+    ORDER BY d.updated_at DESC LIMIT 10
+  `).bind(uid).all()
   const docs = (result.results as any[]).filter((d) => isCollectionAllowed(auth, d.collection_id))
 
   let html = '<div id="doc-view-inner"><div class="doc-head"><h1 class="doc-title">最近のドキュメント</h1></div>\n'
@@ -434,25 +447,29 @@ uiRoute.get('/tree', async (c) => c.html(await renderTree(c)))
 // GET /ui/search?q= - Incremental search results (empty query → tree)
 uiRoute.get('/search', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const q = (c.req.query('q') ?? '').trim()
   if (q === '') return c.html(await renderTree(c))
 
   // FTS5 trigram cannot match queries shorter than 3 chars (common in Japanese) → LIKE fallback
+  // マルチテナント: collections 経由でオーナーフィルタ
   let result: { results: unknown[] }
   if ([...q].length < 3) {
     const like = `%${q}%`
     result = await c.env.DB.prepare(`
-      SELECT id, title, content, collection_id FROM documents
-      WHERE status = 'published' AND (title LIKE ? OR content LIKE ?)
-      ORDER BY updated_at DESC LIMIT 15
-    `).bind(like, like).all()
+      SELECT d.id, d.title, d.content, d.collection_id FROM documents d
+      JOIN collections c ON d.collection_id = c.id
+      WHERE d.status = 'published' AND c.owner_user_id = ? AND (d.title LIKE ? OR d.content LIKE ?)
+      ORDER BY d.updated_at DESC LIMIT 15
+    `).bind(uid, like, like).all()
   } else {
     result = await c.env.DB.prepare(`
       SELECT d.id, d.title, d.content, d.collection_id
       FROM documents_fts JOIN documents d ON documents_fts.rowid = d.rowid
-      WHERE documents_fts MATCH ? AND d.status = 'published'
+      JOIN collections c ON d.collection_id = c.id
+      WHERE documents_fts MATCH ? AND d.status = 'published' AND c.owner_user_id = ?
       LIMIT 15
-    `).bind(toFtsQuery(q)).all().catch(() => ({ results: [] }))
+    `).bind(toFtsQuery(q), uid).all().catch(() => ({ results: [] }))
   }
 
   const hits = (result.results as any[]).filter((r) => isCollectionAllowed(auth, r.collection_id))
@@ -483,7 +500,12 @@ uiRoute.get('/doc/:id', async (c) => {
   const id = c.req.param('id')
   if (c.req.query('raw') === '1') {
     const auth = c.get('auth')
-    const doc = await c.env.DB.prepare('SELECT title, content, collection_id FROM documents WHERE id = ?').bind(id).first() as any
+    const uid = ownerUserIdOf(auth)
+    const doc = await c.env.DB.prepare(`
+      SELECT d.title, d.content, d.collection_id FROM documents d
+      JOIN collections c ON d.collection_id = c.id
+      WHERE d.id = ? AND c.owner_user_id = ?
+    `).bind(id, uid).first() as any
     if (!doc) return c.json({ error: 'Not found' }, 404)
     if (!isCollectionAllowed(auth, doc.collection_id)) return c.json({ error: 'Forbidden' }, 403)
     return c.json({ title: doc.title, content: doc.content })
@@ -496,8 +518,12 @@ uiRoute.get('/doc/:id', async (c) => {
 // GET /ui/doc/:id/edit - Editor
 uiRoute.get('/doc/:id/edit', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
-  const doc = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first() as any
+  const doc = await c.env.DB.prepare(`
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
   if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
 
@@ -524,14 +550,19 @@ const saveDoc = async (c: any, id: string, title: string, content: string) => {
   await c.env.DB.prepare('UPDATE documents SET title = ?, content = ?, updated_at = ? WHERE id = ?')
     .bind(title, content, now, id).run()
   await createRevision(c.env.DB, id, title, content, authorOf(c.get('auth')), now)
+  // マルチテナント: auth を渡してリンク先も同じオーナーのドキュメントのみに制限
   await syncDocumentLinks(c.env.DB, id, content)
 }
 
 // POST /ui/doc/:id/save
 uiRoute.post('/doc/:id/save', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
-  const doc = await c.env.DB.prepare('SELECT collection_id FROM documents WHERE id = ?').bind(id).first() as any
+  const doc = await c.env.DB.prepare(`
+    SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
   if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
 
@@ -550,8 +581,12 @@ uiRoute.post('/doc/:id/save', async (c) => {
 // POST /ui/doc/:id/append
 uiRoute.post('/doc/:id/append', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
-  const doc = await c.env.DB.prepare('SELECT title, content, collection_id FROM documents WHERE id = ?').bind(id).first() as any
+  const doc = await c.env.DB.prepare(`
+    SELECT d.title, d.content, d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
   if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
 
@@ -570,8 +605,12 @@ uiRoute.post('/doc/:id/append', async (c) => {
 // POST /ui/doc/:id/delete
 uiRoute.post('/doc/:id/delete', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
-  const doc = await c.env.DB.prepare('SELECT collection_id FROM documents WHERE id = ?').bind(id).first() as any
+  const doc = await c.env.DB.prepare(`
+    SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
   if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
 
@@ -588,8 +627,12 @@ uiRoute.post('/doc/:id/delete', async (c) => {
 // GET /ui/doc/:id/new-child - Child document creation form
 uiRoute.get('/doc/:id/new-child', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
-  const doc = await c.env.DB.prepare('SELECT id, title, collection_id FROM documents WHERE id = ?').bind(id).first() as any
+  const doc = await c.env.DB.prepare(`
+    SELECT d.id, d.title, d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
   if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
   if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
 
@@ -611,12 +654,18 @@ uiRoute.get('/doc/:id/new-child', async (c) => {
 // POST /ui/docs - Create document (from the tree's inline form)
 uiRoute.post('/docs', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const body = await c.req.parseBody()
   const title = String(body.title ?? '').trim()
   const collectionId = String(body.collection_id ?? '')
   const parentId = String(body.parent_id ?? '').trim() || null
   if (!title || !collectionId) return c.html(errorFragment('タイトルが必要です'), 400)
   if (!isCollectionAllowed(auth, collectionId)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  // マルチテナント: collection のオーナーチェック
+  const col = await c.env.DB.prepare('SELECT id FROM collections WHERE id = ? AND owner_user_id = ?')
+    .bind(collectionId, uid).first()
+  if (!col) return c.html(errorFragment('コレクションが見つかりません'), 404)
 
   const author = authorOf(auth)
   const id = generateId('doc')
@@ -625,7 +674,10 @@ uiRoute.post('/docs', async (c) => {
   // Verify parent and build path in one query
   let path: string
   if (parentId) {
-    const parent = await c.env.DB.prepare('SELECT collection_id, path FROM documents WHERE id = ?').bind(parentId).first() as any
+    const parent = await c.env.DB.prepare(`
+      SELECT d.collection_id, d.path FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.id = ? AND c.owner_user_id = ?
+    `).bind(parentId, uid).first() as any
     if (!parent) return c.html(errorFragment('親ドキュメントが見つかりません'), 404)
     if (parent.collection_id !== collectionId) return c.html(errorFragment('親ドキュメントが異なるコレクションです'), 400)
     path = `${parent.path}/${id}`
@@ -663,12 +715,13 @@ uiRoute.post('/collections', async (c) => {
   if (!name) return c.html(errorFragment('名前が必要です'), 400)
 
   const author = authorOf(auth)
+  const uid = ownerUserIdOf(auth)
   const now = Date.now()
   await c.env.DB.prepare(`
-    INSERT INTO collections (id, name, parent_id, description, is_system, entrypoint_doc_id,
+    INSERT INTO collections (id, name, parent_id, description, is_system, entrypoint_doc_id, owner_user_id,
       created_by_type, created_by_key_id, updated_by_type, updated_by_key_id, created_at, updated_at)
-    VALUES (?, ?, NULL, NULL, 0, NULL, ?, ?, ?, ?, ?, ?)
-  `).bind(generateId('col'), name, author.authorType, author.apiKeyId, author.authorType, author.apiKeyId, now, now).run()
+    VALUES (?, ?, NULL, NULL, 0, NULL, ?, ?, ?, ?, ?, ?, ?)
+  `).bind(generateId('col'), name, uid, author.authorType, author.apiKeyId, author.authorType, author.apiKeyId, now, now).run()
 
   if (String(body.view ?? '') === 'page') {
     notify(c, 'コレクションを追加しました')
@@ -681,10 +734,11 @@ uiRoute.post('/collections', async (c) => {
 // GET /ui/collections/:id/head - Header row of a collection block (?edit=1 → rename form)
 uiRoute.get('/collections/:id/head', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
   if (!isCollectionAllowed(auth, id)) return c.html(errorFragment('アクセス権がありません'), 403)
 
-  const col = await c.env.DB.prepare('SELECT id, name FROM collections WHERE id = ?').bind(id).first() as any
+  const col = await c.env.DB.prepare('SELECT id, name FROM collections WHERE id = ? AND owner_user_id = ?').bind(id, uid).first() as any
   if (!col) return c.html(errorFragment('コレクションが見つかりません'), 404)
 
   const count = await c.env.DB.prepare(
@@ -697,6 +751,7 @@ uiRoute.get('/collections/:id/head', async (c) => {
 // POST /ui/collections/:id/rename
 uiRoute.post('/collections/:id/rename', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
   if (!isCollectionAllowed(auth, id)) return c.html(errorFragment('アクセス権がありません'), 403)
 
@@ -704,12 +759,12 @@ uiRoute.post('/collections/:id/rename', async (c) => {
   const name = String(body.name ?? '').trim()
   if (!name) return c.html(await renderCollectionsPage(c, '名前を入力してください'))
 
-  const existing = await c.env.DB.prepare('SELECT id FROM collections WHERE id = ?').bind(id).first()
+  const existing = await c.env.DB.prepare('SELECT id FROM collections WHERE id = ? AND owner_user_id = ?').bind(id, uid).first()
   if (!existing) return c.html(await renderCollectionsPage(c, 'コレクションが見つかりません'))
 
   const author = authorOf(auth)
-  await c.env.DB.prepare('UPDATE collections SET name = ?, updated_at = ?, updated_by_type = ?, updated_by_key_id = ? WHERE id = ?')
-    .bind(name, Date.now(), author.authorType, author.apiKeyId, id).run()
+  await c.env.DB.prepare('UPDATE collections SET name = ?, updated_at = ?, updated_by_type = ?, updated_by_key_id = ? WHERE id = ? AND owner_user_id = ?')
+    .bind(name, Date.now(), author.authorType, author.apiKeyId, id, uid).run()
 
   notify(c, '名前を変更しました')
   return c.html(await renderCollectionsPage(c))
@@ -718,8 +773,12 @@ uiRoute.post('/collections/:id/rename', async (c) => {
 // POST /ui/collections/:id/delete - Refuses when not empty (same rule as the API)
 uiRoute.post('/collections/:id/delete', async (c) => {
   const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
   if (!isCollectionAllowed(auth, id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  const existing = await c.env.DB.prepare('SELECT id FROM collections WHERE id = ? AND owner_user_id = ?').bind(id, uid).first()
+  if (!existing) return c.html(errorFragment('コレクションが見つかりません'), 404)
 
   const [docsCount, childrenCount] = await Promise.all([
     c.env.DB.prepare('SELECT COUNT(*) AS n FROM documents WHERE collection_id = ?').bind(id).first() as Promise<any>,
@@ -732,7 +791,7 @@ uiRoute.post('/collections/:id/delete', async (c) => {
     return c.html(await renderCollectionsPage(c, 'サブコレクションがあるため削除できません'))
   }
 
-  await c.env.DB.prepare('DELETE FROM collections WHERE id = ?').bind(id).run()
+  await c.env.DB.prepare('DELETE FROM collections WHERE id = ? AND owner_user_id = ?').bind(id, uid).run()
 
   notify(c, 'コレクションを削除しました')
   return c.html(await renderCollectionsPage(c))

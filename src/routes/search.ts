@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { isCollectionAllowed } from '../auth/adapter'
+import { isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
 
 export const searchRoute = new Hono<AppEnv>()
@@ -46,13 +46,16 @@ searchRoute.get('/', async (c) => {
     let sql: string
     const params: any[] = []
 
+    const auth = c.get('auth')
+    const uid = ownerUserIdOf(auth)
+
     if ([...query].length < 3) {
       sql = `
         SELECT d.id, d.title, d.content, d.collection_id, d.priority, d.status
-        FROM documents d
-        WHERE d.status = 'published' AND (d.title LIKE ? OR d.content LIKE ?)
+        FROM documents d JOIN collections col ON d.collection_id = col.id
+        WHERE d.status = 'published' AND col.owner_user_id = ? AND (d.title LIKE ? OR d.content LIKE ?)
       `
-      params.push(`%${query}%`, `%${query}%`)
+      params.push(uid, `%${query}%`, `%${query}%`)
     } else {
       sql = `
         SELECT
@@ -64,12 +67,12 @@ searchRoute.get('/', async (c) => {
           d.status
         FROM documents_fts
         JOIN documents d ON documents_fts.rowid = d.rowid
-        WHERE documents_fts MATCH ? AND d.status = 'published'
+        JOIN collections col ON d.collection_id = col.id
+        WHERE documents_fts MATCH ? AND d.status = 'published' AND col.owner_user_id = ?
       `
-      params.push(toFtsQuery(query))
+      params.push(toFtsQuery(query), uid)
     }
 
-    const auth = c.get('auth')
     if (collectionId) {
       if (!isCollectionAllowed(auth, collectionId)) {
         return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed' } }, 403)

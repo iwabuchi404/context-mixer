@@ -16,10 +16,11 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS collections (
   id                TEXT PRIMARY KEY,
   name              TEXT NOT NULL,
-  parent_id         TEXT REFERENCES collections(id),
+  parent_id         TEXT REFERENCES collections(id) ON DELETE SET NULL,
   description       TEXT,
   is_system         INTEGER NOT NULL DEFAULT 0,
-  entrypoint_doc_id TEXT REFERENCES documents(id),
+  entrypoint_doc_id TEXT REFERENCES documents(id) ON DELETE SET NULL,
+  owner_user_id     TEXT NOT NULL REFERENCES users(id),  -- マルチテナント: コレクションの所有者
   created_by_type   TEXT NOT NULL,  -- 'human' | 'ai'
   created_by_key_id TEXT REFERENCES api_keys(id),
   updated_by_type   TEXT NOT NULL,  -- 'human' | 'ai'
@@ -29,6 +30,7 @@ CREATE TABLE IF NOT EXISTS collections (
 );
 
 CREATE INDEX IF NOT EXISTS idx_collections_parent ON collections(parent_id);
+CREATE INDEX IF NOT EXISTS idx_collections_owner ON collections(owner_user_id);
 
 -- ============================================================
 -- Documents
@@ -38,7 +40,7 @@ CREATE TABLE IF NOT EXISTS documents (
   title             TEXT NOT NULL,
   content           TEXT NOT NULL,
   collection_id     TEXT NOT NULL REFERENCES collections(id),
-  parent_id         TEXT REFERENCES documents(id),
+  parent_id         TEXT REFERENCES documents(id) ON DELETE SET NULL,
   path              TEXT NOT NULL,
   -- Example: /col_abc/doc_001/doc_002
   -- LIKE search for hierarchical retrieval
@@ -81,6 +83,7 @@ CREATE TABLE IF NOT EXISTS api_keys (
   scopes          TEXT NOT NULL,         -- JSON: ["read","write"]
   collection_ids  TEXT,                  -- JSON: ["col_abc"], null = all allowed
   entry_doc_id    TEXT REFERENCES documents(id),
+  owner_user_id   TEXT NOT NULL REFERENCES users(id),  -- マルチテナント: キーの所有者
   expires_at      INTEGER,
   last_used_at    INTEGER,
   is_active       INTEGER NOT NULL DEFAULT 1,
@@ -88,13 +91,14 @@ CREATE TABLE IF NOT EXISTS api_keys (
 );
 
 CREATE INDEX IF NOT EXISTS idx_api_keys_active ON api_keys(is_active);
+CREATE INDEX IF NOT EXISTS idx_api_keys_owner ON api_keys(owner_user_id);
 
 -- ============================================================
 -- Files
 -- ============================================================
 CREATE TABLE IF NOT EXISTS files (
   id                TEXT PRIMARY KEY,
-  document_id       TEXT REFERENCES documents(id),
+  document_id       TEXT REFERENCES documents(id) ON DELETE SET NULL,
   filename          TEXT NOT NULL,
   mime_type         TEXT NOT NULL,
   size_bytes        INTEGER NOT NULL,
@@ -110,16 +114,19 @@ CREATE TABLE IF NOT EXISTS files (
 CREATE TABLE IF NOT EXISTS inbox_tokens (
   id          TEXT PRIMARY KEY,
   token       TEXT NOT NULL UNIQUE,
-  document_id TEXT NOT NULL REFERENCES documents(id),
+  document_id TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  owner_user_id TEXT NOT NULL REFERENCES users(id),  -- マルチテナント: トークンの所有者
   is_active   INTEGER NOT NULL DEFAULT 1,
   expires_at  INTEGER,
   created_at  INTEGER NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_inbox_tokens_owner ON inbox_tokens(owner_user_id);
+
 CREATE TABLE IF NOT EXISTS inbox_items (
   id              TEXT PRIMARY KEY,
   inbox_token_id  TEXT NOT NULL REFERENCES inbox_tokens(id),
-  document_id     TEXT NOT NULL REFERENCES documents(id),
+  document_id     TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
   content         TEXT NOT NULL,
   source_hint     TEXT,
   status          TEXT NOT NULL DEFAULT 'pending',  -- pending / approved / rejected
