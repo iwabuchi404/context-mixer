@@ -108,6 +108,7 @@ AIがMCP経由で使えるツールは9個。
 git clone https://github.com/iwabuchi404/context-mixer.git
 cd context-mixer
 npm install
+cp wrangler.toml.example wrangler.toml
 ```
 
 ### 2. Cloudflareリソースを作成
