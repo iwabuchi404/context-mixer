@@ -12,7 +12,7 @@ ContextMixerの使い方を、目的別に説明する。
 
 ## Web UI（人間向け）
 
-ブラウザで `https://context-mixer.flog404.work` にアクセス。Clerkアカウントでログインする。
+ブラウザでデプロイ先のURLにアクセス。Clerkアカウントでログインする。
 
 ### コレクション・ドキュメントの閲覧
 
@@ -74,7 +74,7 @@ REST APIにアクセスするためのAPIキーを発行する。
 リクエストヘッダーに `Authorization: Bearer` で指定:
 
 ```bash
-curl https://context-mixer.flog404.work/docs \
+curl https://your-instance.example.com/docs \
   -H "Authorization: Bearer kb_xxxxxxxx"
 ```
 
@@ -127,7 +127,7 @@ MCP（Model Context Protocol）経由でAIチャットクライアントから�
 
 1. Claude.aiの設定を開く
 2. **Connectors** → **Add custom connector**
-3. MCPサーバーURLを入力: `https://context-mixer.flog404.work/mcp`
+3. MCPサーバーURLを入力: `https://your-instance.example.com/mcp`
 4. ブラウザでOAuth認可フローが開く:
    - Clerkログイン（未ログインの場合）
    - 権限選択画面で **read** または **read/write** を選択
@@ -141,7 +141,7 @@ MCP（Model Context Protocol）経由でAIチャットクライアントから�
 CLIからMCPサーバーを登録:
 
 ```bash
-claude mcp add context-mixer --transport http https://context-mixer.flog404.work/mcp
+claude mcp add context-mixer --transport http https://your-instance.example.com/mcp
 ```
 
 初回呼び出し時にブラウザでOAuth認可フローが開く。
@@ -149,7 +149,7 @@ claude mcp add context-mixer --transport http https://context-mixer.flog404.work
 ### ChatGPT
 
 1. Settings → Connectors → Add connector（ベータ機能）
-2. MCPサーバーURLを入力: `https://context-mixer.flog404.work/mcp`
+2. MCPサーバーURLを入力: `https://your-instance.example.com/mcp`
 3. OAuth認可フローで認証
 
 ### MCP Inspector（デバッグ用）

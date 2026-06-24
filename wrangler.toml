@@ -23,8 +23,7 @@ binding = "OAUTH_KV"
 id = "YOUR_OAUTH_KV_ID"
 
 # NOTE: Clerk config is intentionally NOT in [vars]. Plain-text [vars] are pushed
-# on every `wrangler deploy` and overwrite the dashboard, so the DEV keys here used
-# to clobber the production (pk_live / flog404.work) values on each deploy.
-#   local      -> .dev.vars (DEV instance: welcomed-kitten-74)
+# on every `wrangler deploy` and overwrite the dashboard Secrets.
+#   local      -> .dev.vars
 #   production -> dashboard Secrets (survive deploys): CLERK_PUBLISHABLE_KEY,
 #                 CLERK_FRONTEND_API, CLERK_SIGN_IN_URL, CLERK_SECRET_KEY

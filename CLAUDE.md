@@ -9,7 +9,7 @@
 - **Storage**: R2(ファイル添付)
 - **認証**: Clerk(人間セッション) + APIキー(AI)。MCPはOAuth(下記)
 - **フロント**: 静的アセット(`public/`)を Workers Assets で配信。HTMX + Vue無し。Markdownはサーバー側(marked)でレンダリング
-- **本番**: `https://context-mixer.flog404.work`(Clerk本番インスタンス `accounts.flog404.work` 使用、`pk_live`)
+- **本番**: デプロイ先のWorkers URL（Clerk本番インスタンス使用、pk_live）
 
 ## アーキテクチャの要点
 

@@ -4,10 +4,10 @@
 
 ## 完成して本番稼働中のもの
 
-本番 `https://context-mixer.flog404.work` にデプロイ済み・動作確認済み:
+本番環境にデプロイ済み・動作確認済み:
 
 - コアAPI: ドキュメント(CRUD・view=meta/outline/full・セクション単位GET/PATCH・append・履歴)、コレクション(ツリー・CRUD)、全文検索(FTS5 + 3文字未満LIKEフォールバック)、ドキュメントリンク(`[[doc_xxx]]` + backlinks)
-- 認証: Clerk(本番インスタンス `accounts.flog404.work` / `pk_live`)、APIキー(`kb_`、SHA-256、scope + コレクション制限、失効)
+- 認証: Clerk(本番インスタンス / pk_live)、APIキー(`kb_`、SHA-256、scope + コレクション制限、失効)
 - Web UI(デザインシステム「台所」v0.3): ツリー+本文の読み画面、コレクション一覧(追加/リネーム/削除)、APIキー管理、inbox承認、ファイル、検索、システム行(sysline)
 - files(R2)、inbox(承認フロー)、entrypoint、/me/entrypoint
 - セキュリティ対策(済): 全HTML出力のエスケープ、レート制限([rate-limit.ts](../src/auth/rate-limit.ts):inbox20/auth30/その他600 per min)、inbox本文10万字・ファイル10MB上限、inbox-token認証バイパス修正、ルート/アセット衝突修正(inbox/filesフラグメントを `/ui/*` へ)
@@ -50,7 +50,7 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
    - `npx @modelcontextprotocol/inspector` で OAuthフロー全体(DCR→authorize→**Clerkログイン→consent画面で権限選択**→token→tools/call)
    - consent画面が描画されるか、read-only選択時に write_doc が `-32003` で拒否されるか、コレクション限定が効くか
 2. **本番KV作成**: ダッシュボード(Storage→KV→Create)or `npx wrangler kv namespace create OAUTH_KV` → 出た id を wrangler.toml の `OAUTH_KV` に記入(現状プレースホルダ)
-3. **本番デプロイ** → claude.ai のコネクタに `https://context-mixer.flog404.work/mcp` を登録 → ブラウザOAuthフローで接続しツール実行を確認
+3. **本番デプロイ** → claude.ai のコネクタにMCPサーバーURLを登録 → ブラウザOAuthフローで接続しツール実行を確認
 4. 確認できたら STATUS を更新(MCP完了へ)
 
 ### 注意・既知の判断
