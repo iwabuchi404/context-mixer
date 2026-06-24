@@ -1,19 +1,19 @@
 > ContextMixerをリモートMCPサーバー化し、Claude.ai等のMCP対応クライアントから直接利用できるようにするための実装プラン。
 >
 
-## 2026-06-21 ローカル実装確認
+## 2026-06-23 ローカル実装確認（2026-06-21 追補を訂正）
 
-このファイルの下部には OAuth 2.1 / `workers-oauth-provider` 前提の計画が残っているが、`D:\work\context-mixer` の現行ローカル実装は次の状態。
+前回の 2026-06-21 追補は「APIキー認証・6ツール・type-check 落ちる・`docs/STATUS.md` なし」と記載していたが、実装を再確認した結果**全て誤り**だった。OAuth 実装は失われておらず現存し、type-check も通過する。訂正版を以下に置く。
 
-- `/mcp` は `src/mcp/handler.ts` に実装済みの JSON-RPC endpoint。
-- 認証は OAuth ではなく、既存APIキー `Authorization: Bearer kb_...` を流用する。
-- `authMiddleware` は `/mcp` を共有認証から除外し、MCP handler 内で APIキーを検証する。
-- 実装済みツールは `search_docs`, `get_doc`, `write_doc`, `append_doc`, `list_collections`, `get_entrypoint` の6個。
-- 書き込みツールは `createRevision` と `syncDocumentLinks` を呼び、REST/UIと同じ署名・リンク同期の経路を通る。
-- `src/mcp/tools.ts` は外部 `CallToolResult` 型importを使わず、ローカルの最小型で返却形を表す。これにより `npm run type-check` は通る。
+- `/mcp` は `src/mcp/handler.ts` の `McpApiHandler`（`WorkerEntrypoint`）。`src/index.ts` の `export default new OAuthProvider({...})` が `apiRoute:'/mcp'` をここへ流す。
+- 認証は **OAuth 2.1**（`@cloudflare/workers-oauth-provider` + Clerk）。consent画面は `src/mcp/oauth-handler.ts`。APIキー `Bearer kb_...` は REST 専用で、MCP 経路では使わない。
+- 実装済みツールは **9個**: `search_docs`, `get_doc`, `write_doc`, `append_doc`, `list_collections`, `list_docs`, `get_entrypoint`, `delete_doc`, `create_collection`（`list_docs` が以前の記載から漏れていた）。
+- 書き込みツールは `createRevision` と `syncDocumentLinks` を呼び、REST/UIと同じ署名・リンク同期の経路を通る。OAuth grant は `api_keys` 行を持たないため `created_by_key_id` は null、`keyName='oauth:email'` で署名。
+- `npm run type-check` は**通過**（`src/mcp/tools.ts` の型はローカル最小型で解決済み）。
 - MCP `search_docs` も REST/UI と同じく、FTS5 の `MATCH` に渡す検索語を phrase quote する。`context-mixer` のようなハイフン入り語を FTS構文として誤解釈しないため。
+- `docs/STATUS.md` は**存在**する（本リポジトリ `docs/STATUS.md`）。
 
-下記は元の実装計画として保持する。OAuth対応を再開する場合は、この現行実装との差分を先に整理する。
+下記は元の実装計画として保持する。本番デプロイ時の残作業（`OAUTH_KV` id 差し替え等）は `docs/STATUS.md` 参照。
 
 ---
 

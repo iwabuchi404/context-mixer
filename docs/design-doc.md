@@ -1,21 +1,23 @@
-## 2026-06-21 現行実装確認
+## 2026-06-23 現行実装確認（2026-06-21 追補を訂正）
 
-この追補は `D:\work\context-mixer` のローカル実装を確認した結果。下の既存本文には古い状態が残っているため、現時点の判断ではこの追補を優先する。
+前回の 2026-06-21 追補は「MCP は APIキー認証・6ツール・type-check 落ちる・`docs/STATUS.md` なし」と記載していたが、実装を再確認した結果**該当部分は全て誤り**だった。OAuth 実装は現存し、type-check も通過する。下の既存本文にも古い状態（Vue MPA 等）が残っているため、現時点の判断ではこの追補を優先する。
 
 ### 現在地
 
-- 実装済み: D1スキーマ、コレクション/ドキュメントCRUD、セクションAPI、append、履歴API、ドキュメントリンク、FTS5検索、Clerkセッション認証、APIキー認証、APIキー管理、`/me/entrypoint`、ワークスペース `/entrypoint`、files/R2、inbox承認フロー、HTMXベースWeb UI、JSON-RPC MCP endpoint。
+- 実装済み: D1スキーマ、コレクション/ドキュメントCRUD、セクションAPI、append、履歴API、ドキュメントリンク、FTS5検索、Clerkセッション認証、APIキー認証、APIキー管理、`/me/entrypoint`、ワークスペース `/entrypoint`、files/R2、inbox承認フロー、HTMXベースWeb UI、MCP（OAuth 2.1・9ツール）。
 - 未実装: `GET /collections/:id/export` は `501 NOT_IMPLEMENTED` を返す。
 - 検索修正: FTS5 の `MATCH` に渡す検索語は空白区切りで phrase quote する。`context-mixer` のようなハイフン入り語を FTS 構文として誤解釈しないため。
 - フロントエンド実態: README/古いspecの「Vue MPA」ではなく、`public/index.html` + `public/app.js` + `/ui/*` fragments による HTMX 構成。
-- MCP実態: ローカルコードは `/mcp` JSON-RPC endpoint を APIキー（`Bearer kb_...`）で認証する。OAuthProviderベースのリモートMCP計画とは差分がある。
+- MCP実態: `src/index.ts` の `export default new OAuthProvider({...})` が `/mcp` を `McpApiHandler` へ流す。認証は OAuth 2.1（`@cloudflare/workers-oauth-provider` + Clerk）。ツールは9個: `search_docs`, `get_doc`, `write_doc`, `append_doc`, `list_collections`, `list_docs`, `get_entrypoint`, `delete_doc`, `create_collection`。
+- `npm run type-check` は**通過**（`src/mcp/tools.ts` の型はローカル最小型で解決済み）。
+- `docs/STATUS.md` は**存在**する。
 
 ### ドキュメント上の古い記述
 
-- 直下の「現在地」には `files(R2)`, `inbox`, `GET /entrypoint`, `MCP server` が未実装とあるが、ローカルコードでは実装済み。
-- ContextMixer上の一部ドキュメントには OAuth/8ツール完了の記述があるが、ローカル実装確認では APIキー認証/6ツールの JSON-RPC 実装として扱う。
-- `docs/STATUS.md` 参照はローカルには該当ファイルがない。
-- `src/mcp/tools.ts` の外部 `CallToolResult` 型importはローカル型に置換済み。`npm run type-check` は通過する。
+- 直下の「現在地」には `files(R2)`, `inbox`, `GET /entrypoint`, `MCP server` が未実装とあるが、実装済み。
+- スタック表の Frontend 行「Vue MPA」は古い。現行は HTMX + Workers Assets。
+- スタック表の認証行に APIキー・OAuth が載っていない（現行は Clerk + APIキー + OAuth の3系統）。
+- APIキーのハッシュは bcrypt ではなく SHA-256（`src/auth/apikey.ts`。キーは高エントロピーなので SHA-256 で十分、bcrypt は Workers 無料枠で重い）。
 
 ---
 

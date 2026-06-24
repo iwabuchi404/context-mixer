@@ -20,8 +20,19 @@ import { oauthRoute } from './mcp/oauth-handler'
 
 const app = new Hono<AppEnv>()
 
-// CORS for development
-app.use('*', cors())
+// CORS — restrict to the production origin in prod; allow any in dev.
+// CLERK_FRONTEND_API is set per-environment (dev=.dev.vars, prod=dashboard Secret),
+// so we use it as the production-origin signal. When absent (local dev without
+// .dev.vars) we fall back to permissive CORS.
+app.use('*', cors({
+  origin: (_origin, c) => {
+    const env = c.env as Env
+    return env.CLERK_FRONTEND_API ? 'https://context-mixer.flog404.work' : '*'
+  },
+  allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization', 'If-Match'],
+  credentials: true,
+}))
 
 // Rate limiting (runs before auth so unauthenticated floods are cheap to reject)
 app.use('*', rateLimit)

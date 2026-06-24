@@ -15,8 +15,8 @@
 
 ## 完成して本番稼働中のもの（追加）
 
-- MCP (Model Context Protocol) リモートサーバー: OAuth 2.1 + Streamable HTTP、8ツール対応
-  - ツール: `search_docs`, `get_doc`, `write_doc`, `append_doc`, `delete_doc`, `get_entrypoint`, `list_collections`, `create_collection`
+- MCP (Model Context Protocol) リモートサーバー: OAuth 2.1 + Streamable HTTP、9ツール対応
+  - ツール: `search_docs`, `get_doc`, `write_doc`, `append_doc`, `delete_doc`, `get_entrypoint`, `list_collections`, `list_docs`, `create_collection`
   - 認証: Cloudflare `workers-oauth-provider` + Clerk OAuth 2.1
   - スコープ: read/write権限分離、コレクションアクセス制限対応
   - Claude.ai / Claude Code / MCP Inspector から接続確認済み（2026-06-14）
