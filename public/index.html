@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Context Mixer — AIと協業するナレッジベース</title>
-  <meta name="description" content="個人とAIが共同管理するAIファーストのナレッジベース。AIが8割書き、人間が読む・編集する。MCPプロトコル対応でClaude等のAIツールから直接読み書きできる。">
+  <meta name="description" content="AIと人が一緒に使うナレッジベース。AIが書き、人が読む・編集する。Claude等のAIから直接読み書きできる。">
   <link rel="icon" href="/favicon.svg">
   <link rel="stylesheet" href="/style.css">
   <style>
@@ -70,10 +70,6 @@
       padding-bottom: var(--space-2);
       border-bottom: 1px solid var(--border);
     }
-    .landing-section p {
-      line-height: var(--leading-prose);
-      color: var(--text);
-    }
     .landing-section ul {
       list-style: none;
       padding: 0;
@@ -90,21 +86,6 @@
       left: var(--space-2);
       color: var(--accent);
       font-family: var(--font-mono);
-    }
-    .landing-tech {
-      font-family: var(--font-mono);
-      font-size: var(--text-sm);
-      color: var(--text-muted);
-      display: flex;
-      flex-wrap: wrap;
-      gap: var(--space-2);
-      margin-top: var(--space-4);
-    }
-    .landing-tech span {
-      padding: var(--space-1) var(--space-3);
-      background: var(--surface-dim);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
     }
     .landing-footer {
       text-align: center;
@@ -138,53 +119,23 @@
     <section class="landing-hero">
       <h1>AIと協業する<br>ナレッジベース</h1>
       <p class="tagline">
-        個人とAIが共同管理する、AIファーストのナレッジベース。<br>
-        AIが8割書き、人間が読む・編集する。MCPでClaude等から直接読み書きできる。
+        AIと人が一緒に使うナレッジベース。<br>
+        AIに使いやすいAPI設計で、AIエージェントから効率的に読み書きできる。
       </p>
       <div class="cta">
         <a class="btn-landing btn-landing-primary" href="/app.html">はじめる</a>
-        <a class="btn-landing btn-landing-ghost" href="#features">機能を見る</a>
       </div>
     </section>
 
     <section class="landing-section" id="features">
       <h2>何ができるか</h2>
       <ul>
-        <li><strong>Web UI</strong> — ツリー状のコレクション・ドキュメント管理。Markdownで書いてサーバー側でHTMLレンダリング</li>
-        <li><strong>MCPプロトコル</strong> — Claude Desktop・Claude Code等のAIツールから直接ドキュメントを読み書き</li>
-        <li><strong>APIキー</strong> — AI向けの読み取り専用・読み書き権限を発行。コレクション単位でスコープ制限</li>
-        <li><strong>受信箱</strong> — 外部からトークン経由でテキストを投稿。承認後にドキュメントに追記</li>
-        <li><strong>リビジョン管理</strong> — 全変更履歴を記録。AIが書いたか人間が書いたかを署名で追跡</li>
-        <li><strong>リンク同期</strong> — <code>[[doc_xxx]]</code>記法でドキュメント間リンクを自動管理</li>
-      </ul>
-    </section>
-
-    <section class="landing-section">
-      <h2>設計のポイント</h2>
-      <ul>
-        <li><strong>AIファースト</strong> — AIの探索コストを下げる設計。APIキー + MCPでAIが直接アクセス</li>
-        <li><strong>サーバーレス</strong> — Cloudflare Workers + D1 + R2。安く・速く・スケールする</li>
-        <li><strong>HTMX</strong> — SPA不要。軽量なサーバー側レンダリングでモバイルも快適</li>
-        <li><strong>マルチテナント</strong> — ユーザーごとにデータが分離。Clerkで認証</li>
-      </ul>
-      <div class="landing-tech">
-        <span>Cloudflare Workers</span>
-        <span>D1 (SQLite)</span>
-        <span>R2</span>
-        <span>Clerk</span>
-        <span>Hono</span>
-        <span>HTMX</span>
-        <span>MCP</span>
-        <span>OAuth 2.1</span>
-      </div>
-    </section>
-
-    <section class="landing-section">
-      <h2>使い方</h2>
-      <ul>
-        <li><strong>人間</strong> — Web UIでコレクションを作り、ドキュメントを書く・読む・編集する</li>
-        <li><strong>AI</strong> — APIキーを発行してClaude Code等に設定。MCP経由でナレッジベースを読み書き</li>
-        <li><strong>協業</strong> — AIがドキュメントを書き、人間が確認・編集。変更履歴で誰が書いたか追跡</li>
+        <li><strong>メモを書く・整理する</strong> — コレクションを作り、その中にドキュメントを階層的に整理。Markdownで書いて見やすいHTMLに変換</li>
+        <li><strong>AIに書かせる</strong> — Claude等のAIツールから直接ドキュメントを読み書き。プロジェクトの文脈をAIに渡すのが簡単に</li>
+        <li><strong>どこからでも投稿</strong> — 外部からトークン経由でテキストを投稿。承認後にドキュメントに追記</li>
+        <li><strong>変更履歴</strong> — 全ての変更を記録。AIが書いたか人が書いたかを履歴で確認</li>
+        <li><strong>リンクで繋ぐ</strong> — ドキュメント同士を <code>[[リンク]]</code> で繋いで、関連する情報を整理</li>
+        <li><strong>ファイル添付</strong> — 画像等のファイルをドキュメントに添付</li>
       </ul>
     </section>
 
@@ -196,7 +147,7 @@
       <a href="/terms.html">利用規約</a>
       <a href="/privacy.html">プライバシーポリシー</a>
       <br>
-      <span>Context Mixer — built with Cloudflare Workers + D1</span>
+      <span>Context Mixer</span>
     </footer>
   </main>
 </body>

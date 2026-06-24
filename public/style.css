@@ -73,6 +73,22 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 }
 .sidebar-search .input { padding-left: 28px; }
 
+.sidebar-footer {
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: var(--space-3);
+  font-size: var(--text-xs);
+}
+.sidebar-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.sidebar-footer a:hover {
+  color: var(--accent);
+}
+
 .main-content {
   overflow-y: auto;
   padding: var(--space-6) var(--space-5) var(--space-8);
