@@ -175,6 +175,23 @@ function onSwap(target) {
     applyCollapsedState()
     markCurrent(document.getElementById('doc-view-inner')?.dataset.docId)
   }
+  // 遅延取得したコレクションツリーが .tree-children に挿入された時の処理
+  if (target.classList.contains('tree-children')) {
+    const group = target.closest('.tree-group')
+    if (group) {
+      // 展開（collapsed を外す）
+      group.classList.remove('collapsed')
+      // hx-get を外して次回以降はクライアント側で開閉
+      const toggle = group.querySelector('.tree-toggle')
+      if (toggle) toggle.removeAttribute('hx-get')
+      // localStorage に展開状態を保存
+      const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
+      collapsed.delete(group.dataset.colId)
+      localStorage.setItem('collapsedCols', JSON.stringify([...collapsed]))
+      // htmx に挿入したHTMLを認識させる
+      htmx.process(target)
+    }
+  }
 }
 
 // --- mobile drawer ---
@@ -228,6 +245,13 @@ function setupDocView() {
     // Collection toggle
     const group = toggle.closest('.tree-group')
     if (!group) return
+
+    // 遅延取得未実施のコレクション: HTMXに取得させる（collapsedの切り替えは afterSwap で行う）
+    if (toggle.hasAttribute('hx-get') && group.classList.contains('collapsed')) {
+      // HTMXが取得完了後に afterSwap で展開するので、ここでは何もしない
+      return
+    }
+
     group.classList.toggle('collapsed')
     const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
     if (group.classList.contains('collapsed')) collapsed.add(group.dataset.colId)
@@ -237,26 +261,33 @@ function setupDocView() {
 }
 
 function applyCollapsedState() {
-  // First-ever load (no saved state): collapse every collection by default,
-  // EXCEPT the one containing the currently-open document (so the user can
-  // see where they are). Once the user touches a toggle, their choice sticks.
+  // First-ever load (no saved state): サーバーが既に collapsed クラスを付与済み。
+  // localStorage に保存して状態を固定化する。
   if (localStorage.getItem('collapsedCols') === null) {
-    const activeDocId = new URLSearchParams(location.search).get('doc')
-      || document.getElementById('doc-view-inner')?.dataset.docId
-      || null
-    const activeColId = activeDocId
-      ? document.querySelector(`.tree-item[data-doc-id="${activeDocId}"]`)?.closest('.tree-group')?.dataset.colId
-      : null
-    const allCols = [...document.querySelectorAll('.tree-group')]
+    const allCols = [...document.querySelectorAll('.tree-group.collapsed')]
       .map((g) => g.dataset.colId)
-      .filter((id) => id && id !== activeColId)
+      .filter(Boolean)
     localStorage.setItem('collapsedCols', JSON.stringify(allCols))
   }
 
   const collapsedCols = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
   const collapsedDocs = new Set(JSON.parse(localStorage.getItem('collapsedDocs') || '[]'))
   document.querySelectorAll('.tree-group').forEach((group) => {
-    if (collapsedCols.has(group.dataset.colId)) group.classList.add('collapsed')
+    // hx-get 付き（未取得）のコレクションは localStorage に関わらず collapsed を維持
+    const toggle = group.querySelector('.tree-toggle')
+    const isLazy = toggle?.hasAttribute('hx-get')
+    if (isLazy) {
+      // 遅延取得コレクション: localStorage に保存済みなら collapsed、未保存ならデフォルト collapsed
+      if (collapsedCols.has(group.dataset.colId) || localStorage.getItem('collapsedCols') === null) {
+        group.classList.add('collapsed')
+      } else {
+        group.classList.remove('collapsed')
+      }
+    } else {
+      // 取得済みコレクション: localStorage に従う
+      if (collapsedCols.has(group.dataset.colId)) group.classList.add('collapsed')
+      else group.classList.remove('collapsed')
+    }
   })
   document.querySelectorAll('.tree-doc-item[data-doc-id]').forEach((item) => {
     if (collapsedDocs.has(item.dataset.docId)) item.classList.add('collapsed')

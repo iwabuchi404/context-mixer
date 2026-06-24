@@ -86,71 +86,97 @@ const renderTree = async (c: any): Promise<string> => {
   return renderTreeHtml(collections, docsByParent)
 }
 
+// ドキュメントツリーHTMLを再帰構築（renderTreeHtml と /ui/collections/:id/tree で共有）
+const renderDocs = (
+  docsByParent: Map<string, Map<string | null, any[]>>,
+  collectionId: string,
+  parentId: string | null,
+  docDepth: number
+): string => {
+  if (docDepth > 20) return ''
+  const parentMap = docsByParent.get(collectionId)
+  if (!parentMap) return ''
+  const docs = parentMap.get(parentId) ?? []
+  // priority: high pinned on top, archive sinks to the bottom (dimmed)
+  const sorted = [
+    ...docs.filter((d) => d.priority === 'high'),
+    ...docs.filter((d) => d.priority === 'normal'),
+    ...docs.filter((d) => d.priority === 'archive'),
+  ]
+  let html = ''
+  for (const doc of sorted) {
+    const cls = doc.priority === 'archive' ? 'is-archive' : ''
+    const mark = doc.priority === 'high' ? '<span class="pri" title="priority: high">●</span>' : ''
+    const children = renderDocs(docsByParent, collectionId, doc.id, docDepth + 1)
+    const hasChildren = children.length > 0
+    // Spacer keeps the link x-position aligned between docs with/without children
+    const toggle = hasChildren
+      ? '<button class="tree-toggle tree-toggle-doc" type="button" aria-label="折りたたみ"><span class="tree-toggle-icon">▾</span></button>'
+      : '<span class="tree-toggle-spacer" aria-hidden="true"></span>'
+    html += `<div class="tree-doc-item${hasChildren ? ' has-children' : ''}" data-doc-id="${esc(doc.id)}" style="--doc-depth:${docDepth}">
+      ${toggle}
+      ${docLink(doc.id, doc.title, cls, mark)}
+      <button class="doc-add-btn" type="button" title="子ドキュメントを追加"
+              hx-get="/ui/doc/${esc(doc.id)}/new-child" hx-target="#doc-view">＋</button>
+    </div>\n`
+    if (hasChildren) {
+      html += `<div class="tree-doc-children">${children}</div>\n`
+    }
+  }
+  return html
+}
+
+// 単一コレクションのドキュメントツリーHTML（遅延取得用）
+const renderCollectionDocs = (col: any, docsByParent: Map<string, Map<string | null, any[]>>): string => {
+  let html = renderDocs(docsByParent, col.id, null, 0)
+  html += `<details class="tree-new tree-new-doc">
+    <summary>＋ メモを追加</summary>
+    <form hx-post="/ui/docs" hx-target="#doc-view">
+      <input type="hidden" name="collection_id" value="${esc(col.id)}">
+      <input class="input" name="title" placeholder="タイトル" required autocomplete="off">
+      <button class="btn btn-sm" type="submit">作成</button>
+    </form>
+  </details>\n`
+  return html
+}
+
 // ツリーHTML構築（renderTree と /ui/init で共有）
+// activeColId: 初回から展開済みにするコレクションID（開いているドキュメントの親）
+//   指定時はそのコレクションのドキュメントのみ inline 描画、他は hx-get で遅延取得
+//   未指定時（null）は全コレクションのドキュメントを inline 描画（従来動作）
 const renderTreeHtml = (
   collections: any[],
-  docsByParent: Map<string, Map<string | null, any[]>>
+  docsByParent: Map<string, Map<string | null, any[]>>,
+  activeColId?: string | null
 ): string => {
-  // Render documents recursively with hierarchy support (depth cap guards against parent_id cycles).
-  // Documents with children get a toggle (▾) and wrap their descendants in a
-  // .tree-doc-children container so the client can collapse them.
-  const renderDocs = (collectionId: string, parentId: string | null, docDepth: number): string => {
-    if (docDepth > 20) return ''
-    const parentMap = docsByParent.get(collectionId)
-    if (!parentMap) return ''
-    const docs = parentMap.get(parentId) ?? []
-    // priority: high pinned on top, archive sinks to the bottom (dimmed)
-    const sorted = [
-      ...docs.filter((d) => d.priority === 'high'),
-      ...docs.filter((d) => d.priority === 'normal'),
-      ...docs.filter((d) => d.priority === 'archive'),
-    ]
-    let html = ''
-    for (const doc of sorted) {
-      const cls = doc.priority === 'archive' ? 'is-archive' : ''
-      const mark = doc.priority === 'high' ? '<span class="pri" title="priority: high">●</span>' : ''
-      const children = renderDocs(collectionId, doc.id, docDepth + 1)
-      const hasChildren = children.length > 0
-      // Spacer keeps the link x-position aligned between docs with/without children
-      const toggle = hasChildren
-        ? '<button class="tree-toggle tree-toggle-doc" type="button" aria-label="折りたたみ"><span class="tree-toggle-icon">▾</span></button>'
-        : '<span class="tree-toggle-spacer" aria-hidden="true"></span>'
-      html += `<div class="tree-doc-item${hasChildren ? ' has-children' : ''}" data-doc-id="${esc(doc.id)}" style="--doc-depth:${docDepth}">
-        ${toggle}
-        ${docLink(doc.id, doc.title, cls, mark)}
-        <button class="doc-add-btn" type="button" title="子ドキュメントを追加"
-                hx-get="/ui/doc/${esc(doc.id)}/new-child" hx-target="#doc-view">＋</button>
-      </div>\n`
-      if (hasChildren) {
-        html += `<div class="tree-doc-children">${children}</div>\n`
-      }
-    }
-    return html
-  }
-
   const renderGroup = (parentId: string | null, depth: number): string => {
     let html = ''
     for (const col of collections.filter((x) => x.parent_id === parentId)) {
-      // collection name navigates to the collections page; the toggle icon
-      // (separate, on the right) collapses the group (state kept client-side)
-      html += `<section class="tree-group" data-col-id="${esc(col.id)}" style="--depth:${depth}">
+      const isActive = activeColId != null && col.id === activeColId
+      // activeColId のコレクションは展開済み、他は折りたたみ + hx-get で遅延取得
+      const toggleAttr = isActive
+        ? '' // 展開済み: クライアント側の通常トグル動作
+        : ` hx-get="/ui/collections/${esc(col.id)}/tree" hx-target="next .tree-children" hx-swap="innerHTML"`
+      html += `<section class="tree-group${isActive ? '' : ' collapsed'}" data-col-id="${esc(col.id)}" style="--depth:${depth}">
         <div class="tree-head">
-          <button class="tree-toggle" type="button" aria-label="折りたたみ"><span class="tree-toggle-icon">▾</span></button>
+          <button class="tree-toggle" type="button" aria-label="折りたたみ"${toggleAttr}><span class="tree-toggle-icon">▾</span></button>
           <a class="tree-col-name" href="/?col=${esc(col.id)}"
              hx-get="/ui/collections/${esc(col.id)}" hx-target="#doc-view" hx-push-url="/?col=${esc(col.id)}">${esc(col.name)}</a>
         </div>
         <div class="tree-children">\n`
-      // Render documents with hierarchy (root docs only, parent_id=null)
-      html += renderDocs(col.id, null, 0)
-      // add-doc form sits at the bottom of the document list, indented one level
-      html += `<details class="tree-new tree-new-doc">
-        <summary>＋ メモを追加</summary>
-        <form hx-post="/ui/docs" hx-target="#doc-view">
-          <input type="hidden" name="collection_id" value="${esc(col.id)}">
-          <input class="input" name="title" placeholder="タイトル" required autocomplete="off">
-          <button class="btn btn-sm" type="submit">作成</button>
-        </form>
-      </details>\n`
+      if (isActive || activeColId == null) {
+        // 展開済み or 従来モード: ドキュメントツリーを inline 描画
+        html += renderDocs(docsByParent, col.id, null, 0)
+        html += `<details class="tree-new tree-new-doc">
+          <summary>＋ メモを追加</summary>
+          <form hx-post="/ui/docs" hx-target="#doc-view">
+            <input type="hidden" name="collection_id" value="${esc(col.id)}">
+            <input class="input" name="title" placeholder="タイトル" required autocomplete="off">
+            <button class="btn btn-sm" type="submit">作成</button>
+          </form>
+        </details>\n`
+      }
+      // 遅延取得モード: .tree-children は空（HTMXが展開時に埋める）
       html += renderGroup(col.id, depth + 1)
       html += '</div></section>\n'
     }
@@ -474,6 +500,8 @@ uiRoute.get('/tree', async (c) => c.html(await renderTree(c)))
 // GET /ui/init - 初回ロード用統合エンドポイント（tree + doc/welcome を1往復で返す）
 // クエリパラメータ: doc=doc_xxx（指定時はそのドキュメント、未指定時はwelcome）
 // レスポンス形式: { tree: "<html>", main: "<html>" }
+// ツリー遅延取得: activeColId（開いているdocの親コレクション）のみドキュメントを inline 描画、
+// 他のコレクションは折りたたみ + hx-get で展開時に取得
 uiRoute.get('/init', async (c) => {
   const auth: AuthContext = c.get('auth')
   const uid = ownerUserIdOf(auth)
@@ -495,21 +523,32 @@ uiRoute.get('/init', async (c) => {
   const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
   const doc = docRow as any
 
-  // Phase 2: documents一覧 と doc関連4クエリ を並列取得
-  const colIds = collections.map((c) => c.id)
-  const docsPromise = colIds.length > 0
+  // activeColId: 開いているドキュメントの親コレクション（初回から展開済みにする）
+  const activeColId = doc?.collection_id ?? null
+
+  // Phase 2: activeColIdのドキュメント一覧 + welcome用ドキュメント + doc関連クエリ を並列取得
+  // activeColId のドキュメントのみ取得（全コレクションの全ドキュメントは取得しない）
+  const activeDocsPromise = activeColId
     ? c.env.DB.prepare(
-        `SELECT id, title, collection_id, parent_id, priority, updated_at FROM documents
-         WHERE status = 'published' AND collection_id IN (${colIds.map(() => '?').join(', ')})
-         ORDER BY updated_at DESC`
-      ).bind(...colIds).all()
+        `SELECT id, title, collection_id, parent_id, priority FROM documents
+         WHERE status = 'published' AND collection_id = ? ORDER BY updated_at DESC`
+      ).bind(activeColId).all()
+    : Promise.resolve({ results: [] })
+
+  // welcome用: doc未指定時は最近10件（全コレクション横断）
+  const welcomeDocsPromise = !docId
+    ? c.env.DB.prepare(`
+        SELECT d.id, d.title, d.collection_id, d.updated_at FROM documents d
+        JOIN collections c ON d.collection_id = c.id
+        WHERE d.status = 'published' AND c.owner_user_id = ?
+        ORDER BY d.updated_at DESC LIMIT 10
+      `).bind(uid).all()
     : Promise.resolve({ results: [] })
 
   // doc関連クエリ（docが存在する場合のみ）
   let docExtraPromise: Promise<any> = Promise.resolve(null)
   if (doc && isCollectionAllowed(auth, doc.collection_id)) {
     docExtraPromise = Promise.all([
-      // collection名は既にcollectionsにあるので再利用（クエリ不要）
       Promise.resolve({ name: collections.find((c) => c.id === doc.collection_id)?.name ?? '' }),
       c.env.DB.prepare('SELECT author_type, api_key_name FROM document_revisions WHERE document_id = ? ORDER BY created_at DESC LIMIT 1').bind(doc.id).first(),
       c.env.DB.prepare(`
@@ -520,7 +559,6 @@ uiRoute.get('/init', async (c) => {
         SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.from_doc_id
         WHERE l.to_doc_id = ? ORDER BY d.title
       `).bind(doc.id).all(),
-      // ancestor query（parent_idがある場合のみ）
       doc.parent_id
         ? c.env.DB.prepare(`
             WITH RECURSIVE anc(id, title, parent_id, depth) AS (
@@ -536,19 +574,20 @@ uiRoute.get('/init', async (c) => {
     ])
   }
 
-  const [docsResult, docExtra] = await Promise.all([docsPromise, docExtraPromise])
-  const allDocs = docsResult.results as any[]
+  const [activeDocsResult, welcomeDocsResult, docExtra] = await Promise.all([
+    activeDocsPromise, welcomeDocsPromise, docExtraPromise,
+  ])
 
-  // tree HTML 構築（CPUのみ、クエリ待ちなし）
+  // tree HTML 構築（activeColId のドキュメントのみ inline、他は遅延取得）
   const docsByParent = new Map<string, Map<string | null, any[]>>()
-  for (const d of allDocs) {
+  for (const d of activeDocsResult.results as any[]) {
     if (!docsByParent.has(d.collection_id)) docsByParent.set(d.collection_id, new Map())
     const parentMap = docsByParent.get(d.collection_id)!
     const pid = d.parent_id || null
     if (!parentMap.has(pid)) parentMap.set(pid, [])
     parentMap.get(pid)!.push(d)
   }
-  const treeHtml = renderTreeHtml(collections, docsByParent)
+  const treeHtml = renderTreeHtml(collections, docsByParent, activeColId)
 
   // main ペイン HTML 構築
   let mainHtml: string
@@ -557,7 +596,7 @@ uiRoute.get('/init', async (c) => {
   } else if (docId) {
     mainHtml = errorFragment('ドキュメントが見つかりません')
   } else {
-    mainHtml = welcomeHtml(allDocs.slice(0, 10))
+    mainHtml = welcomeHtml(welcomeDocsResult.results as any[])
   }
 
   return c.json({ tree: treeHtml, main: mainHtml })
@@ -821,6 +860,31 @@ uiRoute.get('/collections', async (c) => c.html(await renderCollectionsPage(c)))
 
 // GET /ui/collections/:id - Single collection page (document list)
 uiRoute.get('/collections/:id', async (c) => c.html(await renderCollectionPage(c, c.req.param('id'))))
+
+// GET /ui/collections/:id/tree - 単一コレクションのドキュメントツリー（遅延取得用）
+uiRoute.get('/collections/:id/tree', async (c) => {
+  const uid = ownerUserIdOf(c.get('auth'))
+  const id = c.req.param('id')
+  const col = await c.env.DB.prepare('SELECT id, name FROM collections WHERE id = ? AND owner_user_id = ?')
+    .bind(id, uid).first() as any
+  if (!col) return c.html('<p class="tree-empty">コレクションが見つかりません</p>', 404)
+
+  const docsResult = await c.env.DB.prepare(
+    `SELECT id, title, collection_id, parent_id, priority FROM documents
+     WHERE status = 'published' AND collection_id = ? ORDER BY updated_at DESC`
+  ).bind(id).all()
+
+  const docsByParent = new Map<string, Map<string | null, any[]>>()
+  for (const doc of docsResult.results as any[]) {
+    if (!docsByParent.has(doc.collection_id)) docsByParent.set(doc.collection_id, new Map())
+    const parentMap = docsByParent.get(doc.collection_id)!
+    const pid = doc.parent_id || null
+    if (!parentMap.has(pid)) parentMap.set(pid, [])
+    parentMap.get(pid)!.push(doc)
+  }
+
+  return c.html(renderCollectionDocs(col, docsByParent))
+})
 
 // POST /ui/collections - Create collection
 // view=page → returns the management page; otherwise the tree (sidebar form)
