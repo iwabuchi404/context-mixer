@@ -336,7 +336,8 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
   if (!doc) return { error: 'ドキュメントが見つかりません', status: 404 }
   if (!isCollectionAllowed(auth, doc.collection_id)) return { error: 'このドキュメントへのアクセス権がありません', status: 403 }
 
-  const [collection, lastRev, linksResult, backlinksResult] = await Promise.all([
+  // collection名は別途取得（renderDocFromData では collections リストから再利用）
+  const [collection, lastRev, linksResult, backlinksResult, ancestorRows] = await Promise.all([
     c.env.DB.prepare('SELECT name FROM collections WHERE id = ? AND owner_user_id = ?').bind(doc.collection_id, uid).first(),
     c.env.DB.prepare('SELECT author_type, api_key_name FROM document_revisions WHERE document_id = ? ORDER BY created_at DESC LIMIT 1').bind(id).first(),
     c.env.DB.prepare(`
@@ -347,7 +348,27 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
       SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.from_doc_id
       WHERE l.to_doc_id = ? ORDER BY d.title
     `).bind(id).all(),
+    doc.parent_id
+      ? c.env.DB.prepare(`
+          WITH RECURSIVE anc(id, title, parent_id, depth) AS (
+            SELECT id, title, parent_id, 0 FROM documents WHERE id = ?
+            UNION ALL
+            SELECT d.id, d.title, d.parent_id, a.depth + 1
+            FROM documents d JOIN anc a ON d.id = a.parent_id
+            WHERE a.depth < 20
+          )
+          SELECT id, title, depth FROM anc WHERE id != ? ORDER BY depth DESC
+        `).bind(doc.id, doc.id).all()
+      : Promise.resolve({ results: [] }),
   ])
+
+  return { html: renderDocFromData(c, doc, [collection, lastRev, linksResult, backlinksResult, ancestorRows]) }
+}
+
+// クエリ結果からドキュメントHTMLを構築（renderDoc と /ui/init で共有）
+// docExtra = [collection, lastRev, linksResult, backlinksResult, ancestorRows]
+const renderDocFromData = (_c: any, doc: any, docExtra: any[]): string => {
+  const [collection, lastRev, linksResult, backlinksResult, ancestorRows] = docExtra
 
   const linkTitles = new Map<string, string>((linksResult.results as any[]).map((r) => [r.id, r.title]))
   const body = renderMarkdown(doc.content, linkTitles)
@@ -379,7 +400,6 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
   }
 
   // Build breadcrumb: コレクション(全体) > collection(this doc) > ancestors > parent
-  // The collection name links to the single-collection page; "コレクション" to the management page.
   const colName = (collection as any)?.name ?? ''
   const colCrumb = doc.collection_id
     ? `<a class="crumb" href="/?col=${esc(doc.collection_id)}"
@@ -388,24 +408,12 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
   let breadcrumb = `<a class="crumb" href="/?view=collections"
       hx-get="/ui/collections" hx-target="#doc-view" hx-push-url="/?view=collections">コレクション</a> / ${colCrumb}`
 
-  if (doc.parent_id) {
-    const ancestorRows = await c.env.DB.prepare(`
-      WITH RECURSIVE anc(id, title, parent_id, depth) AS (
-        SELECT id, title, parent_id, 0 FROM documents WHERE id = ?
-        UNION ALL
-        SELECT d.id, d.title, d.parent_id, a.depth + 1
-        FROM documents d JOIN anc a ON d.id = a.parent_id
-        WHERE a.depth < 20
-      )
-      SELECT id, title, depth FROM anc WHERE id != ? ORDER BY depth DESC
-    `).bind(doc.id, doc.id).all()
-    const ancestors = ancestorRows.results as any[]
-    if (ancestors.length > 0) {
-      breadcrumb += ' / ' + ancestors.map((p) =>
-        `<a class="crumb" href="/?doc=${esc(p.id)}"
-        hx-get="/ui/doc/${esc(p.id)}" hx-target="#doc-view" hx-push-url="/?doc=${esc(p.id)}">${esc(p.title)}</a>`
-      ).join(' / ')
-    }
+  const ancestors = (ancestorRows as any)?.results ?? []
+  if (ancestors.length > 0) {
+    breadcrumb += ' / ' + ancestors.map((p: any) =>
+      `<a class="crumb" href="/?doc=${esc(p.id)}"
+      hx-get="/ui/doc/${esc(p.id)}" hx-target="#doc-view" hx-push-url="/?doc=${esc(p.id)}">${esc(p.title)}</a>`
+    ).join(' / ')
   }
 
   const html = `
@@ -426,7 +434,7 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
     <button class="btn-primary" type="submit">追記</button>
   </form>
 </div>`
-  return { html }
+  return html
 }
 
 // 最近のドキュメント10件のHTML（renderWelcome と /ui/init で共有）
@@ -471,49 +479,85 @@ uiRoute.get('/init', async (c) => {
   const uid = ownerUserIdOf(auth)
   const docId = c.req.query('doc')
 
-  // 1. collections 取得（tree と welcome/doc で共有）
-  const colsResult = await c.env.DB.prepare(
+  // Phase 1: collections と doc（指定時）を並列取得
+  const colsPromise = c.env.DB.prepare(
     'SELECT id, name, parent_id FROM collections WHERE owner_user_id = ? ORDER BY name'
   ).bind(uid).all()
-  const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
 
-  // 2. ドキュメント一覧取得（tree用 + welcome用を1クエリで兼用）
-  //    tree用は全件、welcome用は最近10件。クエリ1回で全件取得し使い回す
-  let docsResult
-  if (collections.length > 0) {
-    const colIds = collections.map((c) => c.id)
-    const placeholders = colIds.map(() => '?').join(', ')
-    docsResult = await c.env.DB.prepare(
-      `SELECT id, title, collection_id, parent_id, priority, updated_at FROM documents
-       WHERE status = 'published' AND collection_id IN (${placeholders})
-       ORDER BY updated_at DESC`
-    ).bind(...colIds).all()
-  } else {
-    docsResult = { results: [] }
+  const docPromise = docId
+    ? c.env.DB.prepare(`
+        SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+        WHERE d.id = ? AND c.owner_user_id = ?
+      `).bind(docId, uid).first()
+    : Promise.resolve(null)
+
+  const [colsResult, docRow] = await Promise.all([colsPromise, docPromise])
+  const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
+  const doc = docRow as any
+
+  // Phase 2: documents一覧 と doc関連4クエリ を並列取得
+  const colIds = collections.map((c) => c.id)
+  const docsPromise = colIds.length > 0
+    ? c.env.DB.prepare(
+        `SELECT id, title, collection_id, parent_id, priority, updated_at FROM documents
+         WHERE status = 'published' AND collection_id IN (${colIds.map(() => '?').join(', ')})
+         ORDER BY updated_at DESC`
+      ).bind(...colIds).all()
+    : Promise.resolve({ results: [] })
+
+  // doc関連クエリ（docが存在する場合のみ）
+  let docExtraPromise: Promise<any> = Promise.resolve(null)
+  if (doc && isCollectionAllowed(auth, doc.collection_id)) {
+    docExtraPromise = Promise.all([
+      // collection名は既にcollectionsにあるので再利用（クエリ不要）
+      Promise.resolve({ name: collections.find((c) => c.id === doc.collection_id)?.name ?? '' }),
+      c.env.DB.prepare('SELECT author_type, api_key_name FROM document_revisions WHERE document_id = ? ORDER BY created_at DESC LIMIT 1').bind(doc.id).first(),
+      c.env.DB.prepare(`
+        SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.to_doc_id
+        WHERE l.from_doc_id = ? ORDER BY d.title
+      `).bind(doc.id).all(),
+      c.env.DB.prepare(`
+        SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.from_doc_id
+        WHERE l.to_doc_id = ? ORDER BY d.title
+      `).bind(doc.id).all(),
+      // ancestor query（parent_idがある場合のみ）
+      doc.parent_id
+        ? c.env.DB.prepare(`
+            WITH RECURSIVE anc(id, title, parent_id, depth) AS (
+              SELECT id, title, parent_id, 0 FROM documents WHERE id = ?
+              UNION ALL
+              SELECT d.id, d.title, d.parent_id, a.depth + 1
+              FROM documents d JOIN anc a ON d.id = a.parent_id
+              WHERE a.depth < 20
+            )
+            SELECT id, title, depth FROM anc WHERE id != ? ORDER BY depth DESC
+          `).bind(doc.id, doc.id).all()
+        : Promise.resolve({ results: [] }),
+    ])
   }
 
+  const [docsResult, docExtra] = await Promise.all([docsPromise, docExtraPromise])
   const allDocs = docsResult.results as any[]
 
-  // 3. tree HTML 構築
+  // tree HTML 構築（CPUのみ、クエリ待ちなし）
   const docsByParent = new Map<string, Map<string | null, any[]>>()
-  for (const doc of allDocs) {
-    if (!docsByParent.has(doc.collection_id)) docsByParent.set(doc.collection_id, new Map())
-    const parentMap = docsByParent.get(doc.collection_id)!
-    const pid = doc.parent_id || null
+  for (const d of allDocs) {
+    if (!docsByParent.has(d.collection_id)) docsByParent.set(d.collection_id, new Map())
+    const parentMap = docsByParent.get(d.collection_id)!
+    const pid = d.parent_id || null
     if (!parentMap.has(pid)) parentMap.set(pid, [])
-    parentMap.get(pid)!.push(doc)
+    parentMap.get(pid)!.push(d)
   }
   const treeHtml = renderTreeHtml(collections, docsByParent)
 
-  // 4. main ペイン HTML 構築
+  // main ペイン HTML 構築
   let mainHtml: string
-  if (docId) {
-    const result = await renderDoc(c, docId)
-    mainHtml = 'error' in result ? errorFragment(result.error) : result.html
+  if (docId && doc && docExtra) {
+    mainHtml = renderDocFromData(c, doc, docExtra)
+  } else if (docId) {
+    mainHtml = errorFragment('ドキュメントが見つかりません')
   } else {
-    // welcome は最近10件（allDocs は updated_at DESC でソート済み）
-    const recentDocs = allDocs.slice(0, 10)
-    mainHtml = welcomeHtml(recentDocs)
+    mainHtml = welcomeHtml(allDocs.slice(0, 10))
   }
 
   return c.json({ tree: treeHtml, main: mainHtml })
