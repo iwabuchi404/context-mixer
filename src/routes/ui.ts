@@ -56,17 +56,24 @@ const renderTree = async (c: any): Promise<string> => {
   const auth: AuthContext = c.get('auth')
   const uid = ownerUserIdOf(auth)
 
-  const [colsResult, docsResult] = await Promise.all([
-    c.env.DB.prepare('SELECT id, name, parent_id FROM collections WHERE owner_user_id = ? ORDER BY name').bind(uid).all(),
-    c.env.DB.prepare(`
-      SELECT d.id, d.title, d.collection_id, d.parent_id, d.priority
-      FROM documents d JOIN collections c ON d.collection_id = c.id
-      WHERE d.status = 'published' AND c.owner_user_id = ?
-      ORDER BY d.updated_at DESC
-    `).bind(uid).all(),
-  ])
+  // 2クエリ並列取得。documents は collections の IN 句で絞り込み（JOIN不要）
+  const colsResult = await c.env.DB.prepare(
+    'SELECT id, name, parent_id FROM collections WHERE owner_user_id = ? ORDER BY name'
+  ).bind(uid).all()
 
   const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
+  if (collections.length === 0) {
+    // コレクション0件ならドキュメントクエリも不要
+    return renderTreeHtml([], new Map())
+  }
+
+  const colIds = collections.map((c) => c.id)
+  const placeholders = colIds.map(() => '?').join(', ')
+  const docsResult = await c.env.DB.prepare(
+    `SELECT id, title, collection_id, parent_id, priority FROM documents
+     WHERE status = 'published' AND collection_id IN (${placeholders})
+     ORDER BY updated_at DESC`
+  ).bind(...colIds).all()
   const docsByParent = new Map<string, Map<string | null, any[]>>()
   for (const doc of docsResult.results as any[]) {
     if (!docsByParent.has(doc.collection_id)) docsByParent.set(doc.collection_id, new Map())
@@ -76,6 +83,14 @@ const renderTree = async (c: any): Promise<string> => {
     parentMap.get(pid)!.push(doc)
   }
 
+  return renderTreeHtml(collections, docsByParent)
+}
+
+// ツリーHTML構築（renderTree と /ui/init で共有）
+const renderTreeHtml = (
+  collections: any[],
+  docsByParent: Map<string, Map<string | null, any[]>>
+): string => {
   // Render documents recursively with hierarchy support (depth cap guards against parent_id cycles).
   // Documents with children get a toggle (▾) and wrap their descendants in a
   // .tree-doc-children container so the client can collapse them.
@@ -414,17 +429,8 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
   return { html }
 }
 
-const renderWelcome = async (c: any): Promise<string> => {
-  const auth: AuthContext = c.get('auth')
-  const uid = ownerUserIdOf(auth)
-  const result = await c.env.DB.prepare(`
-    SELECT d.id, d.title, d.collection_id, d.updated_at FROM documents d
-    JOIN collections c ON d.collection_id = c.id
-    WHERE d.status = 'published' AND c.owner_user_id = ?
-    ORDER BY d.updated_at DESC LIMIT 10
-  `).bind(uid).all()
-  const docs = (result.results as any[]).filter((d) => isCollectionAllowed(auth, d.collection_id))
-
+// 最近のドキュメント10件のHTML（renderWelcome と /ui/init で共有）
+const welcomeHtml = (docs: any[]): string => {
   let html = '<div id="doc-view-inner"><div class="doc-head"><h1 class="doc-title">最近のドキュメント</h1></div>\n'
   if (docs.length === 0) {
     html += '<p class="muted">まだ何もありません。左のツリーからコレクションとメモを作成してください。</p>'
@@ -435,6 +441,19 @@ const renderWelcome = async (c: any): Promise<string> => {
   return html
 }
 
+const renderWelcome = async (c: any): Promise<string> => {
+  const auth: AuthContext = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const result = await c.env.DB.prepare(`
+    SELECT d.id, d.title, d.collection_id, d.updated_at FROM documents d
+    JOIN collections c ON d.collection_id = c.id
+    WHERE d.status = 'published' AND c.owner_user_id = ?
+    ORDER BY d.updated_at DESC LIMIT 10
+  `).bind(uid).all()
+  const docs = (result.results as any[]).filter((d) => isCollectionAllowed(auth, d.collection_id))
+  return welcomeHtml(docs)
+}
+
 const errorFragment = (message: string) => `<p class="error">${esc(message)}</p>`
 
 // ---------------------------------------------------------------
@@ -443,6 +462,62 @@ const errorFragment = (message: string) => `<p class="error">${esc(message)}</p>
 
 // GET /ui/tree - Sidebar tree
 uiRoute.get('/tree', async (c) => c.html(await renderTree(c)))
+
+// GET /ui/init - 初回ロード用統合エンドポイント（tree + doc/welcome を1往復で返す）
+// クエリパラメータ: doc=doc_xxx（指定時はそのドキュメント、未指定時はwelcome）
+// レスポンス形式: { tree: "<html>", main: "<html>" }
+uiRoute.get('/init', async (c) => {
+  const auth: AuthContext = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const docId = c.req.query('doc')
+
+  // 1. collections 取得（tree と welcome/doc で共有）
+  const colsResult = await c.env.DB.prepare(
+    'SELECT id, name, parent_id FROM collections WHERE owner_user_id = ? ORDER BY name'
+  ).bind(uid).all()
+  const collections = (colsResult.results as any[]).filter((col) => isCollectionAllowed(auth, col.id))
+
+  // 2. ドキュメント一覧取得（tree用 + welcome用を1クエリで兼用）
+  //    tree用は全件、welcome用は最近10件。クエリ1回で全件取得し使い回す
+  let docsResult
+  if (collections.length > 0) {
+    const colIds = collections.map((c) => c.id)
+    const placeholders = colIds.map(() => '?').join(', ')
+    docsResult = await c.env.DB.prepare(
+      `SELECT id, title, collection_id, parent_id, priority, updated_at FROM documents
+       WHERE status = 'published' AND collection_id IN (${placeholders})
+       ORDER BY updated_at DESC`
+    ).bind(...colIds).all()
+  } else {
+    docsResult = { results: [] }
+  }
+
+  const allDocs = docsResult.results as any[]
+
+  // 3. tree HTML 構築
+  const docsByParent = new Map<string, Map<string | null, any[]>>()
+  for (const doc of allDocs) {
+    if (!docsByParent.has(doc.collection_id)) docsByParent.set(doc.collection_id, new Map())
+    const parentMap = docsByParent.get(doc.collection_id)!
+    const pid = doc.parent_id || null
+    if (!parentMap.has(pid)) parentMap.set(pid, [])
+    parentMap.get(pid)!.push(doc)
+  }
+  const treeHtml = renderTreeHtml(collections, docsByParent)
+
+  // 4. main ペイン HTML 構築
+  let mainHtml: string
+  if (docId) {
+    const result = await renderDoc(c, docId)
+    mainHtml = 'error' in result ? errorFragment(result.error) : result.html
+  } else {
+    // welcome は最近10件（allDocs は updated_at DESC でソート済み）
+    const recentDocs = allDocs.slice(0, 10)
+    mainHtml = welcomeHtml(recentDocs)
+  }
+
+  return c.json({ tree: treeHtml, main: mainHtml })
+})
 
 // GET /ui/search?q= - Incremental search results (empty query → tree)
 uiRoute.get('/search', async (c) => {

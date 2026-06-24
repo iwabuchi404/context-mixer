@@ -43,20 +43,43 @@ async function init() {
 }
 
 function loadInitial() {
-  htmx.ajax('GET', '/ui/tree', { target: '#tree-area' })
-
   const params = new URLSearchParams(location.search)
+
+  // /ui/init で tree + main を1往復で取得（初回ロード高速化）
   if (params.get('view') === 'collections') {
+    htmx.ajax('GET', '/ui/tree', { target: '#tree-area' })
     htmx.ajax('GET', '/ui/collections', { target: '#doc-view' })
     return
   }
-  const colId = params.get('col')
-  if (colId) {
-    htmx.ajax('GET', `/ui/collections/${colId}`, { target: '#doc-view' })
+  if (params.get('col')) {
+    htmx.ajax('GET', '/ui/tree', { target: '#tree-area' })
+    htmx.ajax('GET', `/ui/collections/${params.get('col')}`, { target: '#doc-view' })
     return
   }
+
+  // 通常時: /ui/init で統合取得
   const docId = params.get('doc') || localStorage.getItem('lastDoc')
-  htmx.ajax('GET', docId ? `/ui/doc/${docId}` : '/ui/welcome', { target: '#doc-view' })
+  const initUrl = '/ui/init' + (docId ? `?doc=${encodeURIComponent(docId)}` : '')
+  fetch(initUrl, { headers: { Authorization: `Bearer ${cachedToken}` } })
+    .then((r) => r.json())
+    .then((data) => {
+      const treeArea = document.getElementById('tree-area')
+      const docView = document.getElementById('doc-view')
+      treeArea.innerHTML = data.tree
+      docView.innerHTML = data.main
+      // htmx に挿入したHTMLを認識させる
+      htmx.process(treeArea)
+      htmx.process(docView)
+      // afterSwap 相当の処理を直接呼ぶ
+      onSwap(treeArea)
+      onSwap(docView)
+    })
+    .catch((e) => {
+      console.error('init fetch failed:', e)
+      // フォールバック: 従来通り個別取得
+      htmx.ajax('GET', '/ui/tree', { target: '#tree-area' })
+      htmx.ajax('GET', '/ui/welcome', { target: '#doc-view' })
+    })
 }
 
 // A stale lastDoc (deleted doc) leaves an error fragment — fall back to welcome once.
@@ -133,6 +156,27 @@ function setupHeader() {
   })
 }
 
+// afterSwap 処理を関数化（htmxイベント と /ui/init の両方から呼ぶ）
+function onSwap(target) {
+  if (target.id === 'doc-view') {
+    maybeFallbackToWelcome()
+    const inner = document.getElementById('doc-view-inner')
+    const docId = inner?.dataset.docId
+    const title = inner?.dataset.docTitle
+    if (docId) localStorage.setItem('lastDoc', docId)
+    document.title = title ? `${title} - Context Mixer` : 'Context Mixer'
+    markCurrent(docId)
+    document.getElementById('sidebar')?.classList.remove('open')
+    target.scrollTop = 0
+    document.querySelector('.main-content')?.scrollTo(0, 0)
+    addCopyButtons()
+  }
+  if (target.id === 'tree-area') {
+    applyCollapsedState()
+    markCurrent(document.getElementById('doc-view-inner')?.dataset.docId)
+  }
+}
+
 // --- mobile drawer ---
 function setupDrawer() {
   document.body.addEventListener('click', (e) => {
@@ -159,23 +203,7 @@ function setupDocView() {
   })
 
   document.body.addEventListener('htmx:afterSwap', (e) => {
-    if (e.detail.target.id === 'doc-view') {
-      maybeFallbackToWelcome()
-      const inner = document.getElementById('doc-view-inner')
-      const docId = inner?.dataset.docId
-      const title = inner?.dataset.docTitle
-      if (docId) localStorage.setItem('lastDoc', docId)
-      document.title = title ? `${title} - Context Mixer` : 'Context Mixer'
-      markCurrent(docId)
-      document.getElementById('sidebar')?.classList.remove('open')
-      e.detail.target.scrollTop = 0
-      document.querySelector('.main-content')?.scrollTo(0, 0)
-      addCopyButtons()
-    }
-    if (e.detail.target.id === 'tree-area') {
-      applyCollapsedState()
-      markCurrent(document.getElementById('doc-view-inner')?.dataset.docId)
-    }
+    onSwap(e.detail.target)
   })
 
   // Collapse toggle for collections (▾ next to the name) AND documents that
