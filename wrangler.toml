@@ -1,0 +1,29 @@
+name = "context-mixer"
+main = "src/index.ts"
+compatibility_date = "2026-06-22"
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "context-mixer-db"
+database_id = "YOUR_D1_DATABASE_ID"
+
+[[r2_buckets]]
+binding = "R2"
+bucket_name = "context-mixer-files"
+
+# MCP OAuth (workers-oauth-provider) grant/token store. Local dev (miniflare)
+# emulates KV regardless of id; production needs a real namespace id:
+#   npx wrangler kv namespace create OAUTH_KV  → paste the returned id here.
+[[kv_namespaces]]
+binding = "OAUTH_KV"
+id = "YOUR_OAUTH_KV_ID"
+
+# NOTE: Clerk config is intentionally NOT in [vars]. Plain-text [vars] are pushed
+# on every `wrangler deploy` and overwrite the dashboard Secrets.
+#   local      -> .dev.vars
+#   production -> dashboard Secrets (survive deploys): CLERK_PUBLISHABLE_KEY,
+#                 CLERK_FRONTEND_API, CLERK_SIGN_IN_URL, CLERK_SECRET_KEY
