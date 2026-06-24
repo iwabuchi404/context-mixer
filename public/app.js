@@ -175,23 +175,6 @@ function onSwap(target) {
     applyCollapsedState()
     markCurrent(document.getElementById('doc-view-inner')?.dataset.docId)
   }
-  // 遅延取得したコレクションツリーが .tree-children に挿入された時の処理
-  if (target.classList.contains('tree-children')) {
-    const group = target.closest('.tree-group')
-    if (group) {
-      // 展開（collapsed を外す）
-      group.classList.remove('collapsed')
-      // hx-get を外して次回以降はクライアント側で開閉
-      const toggle = group.querySelector('.tree-toggle')
-      if (toggle) toggle.removeAttribute('hx-get')
-      // localStorage に展開状態を保存
-      const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
-      collapsed.delete(group.dataset.colId)
-      localStorage.setItem('collapsedCols', JSON.stringify([...collapsed]))
-      // htmx に挿入したHTMLを認識させる
-      htmx.process(target)
-    }
-  }
 }
 
 // --- mobile drawer ---
@@ -246,10 +229,26 @@ function setupDocView() {
     const group = toggle.closest('.tree-group')
     if (!group) return
 
-    // 遅延取得未実施のコレクション: HTMXに取得させる（collapsedの切り替えは afterSwap で行う）
-    if (toggle.hasAttribute('hx-get') && group.classList.contains('collapsed')) {
-      // HTMXが取得完了後に afterSwap で展開するので、ここでは何もしない
-      return
+    // 遅延取得未実施のコレクション: htmx.ajax() で直接取得
+    const lazyUrl = toggle.dataset.lazy
+    if (lazyUrl && group.classList.contains('collapsed')) {
+      const children = group.querySelector(':scope > .tree-children')
+      if (children && !children.dataset.loaded) {
+        htmx.ajax('GET', lazyUrl, {
+          target: children,
+          swap: 'innerHTML',
+        }).then(() => {
+          // 取得完了: 展開 + フラグ削除
+          children.dataset.loaded = '1'
+          toggle.removeAttribute('data-lazy')
+          group.classList.remove('collapsed')
+          const collapsed = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
+          collapsed.delete(group.dataset.colId)
+          localStorage.setItem('collapsedCols', JSON.stringify([...collapsed]))
+          htmx.process(children)
+        })
+        return
+      }
     }
 
     group.classList.toggle('collapsed')
@@ -273,9 +272,9 @@ function applyCollapsedState() {
   const collapsedCols = new Set(JSON.parse(localStorage.getItem('collapsedCols') || '[]'))
   const collapsedDocs = new Set(JSON.parse(localStorage.getItem('collapsedDocs') || '[]'))
   document.querySelectorAll('.tree-group').forEach((group) => {
-    // hx-get 付き（未取得）のコレクションは localStorage に関わらず collapsed を維持
+    // data-lazy 付き（未取得）のコレクションは localStorage に関わらず collapsed を維持
     const toggle = group.querySelector('.tree-toggle')
-    const isLazy = toggle?.hasAttribute('hx-get')
+    const isLazy = toggle?.dataset.lazy
     if (isLazy) {
       // 遅延取得コレクション: localStorage に保存済みなら collapsed、未保存ならデフォルト collapsed
       if (collapsedCols.has(group.dataset.colId) || localStorage.getItem('collapsedCols') === null) {

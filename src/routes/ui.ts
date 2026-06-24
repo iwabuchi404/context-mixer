@@ -156,7 +156,7 @@ const renderTreeHtml = (
       // activeColId のコレクションは展開済み、他は折りたたみ + hx-get で遅延取得
       const toggleAttr = isActive
         ? '' // 展開済み: クライアント側の通常トグル動作
-        : ` hx-get="/ui/collections/${esc(col.id)}/tree" hx-target="next .tree-children" hx-swap="innerHTML"`
+        : ` data-lazy="/ui/collections/${esc(col.id)}/tree"`
       html += `<section class="tree-group${isActive ? '' : ' collapsed'}" data-col-id="${esc(col.id)}" style="--depth:${depth}">
         <div class="tree-head">
           <button class="tree-toggle" type="button" aria-label="折りたたみ"${toggleAttr}><span class="tree-toggle-icon">▾</span></button>
