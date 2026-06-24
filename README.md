@@ -1,29 +1,59 @@
 # Context Mixer
 
-AIと人間が共同管理する、AIファーストのナレッジベース。Notion代替。
+AIと人間が共同管理する、AIファーストのナレッジベース。
 
-AIが自分で必要な情報を探しに行き、読み、書き込める場所。プロンプトにコンテキストを手動で貼る作業がなくなる。
+AIが自分で必要な情報を探しに行き、読み、書き込める場所。プロンプトにコンテキストを手動で貼る作業がなくなります。
+
+## なぜ作ったのか
+
+個人開発のプロジェクトが20を超えたあたりで、Notionに溜めたドキュメントをAIツールから使うのがしんどくなりました。
+
+少しの追記にもレイテンシがかかり、何度も読み書きしているとトークン消費も馬鹿になりません。ほかのサービスやアプリも検討しましたが、チャットアプリからもCLIのエージェントツールからもアクセスしやすく、AI向きに作られたものが見つかりませんでした。
+
+Notionは人間が読むための道具としてはよくできています。ただ、リッチなブロック構造はAIにとっては邪魔で、ページ単位でしか情報を取れないから必要な1段落のためにページ全体のトークンを消費してしまいます。
+
+ContextMixerは**AIが探索しやすいこと**を優先して設計したナレッジベースです。
 
 ## 何ができるか
 
-- **ドキュメントの粒度取得** — AIは「タイトルと概要だけ」「見出し構造だけ」「特定セクションだけ」「全文」を選んで取得できる。トークン消費を最小限に抑えられる
-- **MCP対応** — Claude.ai・Claude Code・ChatGPT等のMCPクライアントからOAuth認証で直接ドキュメントを検索・取得・書き込みできる。9つのツールを提供
-- **REST API** — APIキー認証でAI・外部サービスからアクセス可能。スコープ（read/write）とコレクション単位のアクセス制限を設定できる
-- **Web UI** — 人間がブラウザから読み書きするためのUI。HTMXで軽量・サーバーサイドレンダリング
+### AIが自分でドキュメントを探して読み書きする
+
+Claude DesktopやClaude CodeからMCP経由で直接アクセス。「このプロジェクトの設計方針を確認して」と言えば、AIが勝手に検索して必要なドキュメントを持ってきてくれます。プロンプトにコンテキストを貼る作業が不要になります。
+
+### トークン消費を抑える粒度取得
+
+ドキュメントを「どこまで読むか」を選べます。
+
+```
+GET /docs/:id?view=meta      → タイトル + 概要のみ（数十トークン）
+GET /docs/:id?view=outline   → 見出し構造
+GET /docs/:id?view=section   → 特定セクションだけ
+GET /docs/:id?view=full      → 全文
+```
+
+AIはまずmetaを見て関係あるか判断し、必要ならsectionで必要な部分だけ取る。全文を毎回食わせないのでトークン消費が劇的に減ります。
+
+### 人間もWeb UIで読み書きできる
+
+ブラウザからコレクションツリーを閲覧、Markdownでドキュメントを編集、全文検索。HTMXで軽量に作られていて、サーバーサイドレンダリングのみで動きます。
+
+### 3つの認証方式
+
+| 相手 | 認証方式 | 用途 |
+|------|----------|------|
+| 人間（ブラウザ） | Clerk セッション認証 | Web UIへのログイン |
+| AI（REST API） | APIキー（スコープ・コレクション制限あり） | 外部サービスからのアクセス |
+| AI（MCP） | OAuth 2.1 | Claude.ai・ChatGPT等からの接続 |
+
+APIキーは「このキーはこのプロジェクトのreadだけ」みたいな運用ができます。信頼度の低い外部サービスに渡すキーの権限を絞れるので安心です。
+
+### そのほかの機能
+
 - **全文検索** — D1のFTS5（trigram）による高速検索。ハイフン入り語にも対応
 - **ドキュメントリンク** — `[[doc_xxx]]` 記法でドキュメント間リンク。backlinksも自動生成
 - **リビジョン履歴** — 全書き込みに署名付きリビジョンを記録。誰が（人間/AI/OAuth）何を変更したか追跡可能
 - **ファイル添付** — R2に画像等をアップロード、ドキュメントに埋め込み
 - **Inbox** — 外部からの投稿を承認フロー経由で取り込み
-
-## 設計思想
-
-Notionは人間が使いやすいことを優先している。ContextMixerは**AIが探索しやすいこと**を優先している。
-
-- ドキュメント取得の粒度を分ける（`meta` / `outline` / `full` / `section`）ことで、AIは必要な分だけ読める
-- MCP経由でAIが直接アクセス。プロンプトへの手動コピペが不要
-- 書き込みには必ず署名付きリビジョンを作成。AIの書き込みも人間の書き込みも同等に記録
-- Cloudflare Workers + D1 + R2でランニングコストほぼゼロ（個人利用の範囲で無料枠内）
 
 ## スタック
 
@@ -36,28 +66,11 @@ Notionは人間が使いやすいことを優先している。ContextMixerは**
 | 認証 | Clerk + APIキー + OAuth 2.1 | 人間・AI・MCPクライアントの3系統 |
 | MCP | workers-oauth-provider | Cloudflare公式・Streamable HTTP |
 
-## 対応クライアント
-
-### MCP接続（OAuth 2.1）
-
-| クライアント | 接続方法 |
-|--------------|----------|
-| Claude.ai | 設定 → Connectors → Custom Connector → URL入力 |
-| Claude Code | `claude mcp add` でリモートMCPサーバーとして登録 |
-| ChatGPT | Settings → Connectors → Add connector（ベータ） |
-| MCP Inspector | `npx @modelcontextprotocol/inspector` でデバッグ |
-
-MCPサーバーURL: `https://context-mixer.flog404.work/mcp`
-
-### REST API（APIキー認証）
-
-APIキーはWeb UIの「API Keys」ページから発行。スコープ（read/write）とアクセス可能なコレクションを指定可能。
-
-```
-Authorization: Bearer kb_xxxxxxxx
-```
+Cloudflareに全部寄せているのはコストが理由です。ナレッジベースは一度作ったら何年も使うものなので、ランニングコストがほぼゼロ（個人利用の範囲で無料枠内）なのは地味に大きいです。
 
 ## MCPツール一覧
+
+AIがMCP経由で使えるツールは9個。
 
 | ツール | 説明 | スコープ |
 |--------|------|----------|
@@ -71,54 +84,63 @@ Authorization: Bearer kb_xxxxxxxx
 | `delete_doc` | ドキュメント削除 | write |
 | `create_collection` | コレクション作成 | write |
 
-詳細な使い方は [docs/USAGE.md](./docs/USAGE.md) を参照。
+## 対応クライアント
 
-## セットアップ
+| クライアント | 接続方法 |
+|--------------|----------|
+| Claude.ai | 設定 → Connectors → Custom Connector → URL入力 |
+| Claude Code | `claude mcp add` でリモートMCPサーバーとして登録 |
+| ChatGPT | Settings → Connectors → Add connector（ベータ） |
+| MCP Inspector | `npx @modelcontextprotocol/inspector` でデバッグ |
+
+## セルフホスト手順
 
 ### 前提
 
 - Node.js 18+
-- Wrangler CLI
-- Clerkアカウント（認証用）
+- Wrangler CLI（`npm install -g wrangler`）
+- Cloudflareアカウント（無料枠でOK）
+- Clerkアカウント（認証用・無料枠でOK）
 
-### インストール
+### 1. リポジトリをクローン
 
 ```bash
+git clone https://github.com/iwabuchi404/context-mixer.git
+cd context-mixer
 npm install
 ```
 
-### Cloudflare リソース作成
+### 2. Cloudflareリソースを作成
 
-1. ログイン:
 ```bash
+# Cloudflareにログイン
 npx wrangler login
-```
 
-2. D1データベース作成:
-```bash
+# D1データベース作成
 npm run d1:create
-```
-`wrangler.toml` の `database_id` を更新。
+# → 出力された database_id を wrangler.toml に反映
 
-3. R2バケット作成:
-```bash
+# R2バケット作成
 npm run r2:create
-```
 
-4. KV名前空間作成（MCP OAuth用）:
-```bash
+# KV名前空間作成（MCP OAuth用）
 npx wrangler kv namespace create OAUTH_KV
-```
-`wrangler.toml` の `OAUTH_KV` の `id` を更新。
-
-5. ローカルマイグレーション:
-```bash
-npm run d1:migrate-local
+# → 出力された id を wrangler.toml に反映
 ```
 
-6. シークレット設定:
+### 3. Clerkアプリを作成
 
-ローカル開発用 `.dev.vars`:
+1. [Clerk](https://clerk.com) でアプリを作成
+2. 以下の値を取得:
+   - `CLERK_SECRET_KEY`
+   - `CLERK_PUBLISHABLE_KEY`
+   - `CLERK_FRONTEND_API`（例: `https://your-app.clerk.accounts.dev`）
+   - `CLERK_SIGN_IN_URL`（例: `https://your-app.clerk.accounts.dev/sign-in`）
+
+### 4. シークレットを設定
+
+ローカル開発用（`.dev.vars`）:
+
 ```ini
 CLERK_SECRET_KEY=sk_test_xxxx
 CLERK_PUBLISHABLE_KEY=pk_test_xxxx
@@ -127,6 +149,7 @@ CLERK_SIGN_IN_URL=https://your-clerk-app.clerk.accounts.dev/sign-in
 ```
 
 本番用:
+
 ```bash
 npx wrangler secret put CLERK_SECRET_KEY
 npx wrangler secret put CLERK_PUBLISHABLE_KEY
@@ -136,17 +159,41 @@ npx wrangler secret put CLERK_SIGN_IN_URL
 
 > **注意**: Clerkの値は `wrangler.toml` の `[vars]` に書かないこと。デプロイのたびに本番ダッシュボードのSecretを上書きしてしまいます。
 
-### 開発
+### 5. マイグレーション
+
+```bash
+# ローカル
+npm run d1:migrate-local
+
+# 本番
+npm run d1:migrate
+```
+
+### 6. デプロイ
+
+```bash
+npm run deploy
+```
+
+これで `https://context-mixer.<your-subdomain>.workers.dev` で立ち上がります。
+
+### 7. MCPクライアントから接続
+
+デプロイ先の `/mcp` エンドポイントをMCPサーバーURLとして各クライアントに登録します。
+
+例: Claude Codeの場合
+
+```bash
+claude mcp add context-mixer --transport http https://context-mixer.<your-subdomain>.workers.dev/mcp
+```
+
+## ローカル開発
 
 ```bash
 npm run dev
 ```
 
-### デプロイ
-
-```bash
-npm run deploy
-```
+`http://localhost:8787` で開発サーバーが立ち上がります。
 
 ## API エンドポイント
 
