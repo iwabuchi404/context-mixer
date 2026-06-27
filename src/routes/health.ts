@@ -9,6 +9,7 @@ healthRoute.get('/config', (c) => {
     publishable_key: c.env.CLERK_PUBLISHABLE_KEY,
     frontend_api: c.env.CLERK_FRONTEND_API,
     sign_in_url: c.env.CLERK_SIGN_IN_URL,
+    environment: c.env.ENVIRONMENT ?? 'unknown',
   })
 })
 

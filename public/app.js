@@ -234,6 +234,12 @@ function setupDocView() {
     if (lazyUrl && group.classList.contains('collapsed')) {
       const children = group.querySelector(':scope > .tree-children')
       if (children && !children.dataset.loaded) {
+        if (toggle.classList.contains('htmx-request')) return
+        const icon = toggle.querySelector('.tree-toggle-icon')
+        const originalIcon = icon ? icon.textContent : '▾'
+        if (icon) icon.innerHTML = '<span class="spinner"></span>'
+        toggle.classList.add('htmx-request')
+
         htmx.ajax('GET', lazyUrl, {
           target: children,
           swap: 'innerHTML',
@@ -246,6 +252,11 @@ function setupDocView() {
           collapsed.delete(group.dataset.colId)
           localStorage.setItem('collapsedCols', JSON.stringify([...collapsed]))
           htmx.process(children)
+        }).catch(() => {
+          showSysline('コレクションの読み込みに失敗しました', true)
+        }).finally(() => {
+          if (icon) icon.textContent = originalIcon
+          toggle.classList.remove('htmx-request')
         })
         return
       }

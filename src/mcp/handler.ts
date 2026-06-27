@@ -10,6 +10,7 @@
 import { WorkerEntrypoint } from 'cloudflare:workers'
 import { toolDefinitions } from './server'
 import * as tools from './tools'
+import { isProduction } from '../auth/adapter'
 import type { Env, AiAuth, McpProps } from '../auth/adapter'
 
 const TOOL_SCOPE: Record<string, 'read' | 'write'> = {
@@ -36,9 +37,8 @@ export class McpApiHandler extends WorkerEntrypoint<Env> {
 
     // TEMP DEBUG: log every request to diagnose ChatGPT (remove after fix).
     // Shows whether tools/call arrives at all and what props the grant carries.
-    // Suppressed in production (when CLERK_FRONTEND_API is set) to avoid noise.
-    const isProd = !!(this.env as any)?.CLERK_FRONTEND_API
-    if (!isProd) {
+    // Suppressed in production to avoid noise.
+    if (!isProduction(this.env as Env)) {
       let rpcMethod = ''
       if (request.method === 'POST') {
         try {

@@ -43,7 +43,7 @@
 
       <h2 class="sidebar-title">Existing Keys</h2>
       <div id="keys-list" hx-get="/api-keys" hx-trigger="auth-ready from:body">
-        <p class="muted">Loading...</p>
+        <div class="doc-loading"><span class="spinner" aria-label="読み込み中"></span></div>
       </div>
     </div>
   </main>

@@ -106,7 +106,7 @@ AIがトークンを節約するため、取得粒度を選べる:
 
 ```
 GET /docs/doc_123?view=meta
-GET /docs/doc_123?view=outline
+GET /docs/doc_123?view=outline   
 GET /docs/doc_123?view=full
 GET /docs/doc_123?view=section&section=intro
 ```

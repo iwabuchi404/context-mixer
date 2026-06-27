@@ -1,6 +1,6 @@
 # 進捗 / 引き継ぎ (STATUS)
 
-> 次セッション向けの「現在地」。最終更新: 2026-06-13。CLAUDE.md と併せて読むこと。
+> 次セッション向けの「現在地」。最終更新: 2026-06-27。CLAUDE.md と併せて読むこと。
 
 ## 完成して本番稼働中のもの
 
@@ -20,8 +20,9 @@
   - 認証: Cloudflare `workers-oauth-provider` + Clerk OAuth 2.1
   - スコープ: read/write権限分離、コレクションアクセス制限対応
   - Claude.ai / Claude Code / MCP Inspector から接続確認済み（2026-06-14）
+  - **本番稼働確認済み（2026-06-27）**: `https://context-mixer.flog404.work/mcp` 経由で Claude.ai カスタムコネクター接続動作
 
-## 進行中: MCP の OAuth 実装(claude.ai 対応) ← ここから再開
+## 完了: MCP の OAuth 実装（本番稼働）
 
 ### 背景
 claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)が必須。前回の自前OAuthは脆弱で全廃済み。今回は **Cloudflare公式 `@cloudflare/workers-oauth-provider`** を採用し、認証はClerkに委譲、consent画面で**権限(read/write・対象コレクション)を選択**できる設計。プランは [.claude/plans/goofy-coalescing-emerson.md](../../.claude/plans/goofy-coalescing-emerson.md) に承認済みで残っている。
@@ -35,7 +36,7 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 - [src/mcp/tools.ts](../src/mcp/tools.ts): 各ツールが `AiAuth` を受け、isCollectionAllowed・署名・リンク同期を適用(REST同等)。writeDocは親ドキュメント(parent_id)対応済み
 - [src/auth/adapter.ts](../src/auth/adapter.ts): Env に `OAUTH_KV: KVNamespace` と `OAUTH_PROVIDER: OAuthHelpers`(`@cloudflare/workers-oauth-provider` からimport)、型 `McpProps` 追加
 - [src/auth/middleware.ts](../src/auth/middleware.ts): 公開パスを `/oauth/` 配下に(旧 `/mcp` skipは除去 — /mcp・token・register・metadata は OAuthProvider が defaultHandler 前に処理しHonoに来ない)
-- [wrangler.toml](../wrangler.toml): `[[kv_namespaces]] OAUTH_KV` 追加(旧自前OAuthの `[vars] OAUTH_CLIENT_ID` は削除)。**id は `REPLACE_WITH_PRODUCTION_KV_ID` のまま(本番デプロイ前に要差し替え)**
+- [wrangler.toml](../wrangler.toml): `[[kv_namespaces]] OAUTH_KV` 追加(旧自前OAuthの `[vars] OAUTH_CLIENT_ID` は削除)。本番KV id を設定済み
 
 ### ローカル検証: 完了(2026-06-13、`npm run dev` ポート8788で実施)
 - ✅ `/.well-known/oauth-authorization-server` 200(issuer/endpoints/`scopes_supported:[read,write]` 正常)
@@ -45,13 +46,11 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 - ✅ DCR(`POST /oauth/register`)→ client_id発行 → `GET /oauth/authorize`(登録済みclient・セッション無し)で **302 → Clerkサインイン**(`redirect_url` に元のOAuthパラメータを保持)。未登録clientは `parseAuthRequest` が400(仕様通り)
 - dev起動ログにランタイムエラー無し
 
-### 残作業(次セッションのTODO)
-1. **ブラウザ/Inspectorでの対話フロー検証**(ローカルの自動curlでは不可 = Clerkログインが必要):
-   - `npx @modelcontextprotocol/inspector` で OAuthフロー全体(DCR→authorize→**Clerkログイン→consent画面で権限選択**→token→tools/call)
-   - consent画面が描画されるか、read-only選択時に write_doc が `-32003` で拒否されるか、コレクション限定が効くか
-2. **本番KV作成**: ダッシュボード(Storage→KV→Create)or `npx wrangler kv namespace create OAUTH_KV` → 出た id を wrangler.toml の `OAUTH_KV` に記入(現状プレースホルダ)
-3. **本番デプロイ** → claude.ai のコネクタにMCPサーバーURLを登録 → ブラウザOAuthフローで接続しツール実行を確認
-4. 確認できたら STATUS を更新(MCP完了へ)
+### 本番稼働確認: 完了（2026-06-27）
+- 本番KV作成済み、`wrangler.toml` に反映済み
+- 本番デプロイ済み
+- `https://context-mixer.flog404.work/mcp` を Claude.ai カスタムコネクターに登録し、OAuth フローで接続
+- ツール実行（search_docs / get_doc / write_doc 等）が正常に動作
 
 ### 注意・既知の判断
 - **MCP接続はOAuthに一本化**。段階1のAPIキーBearer方式のMCP接続(Claude Code向け)は廃止。Claude Code もOAuthフローで繋ぐ。REST APIのAPIキーは従来どおり有効
@@ -60,7 +59,7 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 
 ## UI改善: フェーズ1.5 完了（2026-06-15）
 
-フェーズ1.5として以下を実装完了。型チェック通過済み（本番デプロイ待ち）。
+フェーズ1.5として以下を実装完了。型チェック通過済み。**本番デプロイ済み（2026-06-27）**。
 
 ### 完了（フェーズ1.5）
 | 機能 | 内容 |
@@ -73,6 +72,7 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 | デフォルト閉じる | 初回ロード時、コレクションを閉じた状態（現在ドキュメントのコレクションは開く）|
 | アクティブ状態視覚化 | `.tree-item[aria-current="page"]` にアクセント色+太字 |
 | タッチ対応 | `@media (hover: none)` で追加ボタン・コピーボタンを常時表示 |
+| ローディングスピナー | ツリー遅延展開・検索・初期ロード・管理ページに HTMX 連携のスピナー追加 |
 
 ### 未実装（フェーズ2候補）
 | 機能 | 内容 |
@@ -84,7 +84,7 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 | ドキュメント移動 | コレクション/親の変更 |
 | 検索結果ハイライト | 一致箇所を `<mark>` |
 
-## 実装ロードマップ（2026-06-15時点）
+## 実装ロードマップ（2026-06-27時点）
 
 ### Phase A: 書き込み信頼性（次に着手・最優先）
 冪等性・競合制御・revision保持をまとめて実装（書き込み経路 `createRevision` / `saveDoc` / `writeDoc` を一気に改善）。
@@ -93,10 +93,10 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 - **revision保持**: ドキュメント毎に直近20件保持、超過分は削除
 
 ### Phase B: デプロイ
-フェーズ1.5 UI改善 + Phase A をまとめて本番反映。
+UI改善（スピナー含む）+ dev/prod 切り替え + MCP OAuth を本番反映。**完了（2026-06-27）**。
 
-### Phase C: MCP根本調査
-ChatGPT の `props.scopes` 空問題の根本原因（`workers-oauth-provider` の refresh 時 props 扱い）。現在フォールバック運用中。調査後に `handler.ts` の `[MCP-DEBUG]` ログ削除。
+### Phase C: MCP ChatGPT 調査（必要に応じて）
+Claude.ai 接続は本番確認済み。ChatGPT 接続時の `props.scopes` 空問題が発生する場合は、 workers-oauth-provider の refresh 時 props 扱いを調査。調査後に `handler.ts` の `[MCP-DEBUG]` ログ削除。
 
 ### Phase D: フェーズ2 UI改善（優先度順）
 1. ドキュメント優先度変更UI（API既存）

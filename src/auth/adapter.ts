@@ -35,7 +35,15 @@ export type Env = {
   // is the helper API the provider injects for parseAuthRequest/completeAuthorization.
   OAUTH_KV: KVNamespace
   OAUTH_PROVIDER: OAuthHelpers
+  // Environment marker: 'development' (local dev via .dev.vars) or 'production'
+  // (dashboard Secret). Used to distinguish dev/prod without relying on Clerk keys.
+  ENVIRONMENT?: string
 }
+
+// True when running in the production environment. Defaults to false when
+// ENVIRONMENT is unset, so local dev without .dev.vars remains permissive.
+export const isProduction = (env: Pick<Env, 'ENVIRONMENT'>): boolean =>
+  env.ENVIRONMENT === 'production'
 
 // Props injected by the OAuth provider into McpApiHandler via ctx.props
 export type McpProps = {

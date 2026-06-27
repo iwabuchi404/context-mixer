@@ -492,6 +492,61 @@ ul.plain li { padding: var(--space-3) 0; border-bottom: 1px solid var(--border);
 }
 
 /* ============================================================
+   ローディングインジケータ
+   ============================================================ */
+
+.spinner {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spinner-rotate 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spinner-rotate {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .spinner { animation: none; }
+}
+
+/* HTMX 標準インジケータ: リクエスト中の要素内で表示する */
+.htmx-indicator {
+  display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+  display: inline-block;
+}
+
+/* 初回ロード・遅延ツリー展開用の静的スピナー */
+.tree-loading,
+.doc-loading {
+  padding: var(--space-4);
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ツリー開閉ボタンのスピナー: 回転アイコンを維持しつつサイズを揃える */
+.tree-toggle .spinner {
+  font-size: 14px;
+}
+
+/* 検索ボックスのスピナー */
+.search-spinner {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+/* ============================================================
    モバイル
    ============================================================ */
 

@@ -142,6 +142,7 @@ npx wrangler kv namespace create OAUTH_KV
 ローカル開発用（`.dev.vars`）:
 
 ```ini
+ENVIRONMENT=development
 CLERK_SECRET_KEY=sk_test_xxxx
 CLERK_PUBLISHABLE_KEY=pk_test_xxxx
 CLERK_FRONTEND_API=https://your-clerk-app.clerk.accounts.dev
@@ -151,6 +152,8 @@ CLERK_SIGN_IN_URL=https://your-clerk-app.clerk.accounts.dev/sign-in
 本番用:
 
 ```bash
+npx wrangler secret put ENVIRONMENT
+# 値: production
 npx wrangler secret put CLERK_SECRET_KEY
 npx wrangler secret put CLERK_PUBLISHABLE_KEY
 npx wrangler secret put CLERK_FRONTEND_API
@@ -158,6 +161,8 @@ npx wrangler secret put CLERK_SIGN_IN_URL
 ```
 
 > **注意**: Clerkの値は `wrangler.toml` の `[vars]` に書かないこと。デプロイのたびに本番ダッシュボードのSecretを上書きしてしまいます。
+>
+> **Dev/Prod切り替え**: これまで `CLERK_FRONTEND_API` の有無で本番を判定していましたが、`.dev.vars` にも同じ名前の変数があるため判定が曖昧でした。`ENVIRONMENT` 変数を明示的に使って切り替えてください。`GET /auth/config` や `GET /health/config` の `environment` フィールドで現在の値を確認できます。
 
 ### 5. マイグレーション
 

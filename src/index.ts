@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { OAuthProvider } from '@cloudflare/workers-oauth-provider'
 import type { AppEnv, Env } from './auth/adapter'
+import { isProduction } from './auth/adapter'
 import { authMiddleware } from './auth/middleware'
 import { rateLimit } from './auth/rate-limit'
 import { healthRoute } from './routes/health'
@@ -21,13 +22,12 @@ import { oauthRoute } from './mcp/oauth-handler'
 const app = new Hono<AppEnv>()
 
 // CORS — restrict to the production origin in prod; allow any in dev.
-// CLERK_FRONTEND_API is set per-environment (dev=.dev.vars, prod=dashboard Secret),
-// so we use it as the production-origin signal. When absent (local dev without
-// .dev.vars) we fall back to permissive CORS.
+// Use ENVIRONMENT to switch cleanly. Set ENVIRONMENT=development in .dev.vars
+// and ENVIRONMENT=production as a dashboard Secret.
 app.use('*', cors({
   origin: (_origin, c) => {
     const env = c.env as Env
-    return env.CLERK_FRONTEND_API ? 'https://context-mixer.flog404.work' : '*'
+    return isProduction(env) ? 'https://context-mixer.flog404.work' : '*'
   },
   allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'If-Match'],

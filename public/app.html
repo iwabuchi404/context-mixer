@@ -26,9 +26,13 @@
       <div class="sidebar-search">
         <input id="q" name="q" class="input" type="search" placeholder="検索"
                autocomplete="off"
-               hx-get="/ui/search" hx-trigger="input changed delay:300ms, search" hx-target="#tree-area">
+               hx-get="/ui/search" hx-trigger="input changed delay:300ms, search" hx-target="#tree-area"
+               hx-indicator=".search-spinner">
+        <span class="search-spinner htmx-indicator spinner" aria-label="検索中"></span>
       </div>
-      <div id="tree-area"></div>
+      <div id="tree-area">
+        <div class="tree-loading"><span class="spinner" aria-label="読み込み中"></span></div>
+      </div>
       <div class="sidebar-footer">
         <a href="/terms.html">利用規約</a>
         <a href="/privacy.html">プライバシー</a>
@@ -36,7 +40,9 @@
     </aside>
 
     <div class="main-content">
-      <div id="doc-view"></div>
+      <div id="doc-view">
+        <div class="doc-loading"><span class="spinner" aria-label="読み込み中"></span></div>
+      </div>
     </div>
   </main>
 

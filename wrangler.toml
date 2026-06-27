@@ -27,3 +27,7 @@ id = "YOUR_OAUTH_KV_ID"
 #   local      -> .dev.vars
 #   production -> dashboard Secrets (survive deploys): CLERK_PUBLISHABLE_KEY,
 #                 CLERK_FRONTEND_API, CLERK_SIGN_IN_URL, CLERK_SECRET_KEY
+#
+# Environment switch: set ENVIRONMENT=development in .dev.vars and
+# ENVIRONMENT=production as a dashboard Secret. Code uses this to switch CORS,
+# logging, etc. without relying on the presence of Clerk keys.
