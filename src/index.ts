@@ -27,7 +27,7 @@ const app = new Hono<AppEnv>()
 app.use('*', cors({
   origin: (_origin, c) => {
     const env = c.env as Env
-    return isProduction(env) ? 'https://context-mixer.flog404.work' : '*'
+    return isProduction(env) ? '[PUBLIC_APP_URL]' : '*'
   },
   allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'If-Match'],

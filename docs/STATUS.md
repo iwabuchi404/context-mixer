@@ -20,7 +20,7 @@
   - 認証: Cloudflare `workers-oauth-provider` + Clerk OAuth 2.1
   - スコープ: read/write権限分離、コレクションアクセス制限対応
   - Claude.ai / Claude Code / MCP Inspector から接続確認済み（2026-06-14）
-  - **本番稼働確認済み（2026-06-27）**: `https://context-mixer.flog404.work/mcp` 経由で Claude.ai カスタムコネクター接続動作
+  - **本番稼働確認済み（2026-06-27）**: `[PUBLIC_APP_URL]/mcp` 経由で Claude.ai カスタムコネクター接続動作
 
 ## 完了: MCP の OAuth 実装（本番稼働）
 
@@ -49,7 +49,7 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 ### 本番稼働確認: 完了（2026-06-27）
 - 本番KV作成済み、`wrangler.toml` に反映済み
 - 本番デプロイ済み
-- `https://context-mixer.flog404.work/mcp` を Claude.ai カスタムコネクターに登録し、OAuth フローで接続
+- `[PUBLIC_APP_URL]/mcp` を Claude.ai カスタムコネクターに登録し、OAuth フローで接続
 - ツール実行（search_docs / get_doc / write_doc 等）が正常に動作
 
 ### 注意・既知の判断
