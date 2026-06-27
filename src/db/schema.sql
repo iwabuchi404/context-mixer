@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS documents (
   -- LIKE search for hierarchical retrieval
   priority          TEXT NOT NULL DEFAULT 'normal',  -- high / normal / archive
   status            TEXT NOT NULL DEFAULT 'published',  -- published / archived
+  version           INTEGER NOT NULL DEFAULT 0,  -- 楽観的ロック用
   created_by_type   TEXT NOT NULL,  -- 'human' | 'ai'
   created_by_key_id TEXT REFERENCES api_keys(id),
   created_at        INTEGER NOT NULL,
@@ -65,6 +66,7 @@ CREATE TABLE IF NOT EXISTS document_revisions (
   document_id   TEXT NOT NULL,  -- no FK: revisions survive document deletion (audit/rollback)
   title         TEXT NOT NULL,
   content       TEXT NOT NULL,
+  content_hash  TEXT NOT NULL,  -- title\0content の SHA-256 ハッシュ（冪等判定用）
   author_type   TEXT NOT NULL,  -- 'human' | 'ai'
   api_key_id    TEXT,
   api_key_name  TEXT,           -- Snapshot for tracking after key deletion

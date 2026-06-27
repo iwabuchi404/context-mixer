@@ -86,23 +86,27 @@ claude.ai からMCP接続するにはOAuth 2.1(PKCE/DCR/メタデータ公開)�
 
 ## 実装ロードマップ（2026-06-27時点）
 
-### Phase A: 書き込み信頼性（次に着手・最優先）
+### Phase A: 書き込み信頼性（完了・本番未反映）
 冪等性・競合制御・revision保持をまとめて実装（書き込み経路 `createRevision` / `saveDoc` / `writeDoc` を一気に改善）。
 - **冪等性**: `document_revisions` に `content_hash` 追加、直前と同じ内容なら revision スキップ（AIリトライ無害化）
 - **競合制御**: `documents` に `version` カラム追加、3経路（REST/UI/MCP）で `expected_version` チェック、不一致は409（楽観的制御）
 - **revision保持**: ドキュメント毎に直近20件保持、超過分は削除
+- **実装**: [src/services/revisions.ts](../src/services/revisions.ts) に `createDocument` / `updateDocument` を集約。REST/UI/MCP/inbox 全書き込み経路を移行済み
+- **マイグレーション**: [src/db/migrations/20260627_phase_a.sql](../src/db/migrations/20260627_phase_a.sql)
 
 ### Phase B: デプロイ
-UI改善（スピナー含む）+ dev/prod 切り替え + MCP OAuth を本番反映。**完了（2026-06-27）**。
+UI改善（スピナー含む）+ dev/prod 切り替え + MCP OAuth を本番反映。**完了（2026-06-27）**。Phase A は本番DBマイグレーション後にデプロイ。
 
 ### Phase C: MCP ChatGPT 調査（必要に応じて）
 Claude.ai 接続は本番確認済み。ChatGPT 接続時の `props.scopes` 空問題が発生する場合は、 workers-oauth-provider の refresh 時 props 扱いを調査。調査後に `handler.ts` の `[MCP-DEBUG]` ログ削除。
 
 ### Phase D: フェーズ2 UI改善（優先度順）
-1. ドキュメント優先度変更UI（API既存）
-2. 検索結果ハイライト
-3. ドキュメント移動
-4. 固定ヘッダー / 行番号 / スニペット
+| # | 機能 | 状態 |
+| --- | --- | --- |
+| 1 | ドキュメント優先度変更UI（API既存） | 未実装 |
+| 2 | 検索結果ハイライト | 実装済み |
+| 3 | ドキュメント移動 | 実装済み（コレクション + 親ドキュメントID指定） |
+| 4 | 固定ヘッダー / 行番号 / スニペット | 実装済み |
 
 ### Phase E: インフラ
 observability、WAF、compatibility_date 更新、SMB→ローカルclone化。

@@ -18,7 +18,7 @@
   - [middleware.ts](src/auth/middleware.ts) が REST/UI を保護。公開パス: `/`・`/health`・`/config`・`/favicon.svg`・`/auth/*`・`/public/*`・`/oauth/authorize`・`POST /inbox/:token`
   - 認証コンテキストは `AuthContext`([adapter.ts](src/auth/adapter.ts)):human(全権限)/ ai(scope + allowedCollections制限)。`isCollectionAllowed` / `authorOf` で権限と署名を一元化
 - **ルートとサービス**: [src/routes/](src/routes/) が薄いハンドラ、[src/services/](src/services/) に共通ロジック(`sections.ts` 見出し解析、`links.ts` `[[doc_xxx]]`リンク同期、`markdown.ts` 安全なSSR+`escapeHtml`)
-- **書き込みの不変条件**: ドキュメント書き込みは必ず `createRevision`(署名付きリビジョン)+ `syncDocumentLinks` を通す。REST・UI・MCP全経路で共通(documents.ts の `createRevision` をexportして再利用)
+- **書き込みの不変条件**: ドキュメント書き込みは必ず [src/services/revisions.ts](src/services/revisions.ts) の `createDocument` / `updateDocument` を通す。`updateDocument` は楽観的ロック(version + expected_version)、冪等性(同じ内容なら revision スキップ)、revision 保持(直近20件)を自動で行う。REST・UI・MCP・inbox 全経路で再利用
 - **MCP**([src/mcp/](src/mcp/)): `tools.ts` のツールは `AiAuth` を受け取りREST同等の制限を適用。`handler.ts` は OAuthProvider の apiHandler(WorkerEntrypoint)。`server.ts` がツール定義
 - **デザインシステム「台所」v0.3**([docs/design-system.md](docs/design-system.md) / [public/tokens.css](public/tokens.css)): 生成り背景+墨+藍の二色、UIクロームのみ等幅/直角/強い罫線でCLI感、本文はアナログ。「機械の事実(日時・ID・作者)は等幅」。本文末に終止符「了」を打つ癖あり。コンポーネントから生の色値を使わずトークン参照
 

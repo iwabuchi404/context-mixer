@@ -26,7 +26,7 @@ export const toolDefinitions = {
     }
   },
   write_doc: {
-    description: 'Create or update a document. When creating, specify parent_id to create as a child document.',
+    description: 'Create or update a document. When creating, specify parent_id to create as a child document. Provide expected_version for optimistic concurrency control.',
     inputSchema: {
       type: 'object' as const,
       properties: {
@@ -34,18 +34,20 @@ export const toolDefinitions = {
         title: { type: 'string', description: 'Document title' },
         content: { type: 'string', description: 'Document content (markdown)' },
         collection_id: { type: 'string', description: 'Collection ID' },
-        parent_id: { type: 'string', description: 'Parent document ID (optional, for creating child documents)' }
+        parent_id: { type: 'string', description: 'Parent document ID (optional, for creating child documents)' },
+        expected_version: { type: 'number', description: 'Expected current version for optimistic concurrency control' }
       },
       required: ['title', 'content', 'collection_id']
     }
   },
   append_doc: {
-    description: 'Append content to the end of a document',
+    description: 'Append content to the end of a document. Provide expected_version for optimistic concurrency control.',
     inputSchema: {
       type: 'object' as const,
       properties: {
         id: { type: 'string', description: 'Document ID' },
-        content: { type: 'string', description: 'Content to append' }
+        content: { type: 'string', description: 'Content to append' },
+        expected_version: { type: 'number', description: 'Expected current version for optimistic concurrency control' }
       },
       required: ['id', 'content']
     }

@@ -8,6 +8,27 @@ export const escapeHtml = (s: string): string =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
    .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 
+// Escape HTML and wrap every substring matching the query (case-insensitive) in <mark>.
+// Query must be non-empty. Returns the escaped, highlighted string.
+export const highlightMatches = (s: string, query: string): string => {
+  if (!query) return escapeHtml(s)
+  const lower = query.toLowerCase()
+  const escaped = escapeHtml(s)
+  let out = ''
+  let i = 0
+  while (i < escaped.length) {
+    const idx = escaped.toLowerCase().indexOf(lower, i)
+    if (idx === -1) {
+      out += escaped.slice(i)
+      break
+    }
+    out += escaped.slice(i, idx)
+    out += `<mark>${escaped.slice(idx, idx + query.length)}</mark>`
+    i = idx + query.length
+  }
+  return out
+}
+
 const SAFE_PROTOCOLS = /^(https?:|mailto:|\/)/i
 
 // Resolves [[doc_xxx]] / [[doc_xxx|label]] into markdown links before

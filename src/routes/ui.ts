@@ -4,10 +4,10 @@
 import { Hono } from 'hono'
 import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv, AuthContext } from '../auth/adapter'
-import { escapeHtml as esc, renderMarkdown } from '../services/markdown'
+import { escapeHtml as esc, highlightMatches, renderMarkdown } from '../services/markdown'
 import { parseSections } from '../services/sections'
-import { syncDocumentLinks } from '../services/links'
-import { createRevision } from './documents'
+
+import { createDocument, moveDocument, updateDocument } from '../services/revisions'
 import { renderInboxList } from './inbox'
 import { renderFilesList } from './files'
 
@@ -444,11 +444,13 @@ const renderDocFromData = (_c: any, doc: any, docExtra: any[]): string => {
 
   const html = `
 <div id="doc-view-inner" data-doc-id="${esc(doc.id)}" data-doc-title="${esc(doc.title)}">
-  <div class="doc-head">
-    <h1 class="doc-title">${esc(doc.title)}</h1>
-    <button class="btn-quiet" hx-get="/ui/doc/${esc(doc.id)}/edit" hx-target="#doc-view">✎ 編集</button>
+  <div class="doc-sticky-head">
+    <div class="doc-head">
+      <h1 class="doc-title">${esc(doc.title)}</h1>
+      <button class="btn-ghost" hx-get="/ui/doc/${esc(doc.id)}/edit" hx-target="#doc-view">✎ 編集</button>
+    </div>
+    <p class="meta-line">${breadcrumb} ・ ${fmtDate(doc.updated_at)}${author ? ` ・ ${author}` : ''}</p>
   </div>
-  <p class="meta-line">${breadcrumb} ・ ${fmtDate(doc.updated_at)}${author ? ` ・ ${author}` : ''}</p>
   ${tocMobile}
   <div class="doc-columns">
     <article class="prose">${body}</article>
@@ -456,6 +458,7 @@ const renderDocFromData = (_c: any, doc: any, docExtra: any[]): string => {
   </div>
   ${foot}
   <form class="append-box" hx-post="/ui/doc/${esc(doc.id)}/append" hx-target="#doc-view">
+    <input type="hidden" name="expected_version" value="${esc(String(doc.version))}">
     <textarea class="textarea" name="content" rows="2" placeholder="ここに追記…(そのまま末尾に足されます)" required></textarea>
     <button class="btn-primary" type="submit">追記</button>
   </form>
@@ -640,11 +643,13 @@ uiRoute.get('/search', async (c) => {
     // 1-line snippet around the first match
     const lines = hit.content.split('\n')
     const line = lines.find((l: string) => l.toLowerCase().includes(q.toLowerCase())) ?? lines[0] ?? ''
-    const snippet = line.slice(0, 80)
+    const snippet = line.slice(0, 120)
+    const titleHtml = highlightMatches(hit.title, q)
+    const snippetHtml = highlightMatches(snippet, q)
     html += `<a class="tree-item search-hit" data-doc-id="${esc(hit.id)}" href="/?doc=${esc(hit.id)}"
         hx-get="/ui/doc/${esc(hit.id)}" hx-target="#doc-view" hx-push-url="?doc=${esc(hit.id)}">
-        <span class="search-hit-title">${esc(hit.title)}</span>
-        <span class="search-hit-snippet">${esc(snippet)}</span></a>\n`
+        <span class="search-hit-title">${titleHtml}</span>
+        <span class="search-hit-snippet">${snippetHtml}</span></a>\n`
   }
   html += '</nav>'
   return c.html(html)
@@ -687,30 +692,51 @@ uiRoute.get('/doc/:id/edit', async (c) => {
 
   return c.html(`
 <div id="doc-view-inner" data-doc-id="${esc(doc.id)}" data-doc-title="${esc(doc.title)}">
-  <form hx-post="/ui/doc/${esc(doc.id)}/save" hx-target="#doc-view">
-    <div class="doc-head">
-      <input class="input doc-title-input" name="title" value="${esc(doc.title)}" required>
-      <button class="btn-quiet" type="button" hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view">キャンセル</button>
-      <button class="btn-primary" type="submit">保存</button>
+  <form class="editor-form" hx-post="/ui/doc/${esc(doc.id)}/save" hx-target="#doc-view">
+    <div class="doc-sticky-head">
+      <div class="doc-head">
+        <input class="input doc-title-input" name="title" value="${esc(doc.title)}" required>
+        <button class="btn-ghost btn-lg" type="button" hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view">キャンセル</button>
+        <button class="btn-primary btn-lg" type="submit">保存</button>
+      </div>
+      <div class="editor-toolbar">
+        <input type="hidden" name="expected_version" value="${esc(String(doc.version))}">
+        <span class="btn-tool-group has-dropdown">
+          <button class="btn-tool" type="button" data-heading-insert="1"><span class="tool-icon">¶</span>見出し</button>
+          <button class="btn-tool btn-tool-dropdown" type="button" aria-label="見出しレベル">▼</button>
+          <span class="btn-tool-menu">
+            <button type="button" data-heading-insert="1">H1</button>
+            <button type="button" data-heading-insert="2">H2</button>
+            <button type="button" data-heading-insert="3">H3</button>
+            <button type="button" data-heading-insert="4">H4</button>
+            <button type="button" data-heading-insert="5">H5</button>
+            <button type="button" data-heading-insert="6">H6</button>
+          </span>
+        </span>
+        <button class="btn-tool" type="button" data-wrap-before="**" data-wrap-after="**"><span class="tool-icon">B</span>太字</button>
+        <button class="btn-tool" type="button" data-wrap-before="~~" data-wrap-after="~~"><span class="tool-icon">S</span>取り消し</button>
+        <button class="btn-tool" type="button" data-wrap-before="\`" data-wrap-after="\`"><span class="tool-icon">&gt;</span>コード</button>
+        <button class="btn-tool" type="button" data-block="\`\`\`\n" data-block-end="\n\`\`\`"><span class="tool-icon">&lt;/&gt;</span>コードブロック</button>
+        <button class="btn-tool" type="button" data-line-prefix="> "><span class="tool-icon">"</span>引用</button>
+        <button class="btn-tool" type="button" data-snippet="- "><span class="tool-icon">•</span>箇条書き</button>
+        <button class="btn-tool" type="button" data-numbered-list><span class="tool-icon">1.</span>番号付き</button>
+        <button class="btn-tool" type="button" data-snippet="---\n"><span class="tool-icon">—</span>水平線</button>
+        <button class="btn-tool" type="button" data-snippet="|  |  |  |\n|---|---|---|\n|  |  |  |\n|  |  |  |\n" data-cursor="2"><span class="tool-icon">⊞</span>テーブル</button>
+        <button class="btn-tool" type="button" data-snippet="[[doc_]]" data-cursor="7"><span class="tool-icon">[[ ]]</span>リンク</button>
+      </div>
     </div>
-    <textarea class="textarea editor" name="content" placeholder="Markdownで書く。[[doc_xxx]] で他のドキュメントへリンク。">${esc(doc.content)}</textarea>
+    <div class="editor-wrap">
+      <div class="line-numbers" aria-hidden="true"></div>
+      <textarea class="textarea editor" name="content" placeholder="Markdownで書く。[[doc_xxx]] で他のドキュメントへリンク。">${esc(doc.content)}</textarea>
+    </div>
   </form>
   <p class="edit-foot">
-    <button class="btn-quiet danger-link" hx-post="/ui/doc/${esc(doc.id)}/delete" hx-target="#doc-view"
+    <button class="btn-ghost" hx-get="/ui/doc/${esc(doc.id)}/move" hx-target="#doc-view">移動</button>
+    <button class="btn-ghost-danger" hx-post="/ui/doc/${esc(doc.id)}/delete" hx-target="#doc-view"
             hx-confirm="このドキュメントを削除しますか?(変更履歴は残ります)">削除する</button>
   </p>
 </div>`)
 })
-
-// Shared write path: update content/title, record revision, sync links
-const saveDoc = async (c: any, id: string, title: string, content: string) => {
-  const now = Date.now()
-  await c.env.DB.prepare('UPDATE documents SET title = ?, content = ?, updated_at = ? WHERE id = ?')
-    .bind(title, content, now, id).run()
-  await createRevision(c.env.DB, id, title, content, authorOf(c.get('auth')), now)
-  // マルチテナント: auth を渡してリンク先も同じオーナーのドキュメントのみに制限
-  await syncDocumentLinks(c.env.DB, id, content)
-}
 
 // POST /ui/doc/:id/save
 uiRoute.post('/doc/:id/save', async (c) => {
@@ -718,7 +744,7 @@ uiRoute.post('/doc/:id/save', async (c) => {
   const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
   const doc = await c.env.DB.prepare(`
-    SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
     WHERE d.id = ? AND c.owner_user_id = ?
   `).bind(id, uid).first() as any
   if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
@@ -727,13 +753,28 @@ uiRoute.post('/doc/:id/save', async (c) => {
   const body = await c.req.parseBody()
   const title = String(body.title ?? '').trim()
   const content = String(body.content ?? '')
+  const expectedVersion = parseInt(String(body.expected_version ?? doc.version), 10)
   if (!title) return c.html(errorFragment('タイトルを入力してください'), 400)
 
-  await saveDoc(c, id, title, content)
+  const now = Date.now()
+  const result = await updateDocument(
+    c.env.DB, auth, id,
+    { title: doc.title, content: doc.content, version: doc.version },
+    { title, content },
+    expectedVersion,
+    now
+  )
+  if (!result.ok) {
+    return c.html(errorFragment(
+      result.code === 'CONFLICT'
+        ? '他の操作で更新されています。最新の状態を確認して再度保存してください'
+        : 'ドキュメントが見つかりません'
+    ), result.code === 'CONFLICT' ? 409 : 404)
+  }
 
-  const result = await renderDoc(c, id)
+  const result2 = await renderDoc(c, id)
   notify(c, '保存しました')
-  return c.html('error' in result ? errorFragment(result.error) : result.html)
+  return c.html('error' in result2 ? errorFragment(result2.error) : result2.html)
 })
 
 // POST /ui/doc/:id/append
@@ -742,7 +783,7 @@ uiRoute.post('/doc/:id/append', async (c) => {
   const uid = ownerUserIdOf(auth)
   const id = c.req.param('id')
   const doc = await c.env.DB.prepare(`
-    SELECT d.title, d.content, d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
     WHERE d.id = ? AND c.owner_user_id = ?
   `).bind(id, uid).first() as any
   if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
@@ -750,14 +791,29 @@ uiRoute.post('/doc/:id/append', async (c) => {
 
   const body = await c.req.parseBody()
   const content = String(body.content ?? '').trim()
+  const expectedVersion = parseInt(String(body.expected_version ?? doc.version), 10)
   if (!content) return c.html(errorFragment('内容を入力してください'), 400)
 
   const separator = doc.content === '' || doc.content.endsWith('\n\n') ? '' : doc.content.endsWith('\n') ? '\n' : '\n\n'
-  await saveDoc(c, id, doc.title, doc.content + separator + content)
+  const now = Date.now()
+  const result = await updateDocument(
+    c.env.DB, auth, id,
+    { title: doc.title, content: doc.content, version: doc.version },
+    { content: doc.content + separator + content },
+    expectedVersion,
+    now
+  )
+  if (!result.ok) {
+    return c.html(errorFragment(
+      result.code === 'CONFLICT'
+        ? '他の操作で更新されています。最新の状態を確認して再度追記してください'
+        : 'ドキュメントが見つかりません'
+    ), result.code === 'CONFLICT' ? 409 : 404)
+  }
 
-  const result = await renderDoc(c, id)
+  const result2 = await renderDoc(c, id)
   notify(c, '追記しました')
-  return c.html('error' in result ? errorFragment(result.error) : result.html)
+  return c.html('error' in result2 ? errorFragment(result2.error) : result2.html)
 })
 
 // POST /ui/doc/:id/delete
@@ -782,6 +838,69 @@ uiRoute.post('/doc/:id/delete', async (c) => {
   return c.html(await renderWelcome(c))
 })
 
+// GET /ui/doc/:id/move - Move form
+uiRoute.get('/doc/:id/move', async (c) => {
+  const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const id = c.req.param('id')
+  const doc = await c.env.DB.prepare(`
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
+  if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  const cols = await c.env.DB.prepare(`
+    SELECT id, name FROM collections
+    WHERE owner_user_id = ?
+    ORDER BY name
+  `).bind(uid).all() as { results: { id: string; name: string }[] }
+
+  const options = (cols.results as any[])
+    .filter((col) => isCollectionAllowed(auth, col.id))
+    .map((col) => `<option value="${esc(col.id)}"${col.id === doc.collection_id ? ' selected' : ''}>${esc(col.name)}</option>`)
+    .join('\n')
+
+  return c.html(`
+<div id="doc-view-inner" data-doc-title="移動">
+  <div class="doc-head"><h1 class="doc-title">ドキュメントを移動</h1></div>
+  <p class="meta-line">${esc(doc.title)}</p>
+  <form hx-post="/ui/doc/${esc(id)}/move" hx-target="#doc-view">
+    <label class="meta-line">移動先コレクション
+      <select class="input" name="collection_id" required>${options}</select>
+    </label>
+    <p class="meta-line">
+      <label>親ドキュメントID（省略でトップレベル）<br>
+        <input class="input" name="parent_id" placeholder="doc_xxx">
+      </label>
+    </p>
+    <button class="btn-primary" type="submit">移動</button>
+    <button class="btn-ghost" type="button" hx-get="/ui/doc/${esc(id)}" hx-target="#doc-view">キャンセル</button>
+  </form>
+</div>`)
+})
+
+// POST /ui/doc/:id/move - Execute move
+uiRoute.post('/doc/:id/move', async (c) => {
+  const auth = c.get('auth')
+  const id = c.req.param('id')
+  const body = await c.req.parseBody()
+  const collectionId = String(body.collection_id ?? '')
+  const parentId = String(body.parent_id ?? '').trim() || null
+
+  if (!collectionId) return c.html(errorFragment('コレクションを選択してください'), 400)
+
+  const result = await moveDocument(c.env.DB, auth, id, collectionId, parentId)
+  if (!result.ok) {
+    return c.html(errorFragment(result.message), result.code === 'NOT_FOUND' ? 404 : 400)
+  }
+
+  const result2 = await renderDoc(c, id)
+  notify(c, '移動しました')
+  c.header('HX-Push-Url', `/?doc=${id}`)
+  return c.html('error' in result2 ? errorFragment(result2.error) : result2.html)
+})
+
 // GET /ui/doc/:id/new-child - Child document creation form
 uiRoute.get('/doc/:id/new-child', async (c) => {
   const auth = c.get('auth')
@@ -799,12 +918,44 @@ uiRoute.get('/doc/:id/new-child', async (c) => {
   <div class="doc-head"><h1 class="doc-title">子ドキュメント作成</h1></div>
   <p class="meta-line">親: <a class="crumb" href="/?doc=${esc(doc.id)}"
       hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view" hx-push-url="?doc=${esc(doc.id)}">${esc(doc.title)}</a></p>
-  <form hx-post="/ui/docs" hx-target="#doc-view">
+  <form class="editor-form" hx-post="/ui/docs" hx-target="#doc-view">
+    <div class="doc-sticky-head">
+      <div class="doc-head">
+        <input class="input doc-title-input" name="title" placeholder="タイトル" required autofocus autocomplete="off">
+        <button class="btn-ghost" type="button" hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view">キャンセル</button>
+        <button class="btn-primary" type="submit">作成</button>
+      </div>
+      <div class="editor-toolbar">
+        <span class="btn-tool-group has-dropdown">
+          <button class="btn-tool" type="button" data-heading-insert="1"><span class="tool-icon">¶</span>見出し</button>
+          <button class="btn-tool btn-tool-dropdown" type="button" aria-label="見出しレベル">▼</button>
+          <span class="btn-tool-menu">
+            <button type="button" data-heading-insert="1">H1</button>
+            <button type="button" data-heading-insert="2">H2</button>
+            <button type="button" data-heading-insert="3">H3</button>
+            <button type="button" data-heading-insert="4">H4</button>
+            <button type="button" data-heading-insert="5">H5</button>
+            <button type="button" data-heading-insert="6">H6</button>
+          </span>
+        </span>
+        <button class="btn-tool" type="button" data-wrap-before="**" data-wrap-after="**"><span class="tool-icon">B</span>太字</button>
+        <button class="btn-tool" type="button" data-wrap-before="~~" data-wrap-after="~~"><span class="tool-icon">S</span>取り消し</button>
+        <button class="btn-tool" type="button" data-wrap-before="\`" data-wrap-after="\`"><span class="tool-icon">&gt;</span>コード</button>
+        <button class="btn-tool" type="button" data-block="\`\`\`\n" data-block-end="\n\`\`\`"><span class="tool-icon">&lt;/&gt;</span>コードブロック</button>
+        <button class="btn-tool" type="button" data-line-prefix="> "><span class="tool-icon">"</span>引用</button>
+        <button class="btn-tool" type="button" data-snippet="- "><span class="tool-icon">•</span>箇条書き</button>
+        <button class="btn-tool" type="button" data-numbered-list><span class="tool-icon">1.</span>番号付き</button>
+        <button class="btn-tool" type="button" data-snippet="---\n"><span class="tool-icon">—</span>水平線</button>
+        <button class="btn-tool" type="button" data-snippet="|  |  |  |\n|---|---|---|\n|  |  |  |\n|  |  |  |\n" data-cursor="2"><span class="tool-icon">⊞</span>テーブル</button>
+        <button class="btn-tool" type="button" data-snippet="[[doc_]]" data-cursor="7"><span class="tool-icon">[[ ]]</span>リンク</button>
+      </div>
+    </div>
+    <div class="editor-wrap">
+      <div class="line-numbers" aria-hidden="true"></div>
+      <textarea class="textarea editor" name="content" placeholder="Markdownで書く。[[doc_xxx]] で他のドキュメントへリンク。"></textarea>
+    </div>
     <input type="hidden" name="collection_id" value="${esc(doc.collection_id)}">
     <input type="hidden" name="parent_id" value="${esc(doc.id)}">
-    <input class="input doc-title-input" name="title" placeholder="タイトル" required autofocus autocomplete="off">
-    <button class="btn-primary" type="submit">作成</button>
-    <button class="btn-quiet" type="button" hx-get="/ui/doc/${esc(doc.id)}" hx-target="#doc-view">キャンセル</button>
   </form>
 </div>`)
 })
@@ -815,6 +966,7 @@ uiRoute.post('/docs', async (c) => {
   const uid = ownerUserIdOf(auth)
   const body = await c.req.parseBody()
   const title = String(body.title ?? '').trim()
+  const content = String(body.content ?? '')
   const collectionId = String(body.collection_id ?? '')
   const parentId = String(body.parent_id ?? '').trim() || null
   if (!title || !collectionId) return c.html(errorFragment('タイトルが必要です'), 400)
@@ -825,7 +977,6 @@ uiRoute.post('/docs', async (c) => {
     .bind(collectionId, uid).first()
   if (!col) return c.html(errorFragment('コレクションが見つかりません'), 404)
 
-  const author = authorOf(auth)
   const id = generateId('doc')
   const now = Date.now()
 
@@ -843,11 +994,7 @@ uiRoute.post('/docs', async (c) => {
     path = `/${collectionId}/${id}`
   }
 
-  await c.env.DB.prepare(`
-    INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
-    VALUES (?, ?, '', ?, ?, ?, 'normal', 'published', ?, ?, ?, ?)
-  `).bind(id, title, collectionId, parentId, path, author.authorType, author.apiKeyId, now, now).run()
-  await createRevision(c.env.DB, id, title, '', author, now)
+  await createDocument(c.env.DB, auth, id, title, content, collectionId, parentId, path, now)
 
   const result = await renderDoc(c, id)
   notify(c, '作成しました')

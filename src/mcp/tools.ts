@@ -6,10 +6,10 @@
 
 import type { AppEnv, AiAuth } from '../auth/adapter'
 import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
-import { createRevisionStatement } from '../routes/documents'
+import { createDocument, updateDocument } from '../services/revisions'
 import { buildTree } from '../routes/collections'
 import { parseSections } from '../services/sections'
-import { buildLinkSyncStatements } from '../services/links'
+
 
 type Env = AppEnv['Bindings']
 type CallToolResult = {
@@ -137,29 +137,33 @@ export async function getDoc(
 export async function writeDoc(
   env: Env,
   auth: AiAuth,
-  params: { id?: string; title: string; content: string; collection_id: string; parent_id?: string }
+  params: { id?: string; title: string; content: string; collection_id: string; parent_id?: string; expected_version?: number }
 ): Promise<CallToolResult> {
-  const { id, title, content, collection_id, parent_id } = params
+  const { id, title, content, collection_id, parent_id, expected_version } = params
   const now = Date.now()
-  const author = authorOf(auth)
   const uid = ownerUserIdOf(auth)
 
   if (id) {
     // マルチテナント: collections 経由でオーナーチェック
     const existing = await env.DB.prepare(`
-      SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+      SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
       WHERE d.id = ? AND c.owner_user_id = ?
     `).bind(id, uid).first() as any
     if (!existing) return err('Document not found')
     if (!isCollectionAllowed(auth, existing.collection_id)) return err('Collection not allowed for this key')
 
-    const { statements: linkStatements } = await buildLinkSyncStatements(env.DB, id, content, auth)
-    await env.DB.batch([
-      env.DB.prepare('UPDATE documents SET title = ?, content = ?, updated_at = ? WHERE id = ?')
-        .bind(title, content, now, id),
-      createRevisionStatement(env.DB, id, title, content, author, now),
-      ...linkStatements,
-    ])
+    const result = await updateDocument(
+      env.DB, auth, id,
+      { title: existing.title, content: existing.content, version: existing.version },
+      { title, content },
+      expected_version ?? existing.version,
+      now
+    )
+    if (!result.ok) {
+      return err(result.code === 'CONFLICT'
+        ? 'Document was modified by another request; refresh and retry with expected_version'
+        : 'Document not found')
+    }
 
     const updated = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first()
     return ok(updated)
@@ -191,15 +195,7 @@ export async function writeDoc(
     path = `/${collection_id}/${docId}`
   }
 
-  const { statements: linkStatements } = await buildLinkSyncStatements(env.DB, docId, content, auth)
-  await env.DB.batch([
-    env.DB.prepare(`
-      INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, 'normal', 'published', ?, ?, ?, ?)
-    `).bind(docId, title, content, collection_id, parentId, path, author.authorType, author.apiKeyId, now, now),
-    createRevisionStatement(env.DB, docId, title, content, author, now),
-    ...linkStatements,
-  ])
+  await createDocument(env.DB, auth, docId, title, content, collection_id, parentId, path, now)
 
   const doc = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(docId).first()
   return ok(doc)
@@ -209,9 +205,9 @@ export async function writeDoc(
 export async function appendDoc(
   env: Env,
   auth: AiAuth,
-  params: { id: string; content: string }
+  params: { id: string; content: string; expected_version?: number }
 ): Promise<CallToolResult> {
-  const { id, content } = params
+  const { id, content, expected_version } = params
   const uid = ownerUserIdOf(auth)
   // マルチテナント: collections 経由でオーナーチェック
   const existing = await env.DB.prepare(`
@@ -225,13 +221,18 @@ export async function appendDoc(
   const newContent = existing.content + sep + content
   const now = Date.now()
 
-  const { statements: linkStatements } = await buildLinkSyncStatements(env.DB, id, newContent, auth)
-  await env.DB.batch([
-    env.DB.prepare('UPDATE documents SET content = ?, updated_at = ? WHERE id = ?')
-      .bind(newContent, now, id),
-    createRevisionStatement(env.DB, id, existing.title, newContent, authorOf(auth), now),
-    ...linkStatements,
-  ])
+  const result = await updateDocument(
+    env.DB, auth, id,
+    { title: existing.title, content: existing.content, version: existing.version },
+    { content: newContent },
+    expected_version ?? existing.version,
+    now
+  )
+  if (!result.ok) {
+    return err(result.code === 'CONFLICT'
+      ? 'Document was modified by another request; refresh and retry with expected_version'
+      : 'Document not found')
+  }
 
   const updated = await env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first()
   return ok(updated)

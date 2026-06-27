@@ -1,9 +1,9 @@
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
+import { isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv, AuthContext } from '../auth/adapter'
 import { extractSection, findSection, parseSections, replaceSection } from '../services/sections'
-import { buildLinkSyncStatements } from '../services/links'
+import { createDocument, updateDocument } from '../services/revisions'
 
 // Validation schemas
 const createDocSchema = z.object({
@@ -21,52 +21,24 @@ const updateDocSchema = z.object({
   content: z.string().optional(),
   priority: z.enum(['high', 'normal', 'archive']).optional(),
   status: z.enum(['published', 'archived']).optional(),
+  expected_version: z.number().int().optional(),
 })
 
 const updateSectionSchema = z.object({
   content: z.string(),
   title: z.string().min(1).optional(),
+  expected_version: z.number().int().optional(),
 })
 
 const appendSchema = z.object({
   content: z.string().min(1),
+  expected_version: z.number().int().optional(),
 })
 
 export const documentsRoute = new Hono<AppEnv>()
 
 // Helper: Generate unique ID
 const generateId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-// Helper: Record a revision snapshot (shared with the UI routes).
-// Two variants: `createRevision` runs immediately (kept for backward compat),
-// `createRevisionStatement` returns a prepared statement for inclusion in a
-// D1 batch so callers can keep document update + revision + link sync atomic.
-export const createRevision = async (
-  db: D1Database,
-  docId: string,
-  title: string,
-  content: string,
-  author: ReturnType<typeof authorOf>,
-  now: number
-): Promise<void> => {
-  await db.prepare(`
-    INSERT INTO document_revisions (id, document_id, title, content, author_type, api_key_id, api_key_name, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(generateId('rev'), docId, title, content, author.authorType, author.apiKeyId, author.apiKeyName, now).run()
-}
-
-export const createRevisionStatement = (
-  db: D1Database,
-  docId: string,
-  title: string,
-  content: string,
-  author: ReturnType<typeof authorOf>,
-  now: number
-): D1PreparedStatement =>
-  db.prepare(`
-    INSERT INTO document_revisions (id, document_id, title, content, author_type, api_key_id, api_key_name, created_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).bind(generateId('rev'), docId, title, content, author.authorType, author.apiKeyId, author.apiKeyName, now)
 
 // Helper: Load a document and check collection access + ownership.
 // Returns the doc row, or a Response when not found / forbidden.
@@ -266,14 +238,22 @@ documentsRoute.patch('/:id/sections/:slug', async (c) => {
 
     const newContent = replaceSection(doc.content, section, parsed.content, parsed.title)
     const now = Date.now()
-
-    const { statements: linkStatements, warnings: linkWarnings } = await buildLinkSyncStatements(c.env.DB, id, newContent, c.get('auth'))
-    await c.env.DB.batch([
-      c.env.DB.prepare('UPDATE documents SET content = ?, updated_at = ? WHERE id = ?')
-        .bind(newContent, now, id),
-      createRevisionStatement(c.env.DB, id, doc.title, newContent, authorOf(c.get('auth')), now),
-      ...linkStatements,
-    ])
+    const expectedVersion = parsed.expected_version ?? doc.version
+    const result = await updateDocument(
+      c.env.DB,
+      c.get('auth'),
+      id,
+      { title: doc.title, content: doc.content, version: doc.version },
+      { content: newContent },
+      expectedVersion,
+      now
+    )
+    if (!result.ok) {
+      if (result.code === 'NOT_FOUND') {
+        return c.json({ error: { code: 'DOC_NOT_FOUND', message: 'Document not found' } }, 404)
+      }
+      return c.json({ error: { code: 'CONFLICT', message: 'Document was modified by another request; please refresh and retry' } }, 409)
+    }
 
     // The slug may change when the heading is renamed; re-locate by line
     const newSection = parseSections(newContent).find((s) => s.headingLine === section.headingLine)
@@ -281,7 +261,7 @@ documentsRoute.patch('/:id/sections/:slug', async (c) => {
       document_id: id,
       slug: newSection?.slug ?? slug,
       updated_at: now,
-      ...(linkWarnings.length > 0 ? { link_warnings: linkWarnings } : {}),
+      ...(result.warnings.length > 0 ? { link_warnings: result.warnings } : {}),
     })
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -307,20 +287,28 @@ documentsRoute.post('/:id/append', async (c) => {
     const separator = doc.content === '' || doc.content.endsWith('\n\n') ? '' : doc.content.endsWith('\n') ? '\n' : '\n\n'
     const newContent = doc.content + separator + parsed.content
     const now = Date.now()
-
-    const { statements: linkStatements, warnings: linkWarnings } = await buildLinkSyncStatements(c.env.DB, id, newContent, c.get('auth'))
-    await c.env.DB.batch([
-      c.env.DB.prepare('UPDATE documents SET content = ?, updated_at = ? WHERE id = ?')
-        .bind(newContent, now, id),
-      createRevisionStatement(c.env.DB, id, doc.title, newContent, authorOf(c.get('auth')), now),
-      ...linkStatements,
-    ])
+    const expectedVersion = parsed.expected_version ?? doc.version
+    const result = await updateDocument(
+      c.env.DB,
+      c.get('auth'),
+      id,
+      { title: doc.title, content: doc.content, version: doc.version },
+      { content: newContent },
+      expectedVersion,
+      now
+    )
+    if (!result.ok) {
+      if (result.code === 'NOT_FOUND') {
+        return c.json({ error: { code: 'DOC_NOT_FOUND', message: 'Document not found' } }, 404)
+      }
+      return c.json({ error: { code: 'CONFLICT', message: 'Document was modified by another request; please refresh and retry' } }, 409)
+    }
 
     return c.json({
       document_id: id,
       appended_bytes: parsed.content.length,
       updated_at: now,
-      ...(linkWarnings.length > 0 ? { link_warnings: linkWarnings } : {}),
+      ...(result.warnings.length > 0 ? { link_warnings: result.warnings } : {}),
     })
   } catch (error: any) {
     if (error.name === 'ZodError') {
@@ -434,7 +422,6 @@ documentsRoute.post('/', async (c) => {
       return c.json({ error: { code: 'FORBIDDEN', message: 'Collection not allowed for this API key' } }, 403)
     }
 
-    const author = authorOf(auth)
     const id = generateId('doc')
     const now = Date.now()
 
@@ -442,28 +429,9 @@ documentsRoute.post('/', async (c) => {
     const path = await buildPath(c.env.DB, parsed.parent_id || null, parsed.collection_id, id)
 
     // Create document + initial revision + links atomically
-    const { statements: linkStatements, warnings: linkWarnings } = await buildLinkSyncStatements(c.env.DB, id, parsed.content, auth)
-    await c.env.DB.batch([
-      c.env.DB.prepare(`
-        INSERT INTO documents (id, title, content, collection_id, parent_id, path, priority, status, created_by_type, created_by_key_id, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).bind(
-        id,
-        parsed.title,
-        parsed.content,
-        parsed.collection_id,
-        parsed.parent_id || null,
-        path,
-        parsed.priority || 'normal',
-        parsed.status || 'published',
-        author.authorType,
-        author.apiKeyId,
-        now,
-        now
-      ),
-      createRevisionStatement(c.env.DB, id, parsed.title, parsed.content, author, now),
-      ...linkStatements,
-    ])
+    const { warnings: linkWarnings } = await createDocument(
+      c.env.DB, auth, id, parsed.title, parsed.content, parsed.collection_id, parsed.parent_id || null, path, now
+    )
 
     const accept = c.req.header('Accept') || ''
     if (accept.includes('text/html')) {
@@ -515,58 +483,37 @@ documentsRoute.put('/:id', async (c) => {
     }
 
     const now = Date.now()
-    const updates: string[] = ['updated_at = ?']
-    const params: any[] = [now]
-
-    if (parsed.title !== undefined) {
-      updates.push('title = ?')
-      params.push(parsed.title)
+    const expectedVersion = parsed.expected_version ?? existing.version
+    const result = await updateDocument(
+      c.env.DB,
+      auth,
+      id,
+      { title: existing.title, content: existing.content, version: existing.version },
+      {
+        title: parsed.title,
+        content: parsed.content,
+        priority: parsed.priority,
+        status: parsed.status,
+      },
+      expectedVersion,
+      now
+    )
+    if (!result.ok) {
+      if (result.code === 'NOT_FOUND') {
+        return c.json({ error: { code: 'DOC_NOT_FOUND', message: 'Document not found' } }, 404)
+      }
+      return c.json({ error: { code: 'CONFLICT', message: 'Document was modified by another request; please refresh and retry' } }, 409)
     }
-    if (parsed.content !== undefined) {
-      updates.push('content = ?')
-      params.push(parsed.content)
-    }
-    if (parsed.priority !== undefined) {
-      updates.push('priority = ?')
-      params.push(parsed.priority)
-    }
-    if (parsed.status !== undefined) {
-      updates.push('status = ?')
-      params.push(parsed.status)
-    }
-
-    params.push(id)
-
-    // Compute the post-update title/content for the revision snapshot.
-    // We avoid a second SELECT by deriving from the existing row + parsed values.
-    const newTitle = parsed.title !== undefined ? parsed.title : existing.title
-    const newContent = parsed.content !== undefined ? parsed.content : existing.content
-
-    const batchStatements: D1PreparedStatement[] = [
-      c.env.DB.prepare(`UPDATE documents SET ${updates.join(', ')} WHERE id = ?`).bind(...params),
-      createRevisionStatement(c.env.DB, id, newTitle, newContent, authorOf(auth), now),
-    ]
-
-    let linkWarnings: string[] = []
-    if (parsed.content !== undefined) {
-      const { statements: linkStatements, warnings } = await buildLinkSyncStatements(c.env.DB, id, newContent, auth)
-      batchStatements.push(...linkStatements)
-      linkWarnings = warnings
-    }
-
-    await c.env.DB.batch(batchStatements)
 
     const updated = await c.env.DB.prepare('SELECT * FROM documents WHERE id = ?').bind(id).first()
     const accept = c.req.header('Accept') || ''
 
     // Return HTML for HTMX requests
     if (accept.includes('text/html')) {
-      // Return a small success message or just a script to redirect/reload
-      // For now, redirecting to the document list or just showing "Saved"
       return c.html('<script>alert("保存しました"); window.location.reload();</script>')
     }
 
-    return c.json(linkWarnings.length > 0 ? { ...updated, link_warnings: linkWarnings } : updated)
+    return c.json(result.warnings.length > 0 ? { ...updated, link_warnings: result.warnings } : updated)
   } catch (error: any) {
     if (error.name === 'ZodError') {
       return c.json({ error: { code: 'VALIDATION_ERROR', message: error.errors } }, 400)

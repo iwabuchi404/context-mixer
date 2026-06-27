@@ -119,15 +119,18 @@ mark {
    ボタン(3種: .btn-primary / .btn / .btn-quiet ・ 色違い .btn-danger)
    ============================================================ */
 
-.btn, .btn-primary, .btn-quiet {
+.btn, .btn-primary, .btn-quiet, .btn-ghost, .btn-ghost-danger {
   font: inherit;
   font-size: var(--text-sm);
   line-height: var(--leading-ui);
-  padding: var(--space-2) var(--space-4);
+  padding: 8px 14px;
   border-radius: var(--radius-sm);
   cursor: pointer;
   min-height: 36px;
-  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease), color var(--dur-fast) var(--ease);
 }
 
 .btn {
@@ -151,13 +154,28 @@ mark {
 }
 .btn-quiet:hover { background: var(--surface-dim); color: var(--text); }
 
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+}
+.btn-ghost:hover { background: var(--surface-dim); color: var(--text); }
+.btn-ghost-danger {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--danger);
+}
+.btn-ghost-danger:hover { background: color-mix(in srgb, var(--danger) 8%, transparent); border-color: var(--danger); }
+
 .btn-danger { color: var(--danger); border-color: var(--danger); }
 .btn-danger:hover { background: color-mix(in srgb, var(--danger) 8%, transparent); }
 
-.btn:disabled, .btn-primary:disabled, .btn-quiet:disabled { opacity: 0.45; cursor: default; }
+.btn-lg { padding: 12px 18px; }
+
+.btn:disabled, .btn-primary:disabled, .btn-quiet:disabled, .btn-ghost:disabled, .btn-ghost-danger:disabled, .btn-lg:disabled { opacity: 0.45; cursor: default; }
 
 @media (max-width: 719px) {
-  .btn, .btn-primary, .btn-quiet { min-height: 44px; } /* タッチターゲット */
+  .btn, .btn-primary, .btn-quiet, .btn-ghost, .btn-ghost-danger, .btn-lg { min-height: 44px; } /* タッチターゲット */
 }
 
 /* ============================================================

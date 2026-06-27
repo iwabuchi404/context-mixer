@@ -170,6 +170,7 @@ function onSwap(target) {
     target.scrollTop = 0
     document.querySelector('.main-content')?.scrollTo(0, 0)
     addCopyButtons()
+    setupEditor()
   }
   if (target.id === 'tree-area') {
     applyCollapsedState()
@@ -188,6 +189,131 @@ function setupDrawer() {
       sidebar.classList.remove('open')
     }
   })
+}
+
+// --- editor enhancements (line numbers + snippets) ---
+function setupEditor() {
+  const wrap = document.querySelector('.editor-wrap')
+  if (!wrap) return
+  const textarea = wrap.querySelector('textarea.editor')
+  const numbers = wrap.querySelector('.line-numbers')
+  if (!textarea || !numbers) return
+
+  const sync = () => {
+    const lines = textarea.value.split('\n').length
+    const current = numbers.children.length
+    if (lines !== current) {
+      numbers.innerHTML = Array.from({ length: lines }, (_, i) => `<div>${i + 1}</div>`).join('')
+    }
+    // Scroll sync
+    numbers.scrollTop = textarea.scrollTop
+  }
+
+  textarea.addEventListener('input', sync)
+  textarea.addEventListener('scroll', () => { numbers.scrollTop = textarea.scrollTop })
+  textarea.addEventListener('keydown', (e) => {
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      textarea.setRangeText('  ', start, end, 'end')
+      textarea.dispatchEvent(new Event('input'))
+    }
+  })
+  sync()
+
+  // Snippet / wrap / block / prefix buttons
+  const toolbar = textarea.closest('.editor-form')?.querySelector('.editor-toolbar')
+  if (toolbar) {
+    const insert = (replacement, cursorPos) => {
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      textarea.setRangeText(replacement, start, end, 'end')
+      textarea.selectionStart = textarea.selectionEnd = cursorPos ?? (start + replacement.length)
+      textarea.focus()
+      textarea.dispatchEvent(new Event('input'))
+    }
+
+    toolbar.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-snippet], [data-wrap-before], [data-block], [data-line-prefix], [data-numbered-list]')
+      if (!btn) return
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const selected = textarea.value.slice(start, end)
+
+      const before = btn.dataset.wrapBefore || ''
+      const after = btn.dataset.wrapAfter || ''
+      if (before || after) {
+        const replacement = before + selected + after
+        const cursorPos = selected ? start + replacement.length : start + before.length
+        insert(replacement, cursorPos)
+        return
+      }
+
+      const blockStart = btn.dataset.block || ''
+      const blockEnd = btn.dataset.blockEnd || ''
+      if (blockStart || blockEnd) {
+        const replacement = blockStart + selected + blockEnd
+        const cursorPos = selected ? start + replacement.length : start + blockStart.length
+        insert(replacement, cursorPos)
+        return
+      }
+
+      const linePrefix = btn.dataset.linePrefix || ''
+      if (linePrefix) {
+        const replacement = selected
+          ? selected.split('\n').map((line) => linePrefix + line).join('\n')
+          : linePrefix
+        const cursorPos = selected ? start + replacement.length : start + linePrefix.length
+        insert(replacement, cursorPos)
+        return
+      }
+
+      if (btn.dataset.numberedList !== undefined) {
+        const replacement = selected
+          ? selected.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n')
+          : '1. '
+        const cursorPos = selected ? start + replacement.length : start + replacement.length
+        insert(replacement, cursorPos)
+        return
+      }
+
+      const snippet = btn.dataset.snippet || ''
+      const cursorOffset = parseInt(btn.dataset.cursor || '0', 10)
+      insert(snippet, start + Math.min(cursorOffset, snippet.length))
+    })
+
+    const headingButtons = toolbar.querySelectorAll('[data-heading-insert]')
+    headingButtons.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        const level = parseInt(e.target.closest('[data-heading-insert]').dataset.headingInsert, 10)
+        const start = textarea.selectionStart
+        const end = textarea.selectionEnd
+        const value = textarea.value
+
+        // Determine the line range to affect.
+        let lineStart = value.lastIndexOf('\n', start - 1) + 1
+        let lineEnd = value.indexOf('\n', end)
+        if (lineEnd === -1) lineEnd = value.length
+
+        const lines = value.slice(lineStart, lineEnd).split('\n')
+        const newLines = lines.map((line) => {
+          const match = line.match(/^(#{1,6}) /)
+          if (match) {
+            const currentLevel = match[1].length
+            if (currentLevel === level) return line.replace(/^(#{1,6}) /, '')
+            return '#'.repeat(level) + ' ' + line.replace(/^(#{1,6}) /, '')
+          }
+          return '#'.repeat(level) + ' ' + line
+        })
+        const replacement = newLines.join('\n')
+        textarea.setRangeText(replacement, lineStart, lineEnd, 'end')
+        textarea.selectionStart = textarea.selectionEnd = lineStart + replacement.length
+        textarea.focus()
+        textarea.dispatchEvent(new Event('input'))
+      })
+    })
+  }
 }
 
 // --- reading pane lifecycle ---
@@ -357,7 +483,7 @@ function addCopyButtons() {
     const article = docView.querySelector('.prose')
     if (article) {
       const copyBtn = document.createElement('button')
-      copyBtn.className = 'btn-quiet btn-sm article-copy-btn'
+      copyBtn.className = 'btn-ghost article-copy-btn'
       copyBtn.type = 'button'
       copyBtn.textContent = '記事をコピー'
       copyBtn.setAttribute('aria-label', '記事をMarkdownでコピー')

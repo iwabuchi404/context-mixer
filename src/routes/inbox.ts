@@ -3,11 +3,11 @@
 // Submissions must be approved before they are applied to the document.
 import { Hono } from 'hono'
 import { z } from 'zod'
-import { authorOf, isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
+import { isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv } from '../auth/adapter'
 import { escapeHtml as esc } from '../services/markdown'
-import { createRevisionStatement } from './documents'
-import { buildLinkSyncStatements } from '../services/links'
+import { updateDocument } from '../services/revisions'
+
 
 // Max bytes accepted from a single inbox submission (external, unauthenticated)
 const MAX_INBOX_CONTENT = 100_000
@@ -254,7 +254,6 @@ inboxRoute.post('/:id/approve', async (c) => {
       return c.json({ error: { code: 'INVALID_STATUS', message: 'Item is not pending' } }, 400)
     }
 
-    const author = authorOf(auth)
     const now = Date.now()
 
     // Get current document (オーナーチェック付き)
@@ -275,16 +274,21 @@ inboxRoute.post('/:id/approve', async (c) => {
     const separator = doc.content === '' || doc.content.endsWith('\n\n') ? '' : doc.content.endsWith('\n') ? '\n' : '\n\n'
     const newContent = doc.content + separator + item.content
 
-    // Update document + revision + links + item status atomically
-    const { statements: linkStatements } = await buildLinkSyncStatements(c.env.DB, doc.id, newContent, auth)
-    await c.env.DB.batch([
-      c.env.DB.prepare('UPDATE documents SET content = ?, updated_at = ? WHERE id = ?')
-        .bind(newContent, now, doc.id),
-      createRevisionStatement(c.env.DB, doc.id, doc.title, newContent, author, now),
-      ...linkStatements,
-      c.env.DB.prepare('UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?')
-        .bind('approved', now, id),
-    ])
+    // Update document (with version/revision/links)
+    const updateResult = await updateDocument(
+      c.env.DB, auth, doc.id,
+      { title: doc.title, content: doc.content, version: doc.version },
+      { content: newContent },
+      doc.version,
+      now
+    )
+    if (!updateResult.ok) {
+      return c.json({ error: { code: updateResult.code === 'CONFLICT' ? 'CONFLICT' : 'DOC_NOT_FOUND', message: 'Document was modified by another request' } }, updateResult.code === 'CONFLICT' ? 409 : 404)
+    }
+
+    // Mark inbox item approved
+    await c.env.DB.prepare('UPDATE inbox_items SET status = ?, reviewed_at = ? WHERE id = ?')
+      .bind('approved', now, id).run()
 
     if (accept.includes('text/html')) {
       return c.html(await renderInboxList(c))
