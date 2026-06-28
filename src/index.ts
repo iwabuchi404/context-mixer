@@ -21,13 +21,14 @@ import { oauthRoute } from './mcp/oauth-handler'
 
 const app = new Hono<AppEnv>()
 
-// CORS — restrict to the production origin in prod; allow any in dev.
-// Use ENVIRONMENT to switch cleanly. Set ENVIRONMENT=development in .dev.vars
-// and ENVIRONMENT=production as a dashboard Secret.
+// CORS — restrict to the configured public origin in prod; allow any in dev.
+// Set CORS_ORIGIN=https://your-app.example in production dashboard Secrets.
+// Use ENVIRONMENT=development in .dev.vars and ENVIRONMENT=production as a Secret.
 app.use('*', cors({
   origin: (_origin, c) => {
     const env = c.env as Env
-    return isProduction(env) ? '[PUBLIC_APP_URL]' : '*'
+    if (!isProduction(env)) return '*'
+    return env.CORS_ORIGIN ?? '*'
   },
   allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'If-Match'],

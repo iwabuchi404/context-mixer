@@ -38,6 +38,9 @@ export type Env = {
   // Environment marker: 'development' (local dev via .dev.vars) or 'production'
   // (dashboard Secret). Used to distinguish dev/prod without relying on Clerk keys.
   ENVIRONMENT?: string
+  // Public app URL for CORS origin in production. Falls back to '*' only when
+  // ENVIRONMENT is not set to production.
+  CORS_ORIGIN?: string
 }
 
 // True when running in the production environment. Defaults to false when
