@@ -91,7 +91,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 
 .main-content {
   overflow-y: auto;
-  padding: var(--space-6) var(--space-5) var(--space-8);
+  padding: 0 var(--space-5) var(--space-8);
 }
 
 #doc-view {
@@ -264,7 +264,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 .doc-sticky-head {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 10;
   background: var(--bg);
   padding: var(--space-3) 0 var(--space-2);
   border-bottom: 1px solid var(--border);
@@ -532,6 +532,10 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-6);
+  margin-top: var(--space-6);
+}
+#doc-view-inner > .doc-head {
+  margin-top: var(--space-6);
 }
 
 /* 目次: 広い画面では右カラム、狭い画面では折りたたみ */
@@ -734,7 +738,10 @@ ul.plain li { padding: var(--space-3) 0; border-bottom: 1px solid var(--border);
     box-shadow: var(--shadow-pop);
   }
 
-  .main-content { padding: var(--space-4) var(--space-4) var(--space-8); }
+  .main-content { padding: 0 var(--space-4) var(--space-8); }
+
+  .doc-columns { margin-top: var(--space-4); }
+  #doc-view-inner > .doc-head { margin-top: var(--space-4); }
 
   .doc-head { flex-wrap: wrap; }
   .append-box { flex-direction: column; align-items: stretch; }
