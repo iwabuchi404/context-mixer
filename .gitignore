@@ -9,6 +9,7 @@ pnpm-debug.log*
 .env
 .env.local
 .dev.vars
+wrangler.production.toml
 
 # Build outputs
 dist/
@@ -25,6 +26,21 @@ wrangler/
 # OS
 .DS_Store
 Thumbs.db
+
+# Local development state
+.wrangler/
+.playwright-cli/
+public/.playwright-cli/
+.tmp/
+tmp/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+*.log
+.vars
+
+# Test artifacts containing secrets
+test-oauth-token.json
 
 # Cloudflare
 .mf/

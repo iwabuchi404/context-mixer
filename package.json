@@ -6,7 +6,7 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "wrangler dev --persist-to %USERPROFILE%/.context-mixer/wrangler-state",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy --config wrangler.production.toml",
     "d1:create": "wrangler d1 create context-mixer-db",
     "d1:migrate": "wrangler d1 execute context-mixer-db --remote --file=src/db/schema.sql",
     "d1:migrate-local": "wrangler d1 execute context-mixer-db --local --file=src/db/schema.sql --persist-to %USERPROFILE%/.context-mixer/wrangler-state",
