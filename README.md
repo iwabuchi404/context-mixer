@@ -118,15 +118,17 @@ npx wrangler login
 
 # D1データベース作成
 npm run d1:create
-# → 出力された database_id を wrangler.toml に反映
+# → 出力された database_id を控えておく
 
 # R2バケット作成
 npm run r2:create
 
 # KV名前空間作成（MCP OAuth用）
 npx wrangler kv namespace create OAUTH_KV
-# → 出力された id を wrangler.toml に反映
+# → 出力された id を控えておく
 ```
+
+取得した ID は `wrangler.toml` には書かず、後述の環境変数または CI/CD Secrets として使います。
 
 ### 3. Clerkアプリを作成
 
@@ -154,13 +156,15 @@ CLERK_SIGN_IN_URL=https://your-clerk-app.clerk.accounts.dev/sign-in
 ```bash
 npx wrangler secret put ENVIRONMENT
 # 値: production
+npx wrangler secret put CORS_ORIGIN
+# 値: あなたの本番URL (例: https://your-app.example.com)
 npx wrangler secret put CLERK_SECRET_KEY
 npx wrangler secret put CLERK_PUBLISHABLE_KEY
 npx wrangler secret put CLERK_FRONTEND_API
 npx wrangler secret put CLERK_SIGN_IN_URL
 ```
 
-> **注意**: Clerkの値は `wrangler.toml` の `[vars]` に書かないこと。デプロイのたびに本番ダッシュボードのSecretを上書きしてしまいます。
+> **注意**: Clerkの値と `CORS_ORIGIN` は `wrangler.toml` の `[vars]` に書かないこと。デプロイのたびに本番ダッシュボードのSecretを上書きしてしまいます。
 >
 > **Dev/Prod切り替え**: これまで `CLERK_FRONTEND_API` の有無で本番を判定していましたが、`.dev.vars` にも同じ名前の変数があるため判定が曖昧でした。`ENVIRONMENT` 変数を明示的に使って切り替えてください。`GET /auth/config` や `GET /health/config` の `environment` フィールドで現在の値を確認できます。
 
@@ -176,11 +180,50 @@ npm run d1:migrate
 
 ### 6. デプロイ
 
+#### A. Cloudflare Builds（Git 連携）を使う場合
+
+ダッシュボードで以下を設定します：
+
+| 設定項目 | 値 |
+|---|---|
+| **Deploy command** | `npm run deploy` |
+| **Build variables** | `D1_DATABASE_ID`, `OAUTH_KV_ID` |
+
+`main` ブランチに push すると自動デプロイされます。
+
+#### B. 手動でデプロイする場合
+
+環境変数を設定してから実行：
+
 ```bash
+# macOS/Linux
+export D1_DATABASE_ID="your-d1-database-id"
+export OAUTH_KV_ID="your-oauth-kv-id"
+npm run deploy
+
+# Windows PowerShell
+$env:D1_DATABASE_ID="your-d1-database-id"
+$env:OAUTH_KV_ID="your-oauth-kv-id"
 npm run deploy
 ```
 
-これで `https://context-mixer.<your-subdomain>.workers.dev` で立ち上がります。
+`npm run deploy` は `scripts/make-wrangler-toml.js` を実行し、環境変数から `wrangler.toml` を生成してからデプロイします。ローカルの `wrangler.toml` はプレースホルダーのまま残ります。
+
+> **注意**: 生成される `wrangler.toml` は D1/KV/R2/ASSETS のみを含みます。Cloudflare ダッシュボードで独自に設定した `routes` や `vars` があれば、デプロイ時に上書きされる可能性があります。カスタムドメインや追加の `vars` を使う場合は、ダッシュボードで再設定するか、`scripts/make-wrangler-toml.js` をフォークして拡張してください。
+
+#### C. GitHub Actions を使う場合
+
+`.github/workflows/deploy.yml` を作成し、GitHub Secrets に以下を登録します：
+
+- `CLOUDFLARE_API_TOKEN`
+- `CLOUDFLARE_ACCOUNT_ID`
+- `D1_DATABASE_ID`
+- `OAUTH_KV_ID`
+- 必要に応じて Clerk 関連の Secret
+
+詳細な設定例は公式ドキュメントを参照：[GitHub Actions · Cloudflare Workers](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)
+
+デプロイ後、Workers URL（例: `https://context-mixer.<your-subdomain>.workers.dev`）でアクセスできます。
 
 ### 7. MCPクライアントから接続
 
