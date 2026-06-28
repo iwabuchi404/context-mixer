@@ -92,6 +92,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 .main-content {
   overflow-y: auto;
   padding: 0 var(--space-5) var(--space-8);
+  scroll-behavior: smooth;
 }
 
 #doc-view {
@@ -139,7 +140,16 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 .tree-toggle:hover { background: var(--surface-dim); color: var(--text); }
 .tree-toggle-icon { display: inline-block; transition: transform var(--dur-fast) var(--ease); }
 .tree-group.collapsed .tree-toggle-icon { transform: rotate(-90deg); }
-.tree-group.collapsed .tree-children { display: none; }
+.tree-children {
+  max-height: 1000px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height var(--dur-slow) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+.tree-group.collapsed .tree-children {
+  max-height: 0;
+  opacity: 0;
+}
 
 /* ドキュメントの開閉トグル: 子があるドキュメントのみ表示。スペーサーでリンク位置を揃える */
 .tree-doc-item .tree-toggle-doc {
@@ -148,7 +158,16 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
 }
 .tree-doc-item.has-children .tree-toggle-doc { display: inline-block; }
 .tree-toggle-spacer { display: inline-block; width: calc(var(--space-2) * 2 + 0.5em); }
-.tree-doc-item.collapsed + .tree-doc-children { display: none; }
+.tree-doc-children {
+  max-height: 1000px;
+  opacity: 1;
+  overflow: hidden;
+  transition: max-height var(--dur-slow) var(--ease), opacity var(--dur-fast) var(--ease);
+}
+.tree-doc-item.collapsed + .tree-doc-children {
+  max-height: 0;
+  opacity: 0;
+}
 .tree-doc-item.collapsed > .tree-toggle-doc .tree-toggle-icon { transform: rotate(-90deg); }
 
 .tree-empty {
@@ -559,6 +578,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
     display: block;
     position: sticky;
     top: calc(49px + var(--space-4));
+    padding-top: 60px;
     align-self: start;
     max-height: 75vh;
     overflow-y: auto;
