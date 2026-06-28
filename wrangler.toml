@@ -9,18 +9,16 @@ binding = "ASSETS"
 [[d1_databases]]
 binding = "DB"
 database_name = "context-mixer-db"
-database_id = "YOUR_D1_DATABASE_ID"
+database_id = "6a6f2e3a-f52a-48fd-a644-ed62ffcd7203"
 
 [[r2_buckets]]
 binding = "R2"
 bucket_name = "context-mixer-files"
 
-# MCP OAuth (workers-oauth-provider) grant/token store. Local dev (miniflare)
-# emulates KV regardless of id; production needs a real namespace id:
-#   npx wrangler kv namespace create OAUTH_KV  → paste the returned id here.
+# MCP OAuth (workers-oauth-provider) grant/token store.
 [[kv_namespaces]]
 binding = "OAUTH_KV"
-id = "YOUR_OAUTH_KV_ID"
+id = "0fbbe475c2694193ad3693eae8e11559"
 
 # NOTE: Clerk config is intentionally NOT in [vars]. Plain-text [vars] are pushed
 # on every `wrangler deploy` and overwrite the dashboard Secrets.
