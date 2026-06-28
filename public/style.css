@@ -558,7 +558,7 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   .doc-toc {
     display: block;
     position: sticky;
-    top: var(--space-4);
+    top: calc(49px + var(--space-4));
     align-self: start;
     max-height: 75vh;
     overflow-y: auto;
@@ -581,6 +581,96 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   border-top: 1px solid var(--border);
   padding-top: var(--space-4);
   max-width: var(--measure);
+}
+
+.revision-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 240px) 1fr;
+  gap: var(--space-5);
+  align-items: start;
+  margin-top: var(--space-4);
+}
+.revision-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.revision-item {
+  text-align: left;
+  font: inherit;
+  font-size: var(--text-xs);
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease), border-color var(--dur-fast) var(--ease);
+}
+.revision-item:hover,
+.revision-item.is-current {
+  background: var(--surface-dim);
+  border-color: var(--accent);
+  color: var(--text);
+}
+.revision-time {
+  display: block;
+  font-family: var(--font-mono);
+  margin-bottom: 2px;
+}
+.revision-author {
+  display: block;
+  color: var(--accent);
+  margin-bottom: 2px;
+}
+.revision-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.revision-preview {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: var(--space-4);
+  max-height: 75vh;
+  overflow-y: auto;
+}
+.revision-preview-head {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border);
+}
+.revision-preview-title {
+  font-size: 1.3rem;
+  margin: 0 0 var(--space-4);
+}
+
+@media (max-width: 719px) {
+  .revision-layout {
+    grid-template-columns: 1fr;
+  }
+  .revision-list {
+    flex-direction: row;
+    overflow-x: auto;
+    max-height: none;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .revision-list::-webkit-scrollbar { display: none; }
+  .revision-item {
+    flex: 0 0 auto;
+    min-width: 10rem;
+  }
 }
 .doc-backlinks h2 {
   font-size: var(--text-xs);

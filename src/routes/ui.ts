@@ -731,6 +731,7 @@ uiRoute.get('/doc/:id/edit', async (c) => {
     </div>
   </form>
   <p class="edit-foot">
+    <button class="btn-ghost" hx-get="/ui/doc/${esc(doc.id)}/revisions" hx-target="#doc-view">履歴</button>
     <button class="btn-ghost" hx-get="/ui/doc/${esc(doc.id)}/move" hx-target="#doc-view">移動</button>
     <button class="btn-ghost-danger" hx-post="/ui/doc/${esc(doc.id)}/delete" hx-target="#doc-view"
             hx-confirm="このドキュメントを削除しますか?(変更履歴は残ります)">削除する</button>
@@ -900,6 +901,99 @@ uiRoute.post('/doc/:id/move', async (c) => {
   c.header('HX-Push-Url', `/?doc=${id}`)
   return c.html('error' in result2 ? errorFragment(result2.error) : result2.html)
 })
+
+// GET /ui/doc/:id/revisions - Document revision history (minimal: list + preview)
+uiRoute.get('/doc/:id/revisions', async (c) => {
+  const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const id = c.req.param('id')
+  const doc = await c.env.DB.prepare(`
+    SELECT d.id, d.title, d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
+  if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  const revs = await c.env.DB.prepare(`
+    SELECT id, title, content, author_type, api_key_name, created_at
+    FROM document_revisions
+    WHERE document_id = ?
+    ORDER BY created_at DESC
+    LIMIT 20
+  `).bind(id).all() as { results: { id: string; title: string; content: string; author_type: string; api_key_name: string | null; created_at: number }[] }
+
+  if (revs.results.length === 0) {
+    return c.html(`
+<div id="doc-view-inner" data-doc-title="変更履歴">
+  <div class="doc-head">
+    <h1 class="doc-title">変更履歴</h1>
+    <button class="btn-ghost" hx-get="/ui/doc/${esc(id)}" hx-target="#doc-view">戻る</button>
+  </div>
+  <p class="meta-line">${esc(doc.title)}</p>
+  <p class="meta-line">履歴はまだありません</p>
+</div>`)
+  }
+
+  const latest = revs.results[0]
+  const preview = renderRevisionPreview(latest)
+  const listItems = revs.results.map((rev) => `
+    <button class="revision-item${rev.id === latest.id ? ' is-current' : ''}" type="button"
+            hx-get="/ui/doc/${esc(id)}/revisions/${esc(rev.id)}"
+            hx-target="#revision-preview">
+      <span class="revision-time">${fmtDate(rev.created_at)}</span>
+      <span class="revision-author">${esc(rev.author_type === 'human' ? '人間' : rev.api_key_name || 'AI')}</span>
+      <span class="revision-title">${esc(rev.title)}</span>
+    </button>`).join('')
+
+  return c.html(`
+<div id="doc-view-inner" data-doc-title="変更履歴">
+  <div class="doc-head">
+    <h1 class="doc-title">変更履歴</h1>
+    <button class="btn-ghost" hx-get="/ui/doc/${esc(id)}" hx-target="#doc-view">戻る</button>
+  </div>
+  <p class="meta-line">${esc(doc.title)}</p>
+  <div class="revision-layout">
+    <div class="revision-list">${listItems}</div>
+    <div id="revision-preview" class="revision-preview">${preview}</div>
+  </div>
+</div>`)
+})
+
+// GET /ui/doc/:id/revisions/:revId - Preview a single revision
+uiRoute.get('/doc/:id/revisions/:revId', async (c) => {
+  const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const id = c.req.param('id')
+  const revId = c.req.param('revId')
+  const doc = await c.env.DB.prepare(`
+    SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
+  if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  const rev = await c.env.DB.prepare(`
+    SELECT id, title, content, author_type, api_key_name, created_at
+    FROM document_revisions
+    WHERE id = ? AND document_id = ?
+  `).bind(revId, id).first() as any
+  if (!rev) return c.html(errorFragment('リビジョンが見つかりません'), 404)
+
+  return c.html(renderRevisionPreview(rev))
+})
+
+const renderRevisionPreview = (rev: any): string => {
+  const body = renderMarkdown(rev.content)
+  return `
+<div class="revision-preview-inner">
+  <div class="revision-preview-head">
+    <span class="revision-preview-time">${fmtDate(rev.created_at)}</span>
+    <span class="revision-preview-author">${esc(rev.author_type === 'human' ? '人間' : rev.api_key_name || 'AI')}</span>
+  </div>
+  <h2 class="revision-preview-title">${esc(rev.title)}</h2>
+  <article class="prose">${body}</article>
+</div>`
+}
 
 // GET /ui/doc/:id/new-child - Child document creation form
 uiRoute.get('/doc/:id/new-child', async (c) => {
