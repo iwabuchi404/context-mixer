@@ -1,108 +1,110 @@
 # Context Mixer
 
-AIと人間が共同管理する、AIファーストのナレッジベース。
+> **English** | [日本語](./README.ja.md)
 
-AIが自分で必要な情報を探しに行き、読み、書き込める場所。プロンプトにコンテキストを手動で貼る作業がなくなります。
+An AI-first knowledge base co-managed by AI and humans.
 
-## なぜ作ったのか
+A place where AI can search, read, and write the information it needs on its own. No more manually pasting context into prompts.
 
-個人開発のプロジェクトが20を超えたあたりで、Notionに溜めたドキュメントをAIツールから使うのがしんどくなりました。
+## Why I Built This
 
-少しの追記にもレイテンシがかかり、何度も読み書きしているとトークン消費も馬鹿になりません。ほかのサービスやアプリも検討しましたが、チャットアプリからもCLIのエージェントツールからもアクセスしやすく、AI向きに作られたものが見つかりませんでした。
+After my personal projects surpassed 20, using documents stored in Notion from AI tools became painful.
 
-Notionは人間が読むための道具としてはよくできています。ただ、リッチなブロック構造はAIにとっては邪魔で、ページ単位でしか情報を取れないから必要な1段落のためにページ全体のトークンを消費してしまいます。
+Even a small edit incurred latency, and repeated read/write cycles consumed non-trivial tokens. I looked at other services and apps, but couldn't find one that was both accessible from chat apps and CLI agent tools, and designed with AI in mind.
 
-ContextMixerは**AIが探索しやすいこと**を優先して設計したナレッジベースです。
+Notion is great as a tool for humans to read. But its rich block structure gets in the way for AI — you can only retrieve information per page, so fetching a single paragraph costs the tokens of the entire page.
 
-## 何ができるか
+Context Mixer is a knowledge base designed with **AI explorability** as the top priority.
 
-### AIが自分でドキュメントを探して読み書きする
+## What It Does
 
-Claude DesktopやClaude CodeからMCP経由で直接アクセス。「このプロジェクトの設計方針を確認して」と言えば、AIが勝手に検索して必要なドキュメントを持ってきてくれます。プロンプトにコンテキストを貼る作業が不要になります。
+### AI Searches, Reads, and Writes Documents Autonomously
 
-### トークン消費を抑える粒度取得
+Access directly from Claude Desktop or Claude Code via MCP. Just say "check this project's design policy" and the AI will search and fetch the relevant documents for you. No need to paste context into prompts.
 
-ドキュメントを「どこまで読むか」を選べます。
+### Granular Retrieval to Reduce Token Consumption
+
+Choose "how much" of a document to read:
 
 ```
-GET /docs/:id?view=meta      → タイトル + 概要のみ（数十トークン）
-GET /docs/:id?view=outline   → 見出し構造
-GET /docs/:id?view=section   → 特定セクションだけ
-GET /docs/:id?view=full      → 全文
+GET /docs/:id?view=meta      → title + summary only (tens of tokens)
+GET /docs/:id?view=outline   → heading structure
+GET /docs/:id?view=section   → specific section only
+GET /docs/:id?view=full      → full text
 ```
 
-AIはまずmetaを見て関係あるか判断し、必要ならsectionで必要な部分だけ取る。全文を毎回食わせないのでトークン消費が劇的に減ります。
+The AI first checks `meta` to judge relevance, then fetches only the needed parts via `section`. Since it doesn't ingest the full text every time, token consumption drops dramatically.
 
-### 人間もWeb UIで読み書きできる
+### Humans Can Also Read and Write via Web UI
 
-ブラウザからコレクションツリーを閲覧、Markdownでドキュメントを編集、全文検索。HTMXで軽量に作られていて、サーバーサイドレンダリングのみで動きます。
+Browse the collection tree, edit documents in Markdown, and full-text search — all from the browser. Built lightweight with HTMX, running on server-side rendering only.
 
-### 3つの認証方式
+### Three Authentication Methods
 
-| 相手 | 認証方式 | 用途 |
-|------|----------|------|
-| 人間（ブラウザ） | Clerk セッション認証 | Web UIへのログイン |
-| AI（REST API） | APIキー（スコープ・コレクション制限あり） | 外部サービスからのアクセス |
-| AI（MCP） | OAuth 2.1 | Claude.ai・ChatGPT等からの接続 |
+| Who | Auth Method | Use Case |
+|-----|-------------|----------|
+| Human (browser) | Clerk session auth | Web UI login |
+| AI (REST API) | API key (scope + collection restrictions) | Access from external services |
+| AI (MCP) | OAuth 2.1 | Connections from Claude.ai, ChatGPT, etc. |
 
-APIキーは「このキーはこのプロジェクトのreadだけ」みたいな運用ができます。信頼度の低い外部サービスに渡すキーの権限を絞れるので安心です。
+API keys support policies like "this key can only read this project." You can restrict permissions for keys handed to less trusted external services, giving you peace of mind.
 
-### そのほかの機能
+### Other Features
 
-- **全文検索** — D1のFTS5（trigram）による高速検索。ハイフン入り語にも対応
-- **ドキュメントリンク** — `[[doc_xxx]]` 記法でドキュメント間リンク。backlinksも自動生成
-- **リビジョン履歴** — 全書き込みに署名付きリビジョンを記録。誰が（人間/AI/OAuth）何を変更したか追跡可能
-- **ファイル添付** — R2に画像等をアップロード、ドキュメントに埋め込み
-- **Inbox** — 外部からの投稿を承認フロー経由で取り込み
+- **Full-text search** — Fast search via D1's FTS5 (trigram). Handles hyphenated terms
+- **Document links** — `[[doc_xxx]]` syntax for inter-document links. Backlinks auto-generated
+- **Revision history** — Signed revisions recorded for every write. Track who (human/AI/OAuth) changed what
+- **File attachments** — Upload images etc. to R2, embed in documents
+- **Inbox** — Ingest external submissions via an approval flow
 
-## スタック
+## Stack
 
-| 要素 | 選択 | 理由 |
-|------|------|------|
-| Runtime | Hono on Cloudflare Workers | エッジで動く・無料枠が大きい |
-| DB | D1 (SQLite互換) | Workers統合・FTS5全文検索が使える |
-| Storage | R2 | 転送無料・画像保存 |
-| Frontend | HTMX + Workers Assets | ビルドステップ不要・サーバーサイドレンダリング |
-| 認証 | Clerk + APIキー + OAuth 2.1 | 人間・AI・MCPクライアントの3系統 |
-| MCP | workers-oauth-provider | Cloudflare公式・Streamable HTTP |
+| Component | Choice | Reason |
+|-----------|--------|--------|
+| Runtime | Hono on Cloudflare Workers | Runs on edge, generous free tier |
+| DB | D1 (SQLite-compatible) | Workers integration, FTS5 full-text search |
+| Storage | R2 | Free egress, image storage |
+| Frontend | HTMX + Workers Assets | No build step, server-side rendering |
+| Auth | Clerk + API key + OAuth 2.1 | Three auth systems for humans, AI, and MCP clients |
+| MCP | workers-oauth-provider | Cloudflare official, Streamable HTTP |
 
-Cloudflareに全部寄せているのはコストが理由です。ナレッジベースは一度作ったら何年も使うものなので、ランニングコストがほぼゼロ（個人利用の範囲で無料枠内）なのは地味に大きいです。
+Everything is on Cloudflare for cost reasons. A knowledge base is something you use for years once built, so having running costs near zero (within the free tier for personal use) is quietly significant.
 
-## MCPツール一覧
+## MCP Tools
 
-AIがMCP経由で使えるツールは9個。
+9 tools available to AI via MCP:
 
-| ツール | 説明 | スコープ |
-|--------|------|----------|
-| `search_docs` | キーワード全文検索。スニペット付き | read |
-| `get_doc` | ドキュメント取得（meta/outline/full/section） | read |
-| `list_collections` | コレクション一覧（ツリー構造） | read |
-| `list_docs` | コレクション内のドキュメント一覧（軽量・本文なし） | read |
-| `get_entrypoint` | エントリーポイントドキュメント取得 | read |
-| `write_doc` | ドキュメント作成・更新 | write |
-| `append_doc` | ドキュメント末尾に追記 | write |
-| `delete_doc` | ドキュメント削除 | write |
-| `create_collection` | コレクション作成 | write |
+| Tool | Description | Scope |
+|------|-------------|-------|
+| `search_docs` | Keyword full-text search with snippets | read |
+| `get_doc` | Get document (meta/outline/full/section) | read |
+| `list_collections` | List collections (tree structure) | read |
+| `list_docs` | List documents in a collection (lightweight, no body) | read |
+| `get_entrypoint` | Get entrypoint document | read |
+| `write_doc` | Create or update document | write |
+| `append_doc` | Append content to end of document | write |
+| `delete_doc` | Delete document | write |
+| `create_collection` | Create collection | write |
 
-## 対応クライアント
+## Supported Clients
 
-| クライアント | 接続方法 |
-|--------------|----------|
-| Claude.ai | 設定 → Connectors → Custom Connector → URL入力 |
-| Claude Code | `claude mcp add` でリモートMCPサーバーとして登録 |
-| ChatGPT | Settings → Connectors → Add connector（ベータ） |
-| MCP Inspector | `npx @modelcontextprotocol/inspector` でデバッグ |
+| Client | Connection Method |
+|--------|-------------------|
+| Claude.ai | Settings → Connectors → Custom Connector → Enter URL |
+| Claude Code | Register as remote MCP server via `claude mcp add` |
+| ChatGPT | Settings → Connectors → Add connector (beta) |
+| MCP Inspector | Debug with `npx @modelcontextprotocol/inspector` |
 
-## セルフホスト手順
+## Self-Hosting
 
-### 前提
+### Prerequisites
 
 - Node.js 18+
-- Wrangler CLI（`npm install -g wrangler`）
-- Cloudflareアカウント（無料枠でOK）
-- Clerkアカウント（認証用・無料枠でOK）
+- Wrangler CLI (`npm install -g wrangler`)
+- Cloudflare account (free tier is fine)
+- Clerk account (for auth, free tier is fine)
 
-### 1. リポジトリをクローン
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/iwabuchi404/context-mixer.git
@@ -110,38 +112,38 @@ cd context-mixer
 npm install
 ```
 
-### 2. Cloudflareリソースを作成
+### 2. Create Cloudflare resources
 
 ```bash
-# Cloudflareにログイン
+# Log in to Cloudflare
 npx wrangler login
 
-# D1データベース作成
+# Create D1 database
 npm run d1:create
-# → 出力された database_id を控えておく
+# → Note the outputted database_id
 
-# R2バケット作成
+# Create R2 bucket
 npm run r2:create
 
-# KV名前空間作成（MCP OAuth用）
+# Create KV namespace (for MCP OAuth)
 npx wrangler kv namespace create OAUTH_KV
-# → 出力された id を控えておく
+# → Note the outputted id
 ```
 
-取得した ID は `wrangler.toml` には書かず、後述の環境変数または CI/CD Secrets として使います。
+Do not write the obtained IDs into `wrangler.toml` — use them as environment variables or CI/CD Secrets as described below.
 
-### 3. Clerkアプリを作成
+### 3. Create a Clerk app
 
-1. [Clerk](https://clerk.com) でアプリを作成
-2. 以下の値を取得:
+1. Create an app at [Clerk](https://clerk.com)
+2. Obtain the following values:
    - `CLERK_SECRET_KEY`
    - `CLERK_PUBLISHABLE_KEY`
-   - `CLERK_FRONTEND_API`（例: `https://your-app.clerk.accounts.dev`）
-   - `CLERK_SIGN_IN_URL`（例: `https://your-app.clerk.accounts.dev/sign-in`）
+   - `CLERK_FRONTEND_API` (e.g. `https://your-app.clerk.accounts.dev`)
+   - `CLERK_SIGN_IN_URL` (e.g. `https://your-app.clerk.accounts.dev/sign-in`)
 
-### 4. シークレットを設定
+### 4. Set secrets
 
-ローカル開発用（`.dev.vars`）:
+For local development (`.dev.vars`):
 
 ```ini
 ENVIRONMENT=development
@@ -151,49 +153,49 @@ CLERK_FRONTEND_API=https://your-clerk-app.clerk.accounts.dev
 CLERK_SIGN_IN_URL=https://your-clerk-app.clerk.accounts.dev/sign-in
 ```
 
-本番用:
+For production:
 
 ```bash
 npx wrangler secret put ENVIRONMENT
-# 値: production
+# value: production
 npx wrangler secret put CORS_ORIGIN
-# 値: あなたの本番URL (例: https://your-app.example.com)
+# value: your production URL (e.g. https://your-app.example.com)
 npx wrangler secret put CLERK_SECRET_KEY
 npx wrangler secret put CLERK_PUBLISHABLE_KEY
 npx wrangler secret put CLERK_FRONTEND_API
 npx wrangler secret put CLERK_SIGN_IN_URL
 ```
 
-> **注意**: Clerkの値と `CORS_ORIGIN` は `wrangler.toml` の `[vars]` に書かないこと。デプロイのたびに本番ダッシュボードのSecretを上書きしてしまいます。
+> **Note**: Do not put Clerk values and `CORS_ORIGIN` in `[vars]` in `wrangler.toml`. Every deploy will overwrite the production dashboard Secrets.
 >
-> **Dev/Prod切り替え**: これまで `CLERK_FRONTEND_API` の有無で本番を判定していましたが、`.dev.vars` にも同じ名前の変数があるため判定が曖昧でした。`ENVIRONMENT` 変数を明示的に使って切り替えてください。`GET /auth/config` や `GET /health/config` の `environment` フィールドで現在の値を確認できます。
+> **Dev/Prod switching**: Previously, production was detected by the presence of `CLERK_FRONTEND_API`, but since `.dev.vars` can have the same variable name, the detection was ambiguous. Use the `ENVIRONMENT` variable explicitly to switch. You can check the current value via the `environment` field in `GET /auth/config` or `GET /health/config`.
 
-### 5. マイグレーション
+### 5. Run migrations
 
 ```bash
-# ローカル
+# Local
 npm run d1:migrate-local
 
-# 本番
+# Production
 npm run d1:migrate
 ```
 
-### 6. デプロイ
+### 6. Deploy
 
-#### A. Cloudflare Builds（Git 連携）を使う場合
+#### A. Using Cloudflare Builds (Git integration)
 
-ダッシュボードで以下を設定します：
+Configure the following in the dashboard:
 
-| 設定項目 | 値 |
-|---|---|
+| Setting | Value |
+|---------|-------|
 | **Deploy command** | `npm run deploy` |
 | **Build variables** | `D1_DATABASE_ID`, `OAUTH_KV_ID` |
 
-`main` ブランチに push すると自動デプロイされます。
+Pushing to the `main` branch triggers automatic deployment.
 
-#### B. 手動でデプロイする場合
+#### B. Manual deployment
 
-環境変数を設定してから実行：
+Set environment variables, then run:
 
 ```bash
 # macOS/Linux
@@ -207,83 +209,83 @@ $env:OAUTH_KV_ID="your-oauth-kv-id"
 npm run deploy
 ```
 
-`npm run deploy` は `scripts/make-wrangler-toml.js` を実行し、環境変数から `wrangler.toml` を生成してからデプロイします。ローカルの `wrangler.toml` はプレースホルダーのまま残ります。
+`npm run deploy` runs `scripts/make-wrangler-toml.js`, which generates `wrangler.toml` from environment variables before deploying. The local `wrangler.toml` remains with placeholders.
 
-> **注意**: 生成される `wrangler.toml` は D1/KV/R2/ASSETS のみを含みます。Cloudflare ダッシュボードで独自に設定した `routes` や `vars` があれば、デプロイ時に上書きされる可能性があります。カスタムドメインや追加の `vars` を使う場合は、ダッシュボードで再設定するか、`scripts/make-wrangler-toml.js` をフォークして拡張してください。
+> **Note**: The generated `wrangler.toml` includes only D1/KV/R2/ASSETS. If you have custom `routes` or `vars` configured in the Cloudflare dashboard, they may be overwritten on deploy. If you use custom domains or additional `vars`, reconfigure them in the dashboard or fork `scripts/make-wrangler-toml.js` to extend it.
 
-#### C. GitHub Actions を使う場合
+#### C. Using GitHub Actions
 
-`.github/workflows/deploy.yml` を作成し、GitHub Secrets に以下を登録します：
+Create `.github/workflows/deploy.yml` and register the following in GitHub Secrets:
 
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 - `D1_DATABASE_ID`
 - `OAUTH_KV_ID`
-- 必要に応じて Clerk 関連の Secret
+- Clerk-related Secrets as needed
 
-詳細な設定例は公式ドキュメントを参照：[GitHub Actions · Cloudflare Workers](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)
+See the official docs for detailed setup: [GitHub Actions · Cloudflare Workers](https://developers.cloudflare.com/workers/ci-cd/external-cicd/github-actions/)
 
-デプロイ後、Workers URL（例: `https://context-mixer.<your-subdomain>.workers.dev`）でアクセスできます。
+After deployment, access via the Workers URL (e.g. `https://context-mixer.<your-subdomain>.workers.dev`).
 
-### 7. MCPクライアントから接続
+### 7. Connect from MCP clients
 
-デプロイ先の `/mcp` エンドポイントをMCPサーバーURLとして各クライアントに登録します。
+Register the `/mcp` endpoint of your deployment as the MCP server URL in each client.
 
-例: Claude Codeの場合
+Example — Claude Code:
 
 ```bash
 claude mcp add context-mixer --transport http https://context-mixer.<your-subdomain>.workers.dev/mcp
 ```
 
-## ローカル開発
+## Local Development
 
 ```bash
 npm run dev
 ```
 
-`http://localhost:8787` で開発サーバーが立ち上がります。
+The dev server starts at `http://localhost:8787`.
 
-## API エンドポイント
+## API Endpoints
 
-### システム
-- `GET /health` — ヘルスチェック
-- `GET /` — API情報
+### System
+- `GET /health` — Health check
+- `GET /` — API info
 
-### 認証
-- `GET /auth/login` — Clerkログインへリダイレクト
+### Auth
+- `GET /auth/login` — Redirect to Clerk login
 
-### コレクション
-- `GET /collections` — コレクション一覧（ツリー）
-- `POST /collections` — コレクション作成
-- `PATCH /collections/:id` — コレクション更新
-- `DELETE /collections/:id` — コレクション削除
+### Collections
+- `GET /collections` — List collections (tree)
+- `POST /collections` — Create collection
+- `PATCH /collections/:id` — Update collection
+- `DELETE /collections/:id` — Delete collection
 
-### ドキュメント
-- `GET /docs` — ドキュメント一覧
-- `GET /docs/:id?view=meta|outline|full` — ドキュメント取得
-- `POST /docs` — ドキュメント作成
-- `PATCH /docs/:id` — ドキュメント更新
-- `DELETE /docs/:id` — ドキュメント削除
-- `POST /docs/:id/append` — 末尾追記
-- `GET /docs/:id/history` — リビジョン履歴
+### Documents
+- `GET /docs` — List documents
+- `GET /docs/:id?view=meta|outline|full` — Get document
+- `POST /docs` — Create document
+- `PATCH /docs/:id` — Update document
+- `DELETE /docs/:id` — Delete document
+- `POST /docs/:id/append` — Append to end
+- `GET /docs/:id/history` — Revision history
 
-### その他
-- `GET /search?q=` — 全文検索
-- `POST /files` — ファイルアップロード
-- `POST /inbox/:token` — Inboxへ投稿
-- `GET /entrypoint` — ワークスペースエントリーポイント
-- `GET /me/entrypoint` — ユーザー個人エントリーポイント
-- `POST /mcp` — MCP JSON-RPCエンドポイント（OAuth認証）
+### Others
+- `GET /search?q=` — Full-text search
+- `POST /files` — File upload
+- `POST /inbox/:token` — Post to Inbox
+- `GET /entrypoint` — Workspace entrypoint
+- `GET /me/entrypoint` — User's personal entrypoint
+- `POST /mcp` — MCP JSON-RPC endpoint (OAuth auth)
 
-詳細は [docs/design-doc.md](./docs/design-doc.md) を参照。
+See [docs/design-doc.md](./docs/design-doc.md) for details.
 
-## ドキュメント
+## Documentation
 
-- [docs/USAGE.md](./docs/USAGE.md) — 使い方ガイド（Web UI・APIキー・MCP接続）
-- [docs/design-doc.md](./docs/design-doc.md) — 詳細設計
-- [docs/MCP.md](./docs/MCP.md) — MCP実装方針
-- [docs/STATUS.md](./docs/STATUS.md) — 開発進捗・引き継ぎ
+- [docs/USAGE.md](./docs/USAGE.md) — Usage guide (Web UI, API keys, MCP connection)
+- [docs/design-doc.md](./docs/design-doc.md) — Detailed design
+- [docs/MCP.md](./docs/MCP.md) — MCP implementation policy
+- [docs/STATUS.md](./docs/STATUS.md) — Development progress and handoff
 
-## ライセンス
+## License
 
 MIT
