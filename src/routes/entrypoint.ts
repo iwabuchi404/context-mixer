@@ -44,6 +44,7 @@ entrypointRoute.get('/', async (c) => {
       .filter((c: any) => c.parent_id === parentId)
       .map((c: any) => ({
         ...c,
+        entrypoint_url: c.entrypoint_doc_id ? `/docs/${c.entrypoint_doc_id}` : null,
         children: buildTree(c.id),
       }))
   }
