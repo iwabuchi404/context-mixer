@@ -160,6 +160,11 @@ mark {
   color: var(--text-muted);
 }
 .btn-ghost:hover { background: var(--surface-dim); color: var(--text); }
+.btn-ghost.is-active {
+  background: var(--accent-subtle);
+  border-color: var(--accent);
+  color: var(--accent);
+}
 .btn-ghost-danger {
   background: transparent;
   border: 1px solid var(--border);

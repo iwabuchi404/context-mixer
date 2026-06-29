@@ -9,7 +9,7 @@ import { parseSections } from '../services/sections'
 
 import { createDocument, moveDocument, updateDocument } from '../services/revisions'
 import { renderInboxList } from './inbox'
-import { renderFilesList } from './files'
+import { renderFilesList, renderImagesList } from './files'
 
 export const uiRoute = new Hono<AppEnv>()
 
@@ -18,6 +18,7 @@ export const uiRoute = new Hono<AppEnv>()
 // would otherwise intercept GET /inbox and GET /files).
 uiRoute.get('/inbox', async (c) => c.html(await renderInboxList(c)))
 uiRoute.get('/files', async (c) => c.html(await renderFilesList(c)))
+uiRoute.get('/images', async (c) => c.html(await renderImagesList(c)))
 
 const generateId = (prefix: string) => `${prefix}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
 
@@ -42,7 +43,7 @@ const toFtsQuery = (query: string): string =>
   query.trim().split(/\s+/).filter(Boolean)
     .map((part) => `"${part.replace(/"/g, '""')}"`)
     .join(' ')
-
+　
 // ---------------------------------------------------------------
 // Shared renderers
 // ---------------------------------------------------------------
@@ -364,7 +365,7 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
 
   // collection名は別途取得（renderDocFromData では collections リストから再利用）
   const [collection, lastRev, linksResult, backlinksResult, ancestorRows] = await Promise.all([
-    c.env.DB.prepare('SELECT name FROM collections WHERE id = ? AND owner_user_id = ?').bind(doc.collection_id, uid).first(),
+    c.env.DB.prepare('SELECT name, entrypoint_doc_id FROM collections WHERE id = ? AND owner_user_id = ?').bind(doc.collection_id, uid).first(),
     c.env.DB.prepare('SELECT author_type, api_key_name FROM document_revisions WHERE document_id = ? ORDER BY created_at DESC LIMIT 1').bind(id).first(),
     c.env.DB.prepare(`
       SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.to_doc_id
@@ -442,11 +443,18 @@ const renderDocFromData = (_c: any, doc: any, docExtra: any[]): string => {
     ).join(' / ')
   }
 
+  // エントリーポイント設定ボタン: 現在のドキュメントがコレクションのエントリーポイントか判定
+  const isEntrypoint = (collection as any)?.entrypoint_doc_id === doc.id
+  const entrypointBtn = isEntrypoint
+    ? `<button class="btn-ghost is-active" hx-post="/ui/doc/${esc(doc.id)}/entrypoint/unset" hx-target="#doc-view" title="このコレクションのエントリーポイントを解除">★ エントリーポイント</button>`
+    : `<button class="btn-ghost" hx-post="/ui/doc/${esc(doc.id)}/entrypoint/set" hx-target="#doc-view" title="このコレクションのエントリーポイントに設定">☆ エントリーポイントに設定</button>`
+
   const html = `
 <div id="doc-view-inner" data-doc-id="${esc(doc.id)}" data-doc-title="${esc(doc.title)}">
   <div class="doc-sticky-head">
     <div class="doc-head">
       <h1 class="doc-title">${esc(doc.title)}</h1>
+      ${entrypointBtn}
       <button class="btn-ghost" hx-get="/ui/doc/${esc(doc.id)}/edit" hx-target="#doc-view">✎ 編集</button>
     </div>
     <p class="meta-line">${breadcrumb} ・ ${fmtDate(doc.updated_at)}${author ? ` ・ ${author}` : ''}</p>
@@ -512,7 +520,7 @@ uiRoute.get('/init', async (c) => {
 
   // Phase 1: collections と doc（指定時）を並列取得
   const colsPromise = c.env.DB.prepare(
-    'SELECT id, name, parent_id FROM collections WHERE owner_user_id = ? ORDER BY name'
+    'SELECT id, name, parent_id, entrypoint_doc_id FROM collections WHERE owner_user_id = ? ORDER BY name'
   ).bind(uid).all()
 
   const docPromise = docId
@@ -552,7 +560,10 @@ uiRoute.get('/init', async (c) => {
   let docExtraPromise: Promise<any> = Promise.resolve(null)
   if (doc && isCollectionAllowed(auth, doc.collection_id)) {
     docExtraPromise = Promise.all([
-      Promise.resolve({ name: collections.find((c) => c.id === doc.collection_id)?.name ?? '' }),
+      Promise.resolve({
+        name: collections.find((c) => c.id === doc.collection_id)?.name ?? '',
+        entrypoint_doc_id: collections.find((c) => c.id === doc.collection_id)?.entrypoint_doc_id ?? null,
+      }),
       c.env.DB.prepare('SELECT author_type, api_key_name FROM document_revisions WHERE document_id = ? ORDER BY created_at DESC LIMIT 1').bind(doc.id).first(),
       c.env.DB.prepare(`
         SELECT d.id, d.title FROM document_links l JOIN documents d ON d.id = l.to_doc_id
@@ -723,6 +734,7 @@ uiRoute.get('/doc/:id/edit', async (c) => {
         <button class="btn-tool" type="button" data-snippet="---\n"><span class="tool-icon">—</span>水平線</button>
         <button class="btn-tool" type="button" data-snippet="|  |  |  |\n|---|---|---|\n|  |  |  |\n|  |  |  |\n" data-cursor="2"><span class="tool-icon">⊞</span>テーブル</button>
         <button class="btn-tool" type="button" data-snippet="[[doc_]]" data-cursor="7"><span class="tool-icon">[[ ]]</span>リンク</button>
+        <button class="btn-tool" type="button" data-upload-image><span class="tool-icon">🖼</span>画像</button>
       </div>
     </div>
     <div class="editor-wrap">
@@ -815,6 +827,46 @@ uiRoute.post('/doc/:id/append', async (c) => {
   const result2 = await renderDoc(c, id)
   notify(c, '追記しました')
   return c.html('error' in result2 ? errorFragment(result2.error) : result2.html)
+})
+
+// POST /ui/doc/:id/entrypoint/set - このドキュメントをコレクションのエントリーポイントに設定
+uiRoute.post('/doc/:id/entrypoint/set', async (c) => {
+  const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const id = c.req.param('id')
+  const doc = await c.env.DB.prepare(`
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
+  if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  await c.env.DB.prepare('UPDATE collections SET entrypoint_doc_id = ? WHERE id = ? AND owner_user_id = ?')
+    .bind(id, doc.collection_id, uid).run()
+
+  const result = await renderDoc(c, id)
+  notify(c, 'エントリーポイントに設定しました')
+  return c.html('error' in result ? errorFragment(result.error) : result.html)
+})
+
+// POST /ui/doc/:id/entrypoint/unset - エントリーポイントを解除
+uiRoute.post('/doc/:id/entrypoint/unset', async (c) => {
+  const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const id = c.req.param('id')
+  const doc = await c.env.DB.prepare(`
+    SELECT d.* FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
+  if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  await c.env.DB.prepare('UPDATE collections SET entrypoint_doc_id = NULL WHERE id = ? AND owner_user_id = ? AND entrypoint_doc_id = ?')
+    .bind(doc.collection_id, uid, id).run()
+
+  const result = await renderDoc(c, id)
+  notify(c, 'エントリーポイントを解除しました')
+  return c.html('error' in result ? errorFragment(result.error) : result.html)
 })
 
 // POST /ui/doc/:id/delete
@@ -1042,6 +1094,7 @@ uiRoute.get('/doc/:id/new-child', async (c) => {
         <button class="btn-tool" type="button" data-snippet="---\n"><span class="tool-icon">—</span>水平線</button>
         <button class="btn-tool" type="button" data-snippet="|  |  |  |\n|---|---|---|\n|  |  |  |\n|  |  |  |\n" data-cursor="2"><span class="tool-icon">⊞</span>テーブル</button>
         <button class="btn-tool" type="button" data-snippet="[[doc_]]" data-cursor="7"><span class="tool-icon">[[ ]]</span>リンク</button>
+        <button class="btn-tool" type="button" data-upload-image disabled><span class="tool-icon">🖼</span>画像</button>
       </div>
     </div>
     <div class="editor-wrap">
