@@ -216,12 +216,28 @@ collectionsRoute.patch('/:id', async (c) => {
       params.push(parsed.description)
     }
     if (parsed.parent_id !== undefined) {
+      if (parsed.parent_id) {
+        const parentCol = await loadOwnedCollection(c.env.DB, auth, parsed.parent_id)
+        if (!parentCol) {
+          return c.json({ error: { code: 'VALIDATION_ERROR', message: 'parent_id not found or not owned' } }, 400)
+        }
+      }
       updates.push('parent_id = ?')
-      params.push(parsed.parent_id)
+      params.push(parsed.parent_id || null)
     }
     if (parsed.entrypoint_doc_id !== undefined) {
+      if (parsed.entrypoint_doc_id) {
+        const uid = ownerUserIdOf(auth)
+        const doc = await c.env.DB.prepare(`
+          SELECT d.id FROM documents d JOIN collections c ON d.collection_id = c.id
+          WHERE d.id = ? AND c.owner_user_id = ? AND d.status = 'published'
+        `).bind(parsed.entrypoint_doc_id, uid).first()
+        if (!doc) {
+          return c.json({ error: { code: 'VALIDATION_ERROR', message: 'entrypoint_doc_id not found or not owned' } }, 400)
+        }
+      }
       updates.push('entrypoint_doc_id = ?')
-      params.push(parsed.entrypoint_doc_id)
+      params.push(parsed.entrypoint_doc_id || null)
     }
 
     params.push(id)

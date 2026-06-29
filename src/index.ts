@@ -28,7 +28,8 @@ app.use('*', cors({
   origin: (_origin, c) => {
     const env = c.env as Env
     if (!isProduction(env)) return '*'
-    return env.CORS_ORIGIN ?? '*'
+    // In production, require an explicit CORS_ORIGIN; reject if unset.
+    return env.CORS_ORIGIN ?? null
   },
   allowMethods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization', 'If-Match'],

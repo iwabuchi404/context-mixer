@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Images - Context Mixer</title>
+  <link rel="icon" href="/favicon.svg">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/htmx.min.js"></script>
+</head>
+<body hx-headers='{"Accept": "text/html"}'>
+  <header>
+    <a class="brand" href="/app.html">Context Mixer</a>
+    <span class="spacer"></span>
+    <nav>
+      <a href="/keys.html">キー</a>
+      <a href="/inbox.html">受信箱</a>
+      <a href="/files.html">ファイル</a>
+      <a href="/images.html" style="color:var(--accent)">画像</a>
+    </nav>
+    <button id="signout" class="btn-quiet">サインアウト</button>
+  </header>
+
+  <main class="main-content">
+    <div style="max-width: 1100px; margin: 0 auto">
+      <h1>画像管理</h1>
+      <p class="muted" style="margin-bottom: var(--space-6)">ドキュメントに埋め込む画像をアップロード・管理します。</p>
+
+      <div class="doc-meta-card" style="margin-bottom: var(--space-7)">
+        <h3>画像をアップロード</h3>
+        <form id="image-upload-form" hx-post="/files?view=images" hx-encoding="multipart/form-data" hx-target="#images-list" hx-indicator="#upload-spinner">
+          <div class="form-row" style="align-items: flex-end">
+            <div style="flex:1; min-width:10rem">
+              <label class="muted" style="display:block; font-size:var(--text-xs); margin-bottom:var(--space-1)">ファイル</label>
+              <input type="file" name="file" class="input" accept="image/*" required style="padding: var(--space-1)">
+            </div>
+            <div style="flex:2; min-width:12rem">
+              <label class="muted" style="display:block; font-size:var(--text-xs); margin-bottom:var(--space-1)">紐付けるドキュメント</label>
+              <select id="upload-doc-select" name="document_id" class="input" required>
+                <option value="" disabled selected>読み込み中…</option>
+              </select>
+            </div>
+            <button type="submit" class="btn-primary">アップロード</button>
+          </div>
+          <span id="upload-spinner" class="htmx-indicator spinner" aria-label="送信中"></span>
+        </form>
+      </div>
+
+      <div class="doc-meta-card" style="margin-bottom: var(--space-7)">
+        <h3>フィルター</h3>
+        <form class="form-row" hx-get="/ui/images" hx-target="#images-list" hx-trigger="submit, change, input changed delay:300ms">
+          <div style="flex:1; min-width:10rem">
+            <label class="muted" style="display:block; font-size:var(--text-xs); margin-bottom:var(--space-1)">ファイル名</label>
+            <input type="search" name="q" class="input" placeholder="画像ファイル名で検索" autocomplete="off">
+          </div>
+          <div style="flex:2; min-width:12rem">
+            <label class="muted" style="display:block; font-size:var(--text-xs); margin-bottom:var(--space-1)">ドキュメント</label>
+            <select id="filter-doc-select" name="doc" class="input">
+              <option value="">すべてのドキュメント</option>
+            </select>
+          </div>
+          <button type="submit" class="btn-primary" style="align-self:flex-end">適用</button>
+        </form>
+      </div>
+
+      <h2 class="sidebar-title">画像一覧</h2>
+      <div id="images-list" hx-get="/ui/images" hx-trigger="auth-ready from:body" hx-headers='{"Accept": "text/html"}'>
+        <div class="doc-loading"><span class="spinner" aria-label="読み込み中"></span></div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+  <script>
+    async function populateDocumentSelects() {
+      try {
+        const res = await fetch('/docs?limit=500')
+        if (!res.ok) return
+        const { data } = await res.json()
+        const uploadSelect = document.getElementById('upload-doc-select')
+        const filterSelect = document.getElementById('filter-doc-select')
+        if (!data || data.length === 0) {
+          uploadSelect.innerHTML = '<option value="" disabled selected>ドキュメントがありません</option>'
+          return
+        }
+        const options = data.map((doc) => `<option value="${esc(doc.id)}">${esc(doc.title)} (${esc(doc.id)})</option>`).join('')
+        uploadSelect.innerHTML = '<option value="" disabled selected>ドキュメントを選択</option>' + options
+        filterSelect.innerHTML = '<option value="">すべてのドキュメント</option>' + options
+      } catch (e) {
+        console.error('Failed to load document list:', e)
+      }
+    }
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    }
+    document.addEventListener('auth-ready', populateDocumentSelects)
+  </script>
+</body>
+</html>

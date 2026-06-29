@@ -313,6 +313,54 @@ function setupEditor() {
         textarea.dispatchEvent(new Event('input'))
       })
     })
+
+    // Image upload button
+    const uploadImageBtn = toolbar.querySelector('[data-upload-image]')
+    if (uploadImageBtn) {
+      uploadImageBtn.addEventListener('click', async () => {
+        const docView = document.getElementById('doc-view-inner')
+        const docId = docView?.dataset.docId
+        if (!docId) {
+          alert('画像アップロードは、ドキュメント作成後に利用できます')
+          return
+        }
+
+        const input = document.createElement('input')
+        input.type = 'file'
+        input.accept = 'image/*'
+        input.onchange = async () => {
+          const file = input.files?.[0]
+          if (!file) return
+
+          const formData = new FormData()
+          formData.append('file', file)
+          formData.append('document_id', docId)
+
+          try {
+            const res = await fetch('/files', { method: 'POST', body: formData })
+            if (!res.ok) {
+              const body = await res.json().catch(() => ({}))
+              alert('画像アップロードに失敗しました: ' + (body.error?.message || res.status))
+              return
+            }
+            const data = await res.json()
+            const fileId = data.id || data.data?.id
+            if (!fileId) {
+              alert('画像の情報が取得できませんでした')
+              return
+            }
+            const alt = file.name.replace(/\.[^/.]+$/, '')
+            const markdown = `![${alt}](/files/${fileId}/raw)`
+            const start = textarea.selectionStart
+            insert(markdown, start + markdown.length)
+          } catch (err) {
+            alert('画像アップロード中にエラーが発生しました')
+            console.error(err)
+          }
+        }
+        input.click()
+      })
+    }
   }
 }
 
@@ -437,6 +485,19 @@ function markCurrent(docId) {
 }
 
 // --- copy to clipboard ---
+// Global markdown copy buttons (e.g. image management page)
+document.body.addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-copy-markdown]')
+  if (!btn) return
+  e.preventDefault()
+  const markdown = btn.dataset.copyMarkdown || ''
+  navigator.clipboard.writeText(markdown).then(() => {
+    showSysline('Markdown をコピーしました')
+  }).catch(() => {
+    showSysline('コピーに失敗しました', true)
+  })
+})
+
 // Adds a copy button to each code block and a "copy article" button to the
 // doc header. Idempotent — skips elements that already have a button so it
 // can run after every HTMX swap.

@@ -4,11 +4,14 @@ import { isCollectionAllowed, ownerUserIdOf } from '../auth/adapter'
 import type { AppEnv, AuthContext } from '../auth/adapter'
 import { extractSection, findSection, parseSections, replaceSection } from '../services/sections'
 import { createDocument, updateDocument } from '../services/revisions'
+import { escapeHtml } from '../services/markdown'
 
 // Validation schemas
+const MAX_DOC_CONTENT = 1_000_000 // 1 MB
+
 const createDocSchema = z.object({
   title: z.string().min(1),
-  content: z.string(),
+  content: z.string().max(MAX_DOC_CONTENT),
   collection_id: z.string(),
   parent_id: z.string().optional(),
   priority: z.enum(['high', 'normal', 'archive']).optional(),
@@ -18,20 +21,20 @@ const createDocSchema = z.object({
 
 const updateDocSchema = z.object({
   title: z.string().min(1).optional(),
-  content: z.string().optional(),
+  content: z.string().max(MAX_DOC_CONTENT).optional(),
   priority: z.enum(['high', 'normal', 'archive']).optional(),
   status: z.enum(['published', 'archived']).optional(),
   expected_version: z.number().int().optional(),
 })
 
 const updateSectionSchema = z.object({
-  content: z.string(),
+  content: z.string().max(MAX_DOC_CONTENT),
   title: z.string().min(1).optional(),
   expected_version: z.number().int().optional(),
 })
 
 const appendSchema = z.object({
-  content: z.string().min(1),
+  content: z.string().min(1).max(MAX_DOC_CONTENT),
   expected_version: z.number().int().optional(),
 })
 
@@ -66,12 +69,15 @@ const loadDoc = async (c: any, id: string): Promise<{ doc: any } | { response: R
 }
 
 // Helper: Build path from parent
-const buildPath = async (db: D1Database, parentId: string | null, collectionId: string, docId: string): Promise<string> => {
+const buildPath = async (db: D1Database, parentId: string | null, collectionId: string, docId: string, ownerUserId: string): Promise<string> => {
   if (!parentId) {
     return `/${collectionId}/${docId}`
   }
 
-  const parent = await db.prepare('SELECT path FROM documents WHERE id = ?').bind(parentId).first() as { path: string } | null
+  const parent = await db.prepare(`
+    SELECT d.path FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(parentId, ownerUserId).first() as { path: string } | null
 
   if (!parent) {
     throw new Error('Parent document not found')
@@ -354,7 +360,7 @@ documentsRoute.get('/:id/history', async (c) => {
     for (const rev of revisions as any[]) {
       html += `  <li>\n`
       html += `    <span>${new Date(rev.created_at).toLocaleString()}</span>\n`
-      html += `    <span class="tag">${rev.author_type}${rev.api_key_name ? ': ' + rev.api_key_name : ''}</span>\n`
+      html += `    <span class="tag">${escapeHtml(rev.author_type)}${rev.api_key_name ? ': ' + escapeHtml(rev.api_key_name) : ''}</span>\n`
       html += `    <span class="muted">${rev.content_bytes} bytes</span>\n`
       html += `  </li>\n`
     }
@@ -426,7 +432,7 @@ documentsRoute.post('/', async (c) => {
     const now = Date.now()
 
     // Build path
-    const path = await buildPath(c.env.DB, parsed.parent_id || null, parsed.collection_id, id)
+    const path = await buildPath(c.env.DB, parsed.parent_id || null, parsed.collection_id, id, uid)
 
     // Create document + initial revision + links atomically
     const { warnings: linkWarnings } = await createDocument(
