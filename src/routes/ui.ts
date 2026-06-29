@@ -302,12 +302,19 @@ const renderCollectionPage = async (c: any, collectionId: string): Promise<strin
   const uid = ownerUserIdOf(auth)
   if (!isCollectionAllowed(auth, collectionId)) return errorFragment('このコレクションへのアクセス権がありません')
 
-  const [col, docsResult] = await Promise.all([
-    c.env.DB.prepare('SELECT id, name, description FROM collections WHERE id = ? AND owner_user_id = ?').bind(collectionId, uid).first(),
+  const [col, docsResult, allDocsResult] = await Promise.all([
+    c.env.DB.prepare('SELECT id, name, description, entrypoint_doc_id FROM collections WHERE id = ? AND owner_user_id = ?').bind(collectionId, uid).first(),
     c.env.DB.prepare(`
       SELECT id, title, parent_id, priority, updated_at FROM documents
       WHERE collection_id = ? AND status = 'published'
     `).bind(collectionId).all(),
+    // エントリーポイント設定用: 全コレクションの全ドキュメント（オーナーフィルタ付き）
+    c.env.DB.prepare(`
+      SELECT d.id, d.title, c.name AS collection_name
+      FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE c.owner_user_id = ? AND d.status = 'published'
+      ORDER BY c.name, d.title
+    `).bind(uid).all(),
   ])
   const collection = col as any
   if (!collection) return errorFragment('コレクションが見つかりません')
@@ -336,11 +343,32 @@ const renderCollectionPage = async (c: any, collectionId: string): Promise<strin
   }
 
   const docCount = (docsResult.results as any[]).length
+  const entrypointDocId = (collection as any)?.entrypoint_doc_id ?? null
+  const allDocs = allDocsResult.results as any[]
+
+  // エントリーポイント選択肢: コレクション名でグループ化
+  const entrypointOptions = allDocs.map((d) => {
+    const selected = d.id === entrypointDocId ? ' selected' : ''
+    return `<option value="${esc(d.id)}"${selected}>${esc(d.collection_name)} / ${esc(d.title)}</option>`
+  }).join('')
+
+  const entrypointBox = `
+  <details class="entrypoint-box">
+    <summary>エントリーポイント${entrypointDocId ? ' ★' : ''}</summary>
+    <form hx-post="/ui/collections/${esc(collectionId)}/entrypoint" hx-target="#doc-view">
+      <select class="input" name="entrypoint_doc_id">
+        <option value="">（なし）</option>
+        ${entrypointOptions}
+      </select>
+      <button class="btn btn-sm" type="submit">設定</button>
+    </form>
+  </details>`
 
   return `
 <div id="doc-view-inner" data-doc-title="${esc(collection.name)}">
   ${colHead(collection, docCount)}
   ${collection.description ? `<p class="muted" style="margin: var(--space-3) 0">${esc(collection.description)}</p>` : ''}
+  ${entrypointBox}
   <nav class="tree col-docs">
     ${renderDocTree(null, 0) || '<p class="tree-empty">まだメモがありません</p>'}
   </nav>
@@ -1247,7 +1275,38 @@ uiRoute.post('/collections/:id/rename', async (c) => {
   return c.html(await renderCollectionsPage(c))
 })
 
-// POST /ui/collections/:id/delete - Refuses when not empty (same rule as the API)
+// POST /ui/collections/:id/entrypoint - エントリーポイント設定（全ドキュメントから選択可）
+uiRoute.post('/collections/:id/entrypoint', async (c) => {
+  const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const id = c.req.param('id')
+  if (!isCollectionAllowed(auth, id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  const col = await c.env.DB.prepare('SELECT id FROM collections WHERE id = ? AND owner_user_id = ?').bind(id, uid).first()
+  if (!col) return c.html(errorFragment('コレクションが見つかりません'), 404)
+
+  const body = await c.req.parseBody()
+  const docId = String(body.entrypoint_doc_id ?? '').trim()
+
+  if (docId) {
+    // ドキュメントが同じオーナーのものか確認
+    const doc = await c.env.DB.prepare(`
+      SELECT d.id FROM documents d JOIN collections c ON d.collection_id = c.id
+      WHERE d.id = ? AND c.owner_user_id = ? AND d.status = 'published'
+    `).bind(docId, uid).first()
+    if (!doc) return c.html(errorFragment('指定されたドキュメントが見つかりません'), 404)
+
+    await c.env.DB.prepare('UPDATE collections SET entrypoint_doc_id = ? WHERE id = ? AND owner_user_id = ?')
+      .bind(docId, id, uid).run()
+    notify(c, 'エントリーポイントを設定しました')
+  } else {
+    await c.env.DB.prepare('UPDATE collections SET entrypoint_doc_id = NULL WHERE id = ? AND owner_user_id = ?')
+      .bind(id, uid).run()
+    notify(c, 'エントリーポイントを解除しました')
+  }
+
+  return c.html(await renderCollectionPage(c, id))
+})
 uiRoute.post('/collections/:id/delete', async (c) => {
   const auth = c.get('auth')
   const uid = ownerUserIdOf(auth)
