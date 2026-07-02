@@ -9,7 +9,7 @@ import { clerkSession, ensureUser, verifySession } from './clerk'
 
 const isPublic = (method: string, path: string): boolean => {
   if (path === '/health' || path === '/' || path === '/config' || path === '/favicon.svg') return true
-  if (path.startsWith('/auth/') || path.startsWith('/public/')) return true
+  if (path.startsWith('/auth/') || path.startsWith('/public/') || path.startsWith('/s/')) return true
   // OAuth consent screen. /mcp, /oauth/token, /oauth/register and the .well-known
   // metadata are handled by the OAuthProvider wrapper and never reach this app;
   // /oauth/authorize does, and runs its own Clerk-session check internally.

@@ -392,7 +392,7 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
   if (!isCollectionAllowed(auth, doc.collection_id)) return { error: 'このドキュメントへのアクセス権がありません', status: 403 }
 
   // collection名は別途取得（renderDocFromData では collections リストから再利用）
-  const [collection, lastRev, linksResult, backlinksResult, ancestorRows] = await Promise.all([
+  const [collection, lastRev, linksResult, backlinksResult, ancestorRows, shareLink] = await Promise.all([
     c.env.DB.prepare('SELECT name FROM collections WHERE id = ? AND owner_user_id = ?').bind(doc.collection_id, uid).first(),
     c.env.DB.prepare('SELECT author_type, api_key_name FROM document_revisions WHERE document_id = ? ORDER BY created_at DESC LIMIT 1').bind(id).first(),
     c.env.DB.prepare(`
@@ -415,15 +415,16 @@ const renderDoc = async (c: any, id: string): Promise<{ html: string } | { error
           SELECT id, title, depth FROM anc WHERE id != ? ORDER BY depth DESC
         `).bind(doc.id, doc.id).all()
       : Promise.resolve({ results: [] }),
+    c.env.DB.prepare('SELECT id FROM share_links WHERE doc_id = ?').bind(id).first(),
   ])
 
-  return { html: renderDocFromData(c, doc, [collection, lastRev, linksResult, backlinksResult, ancestorRows]) }
+  return { html: renderDocFromData(c, doc, [collection, lastRev, linksResult, backlinksResult, ancestorRows, shareLink]) }
 }
 
 // クエリ結果からドキュメントHTMLを構築（renderDoc と /ui/init で共有）
-// docExtra = [collection, lastRev, linksResult, backlinksResult, ancestorRows]
+// docExtra = [collection, lastRev, linksResult, backlinksResult, ancestorRows, shareLink]
 const renderDocFromData = (_c: any, doc: any, docExtra: any[]): string => {
-  const [collection, lastRev, linksResult, backlinksResult, ancestorRows] = docExtra
+  const [collection, lastRev, linksResult, backlinksResult, ancestorRows, shareLink] = docExtra
 
   const linkTitles = new Map<string, string>((linksResult.results as any[]).map((r) => [r.id, r.title]))
   const body = renderMarkdown(doc.content, linkTitles)
@@ -471,15 +472,22 @@ const renderDocFromData = (_c: any, doc: any, docExtra: any[]): string => {
     ).join(' / ')
   }
 
+  const shareId = (shareLink as any)?.id
+  const shareBtn = shareId
+    ? `<button class="btn-ghost is-active" hx-delete="/ui/doc/${esc(doc.id)}/share" hx-target="#doc-view" hx-confirm="共有リンクを取り消しますか？URLは無効になります。">共有取り消し</button>`
+    : `<button class="btn-ghost" hx-post="/ui/doc/${esc(doc.id)}/share" hx-target="#doc-view">共有</button>`
+
   const html = `
 <div id="doc-view-inner" data-doc-id="${esc(doc.id)}" data-doc-title="${esc(doc.title)}">
   <div class="doc-sticky-head">
     <div class="doc-head">
       <h1 class="doc-title">${esc(doc.title)}</h1>
       <button class="btn-ghost" hx-get="/ui/doc/${esc(doc.id)}/edit" hx-target="#doc-view">✎ 編集</button>
+      ${shareBtn}
     </div>
     <p class="meta-line">${breadcrumb} ・ ${fmtDate(doc.updated_at)}${author ? ` ・ ${author}` : ''}</p>
   </div>
+  ${shareId ? `<p class="share-url-line">共有URL: <a href="/s/${esc(shareId)}" target="_blank">${esc(`/s/${shareId}`)}</a></p>` : ''}
   ${tocMobile}
   <div class="doc-columns">
     <article class="prose">${body}</article>
@@ -603,6 +611,7 @@ uiRoute.get('/init', async (c) => {
             SELECT id, title, depth FROM anc WHERE id != ? ORDER BY depth DESC
           `).bind(doc.id, doc.id).all()
         : Promise.resolve({ results: [] }),
+      c.env.DB.prepare('SELECT id FROM share_links WHERE doc_id = ?').bind(doc.id).first(),
     ])
   }
 
@@ -866,6 +875,49 @@ uiRoute.post('/doc/:id/delete', async (c) => {
   notify(c, '削除しました(履歴は残ります)')
   c.header('HX-Push-Url', '/')
   return c.html(await renderWelcome(c))
+})
+
+// POST /ui/doc/:id/share - 共有リンク発行（トグルON）
+uiRoute.post('/doc/:id/share', async (c) => {
+  const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const id = c.req.param('id')
+  const doc = await c.env.DB.prepare(`
+    SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
+  if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  // 既存の共有リンクがあれば削除（都度発行: 新しいURLになる）
+  await c.env.DB.prepare('DELETE FROM share_links WHERE doc_id = ?').bind(id).run()
+  const shareId = `share_${crypto.randomUUID().replace(/-/g, '')}`
+  await c.env.DB.prepare(
+    'INSERT INTO share_links (id, doc_id, owner_user_id, created_at) VALUES (?, ?, ?, ?)'
+  ).bind(shareId, id, uid, Date.now()).run()
+
+  notify(c, '共有リンクを発行しました', false)
+  const result = await renderDoc(c, id)
+  return c.html('error' in result ? errorFragment(result.error) : result.html)
+})
+
+// DELETE /ui/doc/:id/share - 共有取り消し（トグルOFF）
+uiRoute.delete('/doc/:id/share', async (c) => {
+  const auth = c.get('auth')
+  const uid = ownerUserIdOf(auth)
+  const id = c.req.param('id')
+  const doc = await c.env.DB.prepare(`
+    SELECT d.collection_id FROM documents d JOIN collections c ON d.collection_id = c.id
+    WHERE d.id = ? AND c.owner_user_id = ?
+  `).bind(id, uid).first() as any
+  if (!doc) return c.html(errorFragment('ドキュメントが見つかりません'), 404)
+  if (!isCollectionAllowed(auth, doc.collection_id)) return c.html(errorFragment('アクセス権がありません'), 403)
+
+  await c.env.DB.prepare('DELETE FROM share_links WHERE doc_id = ? AND owner_user_id = ?').bind(id, uid).run()
+
+  notify(c, '共有リンクを取り消しました', false)
+  const result = await renderDoc(c, id)
+  return c.html('error' in result ? errorFragment(result.error) : result.html)
 })
 
 // GET /ui/doc/:id/move - Move form

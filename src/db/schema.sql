@@ -154,6 +154,20 @@ CREATE INDEX IF NOT EXISTS idx_links_from ON document_links(from_doc_id);
 CREATE INDEX IF NOT EXISTS idx_links_to   ON document_links(to_doc_id);
 
 -- ============================================================
+-- Share Links (ドキュメント単位の予測困難な共有URL)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS share_links (
+  id            TEXT PRIMARY KEY,      -- share_xxxxx (予測困難なランダム文字列)
+  doc_id        TEXT NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
+  owner_user_id TEXT NOT NULL REFERENCES users(id),
+  created_at    INTEGER NOT NULL,
+  UNIQUE(doc_id)  -- 1ドキュメントにつき1つの有効なリンク
+);
+
+CREATE INDEX IF NOT EXISTS idx_share_links_doc ON share_links(doc_id);
+CREATE INDEX IF NOT EXISTS idx_share_links_owner ON share_links(owner_user_id);
+
+-- ============================================================
 -- Full-Text Search (FTS5)
 -- ============================================================
 CREATE VIRTUAL TABLE IF NOT EXISTS documents_fts USING fts5(

@@ -16,6 +16,7 @@ import { inboxRoute } from './routes/inbox'
 import { apiKeysRoute } from './routes/api-keys'
 import { meRoute } from './routes/me'
 import { uiRoute } from './routes/ui'
+import { shareRoute } from './routes/share'
 import { McpApiHandler } from './mcp/handler'
 import { oauthRoute } from './mcp/oauth-handler'
 
@@ -60,6 +61,9 @@ app.route('/me', meRoute)
 
 // Web UI fragments (HTMX)
 app.route('/ui', uiRoute)
+
+// Public share pages (unauthenticated, read-only)
+app.route('/s', shareRoute)
 
 // MCP OAuth consent UI. token/register/metadata + token validation are handled
 // by the OAuthProvider wrapper below; only the consent screen lives in the app.

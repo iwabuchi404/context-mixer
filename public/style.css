@@ -100,6 +100,13 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   margin: 0 auto;
 }
 
+/* 共有ページ（認証不要・閲覧のみ） */
+.share-page {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 var(--space-5) var(--space-8);
+}
+
 /* ============================================================
    ツリー
    ============================================================ */
@@ -334,6 +341,22 @@ header nav a:hover { background: var(--surface-dim); color: var(--text); }
   background: var(--surface-dim);
   color: var(--accent);
   text-decoration: none;
+}
+
+/* 共有URL表示行 */
+.share-url-line {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  margin: 0 0 var(--space-3);
+  word-break: break-all;
+}
+.share-url-line a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.share-url-line a:hover {
+  text-decoration: underline;
 }
 
 /* コードブロックのコピーボタン: ホバーで現れる、右上の静かなピル */
